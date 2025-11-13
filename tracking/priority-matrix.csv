@@ -1,0 +1,16 @@
+procedure_name,original_loc,converted_loc,aws_sct_warnings,frequency_score,impact_score,dependency_score,sla_score,criticality_score,code_complexity_score,warning_complexity_score,logic_complexity_score,ext_dep_score,complexity_score,priority_quadrant,sprint_assigned,status,owner,estimated_hours,actual_hours,notes
+ReconcileMUpstream,124,186,4,4,4,3,3,3.5,2,3,4,2,2.75,P1,Sprint_2,IN_PROGRESS,Pierre,8,0,Recursive query handling + temp tables
+AddArc,75,98,2,3,4,2,2,2.75,2,2,3,3,2.5,P1,Sprint_3,PENDING,Pierre,6,0,Multiple temp tables + delta calculation
+GetMaterialByRunProperties,543,687,8,4,3,2,2,2.75,5,4,4,2,3.75,P1,Sprint_4,PENDING,Pierre,12,0,Very long procedure with complex logic
+LinkUnlinkedMaterials,0,0,0,2,2,1,1,1.5,0,0,0,0,0,P3,Sprint_8,PENDING,Pierre,4,0,Need to extract from SQL Server
+MaterialToTransition,0,0,0,3,3,2,2,2.5,0,0,0,0,0,P2,Sprint_6,PENDING,Pierre,5,0,Need to extract from SQL Server
+MoveContainer,0,0,0,2,2,1,1,1.5,0,0,0,0,0,P3,Sprint_8,PENDING,Pierre,4,0,Need to extract from SQL Server
+MoveGooType,0,0,0,2,2,1,1,1.5,0,0,0,0,0,P3,Sprint_8,PENDING,Pierre,4,0,Need to extract from SQL Server
+ProcessDirtyTrees,0,0,0,4,4,3,3,3.5,0,0,0,0,0,P1,Sprint_3,PENDING,Pierre,10,0,Need to extract and analyze
+ProcessSomeMUpstream,0,0,0,4,4,3,3,3.5,0,0,0,0,0,P1,Sprint_2,PENDING,Pierre,8,0,Similar to ReconcileMUpstream
+RemoveArc,0,0,0,3,4,2,2,2.75,0,0,0,0,0,P1,Sprint_3,PENDING,Pierre,6,0,Inverse of AddArc
+TransitionToMaterial,0,0,0,3,3,2,2,2.5,0,0,0,0,0,P2,Sprint_5,PENDING,Pierre,5,0,Simple insert operation
+sp_move_node,0,0,0,3,3,2,2,2.5,0,0,0,0,0,P2,Sprint_5,PENDING,Pierre,6,0,Tree manipulation logic
+usp_UpdateContainerTypeFromArgus,0,0,0,2,2,1,1,1.5,0,0,0,0,0,P3,Sprint_7,PENDING,Pierre,4,0,Simple update with OPENQUERY
+usp_UpdateMDownstream,0,0,0,4,4,3,3,3.5,0,0,0,0,0,P1,Sprint_2,PENDING,Pierre,8,0,Batch processing of downstream
+usp_UpdateMUpstream,0,0,0,4,4,3,3,3.5,0,0,0,0,0,P1,Sprint_1,PENDING,Pierre,8,0,Critical batch processing

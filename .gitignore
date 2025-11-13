@@ -1,0 +1,42 @@
+# Python
+*.pyc
+__pycache__/
+venv/
+.venv/
+*.egg-info/
+*.egg
+
+# Environment files
+*.env
+!*.env.template
+!template.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Logs
+*.log
+logs/
+
+# Database dumps
+*.dump
+*.sql.backup
+
+# Temporary files
+*.tmp
+*.bak
+.temp/
+
+# Build artifacts
+dist/
+build/
+*.pyc

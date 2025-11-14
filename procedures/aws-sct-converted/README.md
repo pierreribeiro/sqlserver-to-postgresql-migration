@@ -125,13 +125,32 @@ AWS SCT output typically scores:
 
 ---
 
-## 📊 Current Inventory
+## 📊 Current Inventory - **16 FILES AVAILABLE** ✅
 
-| Procedure | AWS SCT Date | Size | Critical Issues | Status |
-|-----------|--------------|------|-----------------|--------|
-| reconcilemupstream.sql | TBD | TBD | TBD | 🔴 Not Started |
+| # | Procedure | Converted Date | Status | Priority |
+|---|-----------|----------------|--------|----------|
+| 1 | addarc.sql | 2025-11-13 | ✅ Available | P1 |
+| 2 | getmaterialbyrunproperties.sql | 2025-11-13 | ✅ Available | P1 |
+| 3 | linkunlinkedmaterials.sql | 2025-11-13 | ✅ Available | P3 |
+| 4 | materialtotransition.sql | 2025-11-13 | ✅ Available | P2 |
+| 5 | movecontainer.sql | 2025-11-13 | ✅ Available | P3 |
+| 6 | movegootype.sql | 2025-11-13 | ✅ Available | P3 |
+| 7 | processdirtytrees.sql | 2025-11-13 | ✅ Available | P1 |
+| 8 | processsomemupstream.sql | 2025-11-13 | ✅ Available | P1 |
+| 9 | reconcilemupstream.sql | 2025-11-13 | ✅ Analyzed | P1 |
+| 10 | removearc.sql | 2025-11-13 | ✅ Available | P1 |
+| 11 | transitiontomaterial.sql | 2025-11-13 | ✅ Available | P2 |
+| 12 | sp_move_node.sql | 2025-11-13 | ✅ Available | P2 |
+| 13 | usp_updatecontainertypefromargus.sql | 2025-11-13 | ✅ Available | P3 |
+| 14 | usp_updatemdownstream.sql | 2025-11-13 | ✅ Available | P1 |
+| 15 | usp_updatemupstream.sql | 2025-11-13 | ✅ Available | P1 |
+| 16 | README.md | 2025-11-13 | ✅ Documentation | - |
 
-*(Update this table as procedures are converted)*
+**Total:** 15 SQL procedures + 1 README = 16 files
+
+**Conversion Date:** All converted on 2025-11-13 via AWS SCT batch operation
+
+**Next Action:** Begin systematic analysis starting with P1 procedures
 
 ---
 
@@ -154,9 +173,11 @@ All files must first:
 - Production-ready versions: `../corrected/`
 - Project plan: `/docs/PROJECT-PLAN.md`
 - Analysis template: `/templates/analysis-template.md`
+- Priority matrix: `/tracking/priority-matrix.csv`
 
 ---
 
 **Maintained by:** Pierre Ribeiro (DBA/DBRE)  
 **Last Updated:** 2025-11-13  
-**Version:** 1.0
+**Version:** 1.1  
+**Status:** 🟢 16 FILES AVAILABLE - READY FOR ANALYSIS

@@ -6,7 +6,7 @@ LinkUnlinkedMaterials,19,43,3,2,2,1,1,1.5,1,2,2,1,1.5,P3,Sprint_8,EXTRACTED,Pier
 MaterialToTransition,7,6,1,3,3,2,2,2.5,1,1,2,1,1.25,P2,Sprint_6,EXTRACTED,Pierre,5,0,Simple insert operation | EXTRACTED + CONVERTED
 MoveContainer,48,127,3,2,2,1,1,1.5,2,2,2,2,2.0,P3,Sprint_8,EXTRACTED,Pierre,4,0,Container movement logic | EXTRACTED + CONVERTED
 MoveGooType,47,125,3,2,2,1,1,1.5,2,2,2,2,2.0,P3,Sprint_8,EXTRACTED,Pierre,4,0,Type movement logic | EXTRACTED + CONVERTED
-ProcessDirtyTrees,42,106,4,4,4,3,3,3.5,2,3,3,2,2.5,P1,Sprint_3,EXTRACTED,Pierre,10,0,Tree processing with recursion | EXTRACTED + CONVERTED
+ProcessDirtyTrees,42,106,4,4,4,3,3,3.5,2,3,3,2,2.5,P1,Sprint_3,CORRECTED,Pierre,10,1.5,Coordinator pattern (NOT recursive) - WHILE loop | CORRECTED (Quality: 8.5/10, 4 P0 blockers fixed)
 ProcessSomeMUpstream,88,219,5,4,4,3,3,3.5,2,3,4,3,3.0,P1,Sprint_2,EXTRACTED,Pierre,8,0,Similar to ReconcileMUpstream | EXTRACTED + CONVERTED
 RemoveArc,74,97,3,3,4,2,2,2.75,2,2,3,3,2.5,P1,Sprint_3,CORRECTED,Pierre,6,0.5,Simple DELETE operation (NOT inverse of AddArc) | CORRECTED (Quality: 9.0/10, Perf: +50-100%)
 TransitionToMaterial,7,6,1,3,3,2,2,2.5,1,1,2,1,1.25,P2,Sprint_5,EXTRACTED,Pierre,5,0,Simple insert operation | EXTRACTED + CONVERTED

@@ -79,16 +79,20 @@ echo ""
 # 3. Python Packages Check
 # =============================================================================
 echo "3️⃣  Python Automation Packages"
-REQUIRED_PACKAGES=("sqlparse" "click" "pandas" "rich" "jinja2" "pyyaml")
+REQUIRED_PACKAGES=("sqlparse" "click" "pandas" "rich" "jinja2" "yaml")
+PACKAGE_DISPLAY=("sqlparse" "click" "pandas" "rich" "jinja2" "pyyaml")
 MISSING_PACKAGES=0
 
-for package in "${REQUIRED_PACKAGES[@]}"; do
+for i in "${!REQUIRED_PACKAGES[@]}"; do
+    package="${REQUIRED_PACKAGES[$i]}"
+    display="${PACKAGE_DISPLAY[$i]}"
+
     if python3 -c "import $package" 2>/dev/null; then
         # Get package version
         VERSION=$(python3 -c "import $package; print(getattr($package, '__version__', 'unknown'))" 2>/dev/null || echo "unknown")
-        echo "   ✅ $package ($VERSION)"
+        echo "   ✅ $display ($VERSION)"
     else
-        echo "   ❌ $package (not installed)"
+        echo "   ❌ $display (not installed)"
         MISSING_PACKAGES=$((MISSING_PACKAGES + 1))
     fi
 done
@@ -133,17 +137,21 @@ echo ""
 # 5. GitHub CLI Check (Optional)
 # =============================================================================
 echo "5️⃣  GitHub CLI (Optional)"
-if check_command gh; then
-    GH_VERSION=$(gh --version 2>&1 | head -n1 | awk '{print $3}')
+if check_command gh || [ -f /usr/local/bin/gh ]; then
+    if [ -f /usr/local/bin/gh ]; then
+        GH_VERSION=$(/usr/local/bin/gh version 2>&1 | head -n1 | awk '{print $3}')
+    else
+        GH_VERSION=$(gh --version 2>&1 | head -n1 | awk '{print $3}')
+    fi
     echo "   ✅ GitHub CLI $GH_VERSION"
 
     # Check authentication
-    if gh auth status &> /dev/null; then
+    GH_BIN=$([ -f /usr/local/bin/gh ] && echo "/usr/local/bin/gh" || echo "gh")
+    if $GH_BIN auth status &> /dev/null; then
         echo "   ✅ GitHub authenticated"
     else
-        echo "   ⚠️  GitHub not authenticated"
-        echo "      Run: gh auth login"
-        WARNINGS=$((WARNINGS + 1))
+        echo "   ⚠️  GitHub not authenticated (optional)"
+        echo "      Run: $GH_BIN auth login"
     fi
 else
     echo "   ⚠️  GitHub CLI not installed (optional)"

@@ -51,7 +51,16 @@ This project manages the conversion of **15 stored procedures** from SQL Server 
 
 ## 🚀 Quick Start
 
-See [PROJECT-PLAN.md](docs/PROJECT-PLAN.md) for complete setup instructions.
+### 📖 Setup Instructions
+
+**New to this project?** Start here:
+
+1. **[SETUP-GUIDE.md](docs/SETUP-GUIDE.md)** - Complete environment setup (15-30 min)
+2. **[PROJECT-PLAN.md](docs/PROJECT-PLAN.md)** - Full 10-week roadmap
+3. **Run Setup Validation:**
+   ```bash
+   ./scripts/validation/check-setup.sh
+   ```
 
 ### Prerequisites
 
@@ -62,9 +71,13 @@ See [PROJECT-PLAN.md](docs/PROJECT-PLAN.md) for complete setup instructions.
 - Git
 - psql CLI
 
+**Python Automation Packages** (install via pip):
+- Run: `pip install -r scripts/automation/requirements.txt`
+- Packages: sqlparse, click, pandas, rich, jinja2, pyyaml, etc.
+
 **Optional:**
 - Claude Desktop (for AI-assisted analysis)
-- GitHub CLI
+- GitHub CLI (`gh`) - See [SETUP-GUIDE.md](docs/SETUP-GUIDE.md) for installation
 
 ---
 
@@ -157,6 +170,7 @@ sqlserver-to-postgresql-migration/
 
 ### Key Documents
 
+- **[Setup Guide](docs/SETUP-GUIDE.md)** - Environment setup & configuration ✅
 - **[Project Plan](docs/PROJECT-PLAN.md)** - Complete 10-week roadmap ✅
 - **[Priority Matrix](tracking/priority-matrix.csv)** - Procedure prioritization ✅
 - **[Progress Tracker](tracking/progress-tracker.md)** - Current status

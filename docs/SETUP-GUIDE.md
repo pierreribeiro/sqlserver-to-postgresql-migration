@@ -5,7 +5,7 @@
 This guide helps you set up the development environment for the SQL Server → PostgreSQL migration project.
 
 **Estimated Time:** 15-30 minutes
-**Last Updated:** 2025-11-24
+**Last Updated:** 2025-11-25
 
 ---
 
@@ -265,6 +265,114 @@ gh pr list
 /usr/local/bin/gh issue list
 /usr/local/bin/gh pr list
 ```
+
+### GitHub CLI in Proxy Environments (Claude Code Web Workaround)
+
+**Problem:**
+
+In proxy environments like Claude Code Web, Docker containers, or corporate networks with Git proxies, the `gh` CLI may fail with:
+
+```
+none of the git remotes configured for this repository point to a known GitHub host
+```
+
+This happens because Git remotes use proxy URLs instead of direct GitHub URLs:
+
+```bash
+# Example proxy remote (doesn't work with gh CLI)
+origin: http://local_proxy@127.0.0.1:18276/git/pierreribeiro/sqlserver-to-postgresql-migration
+```
+
+**Solution: Add Direct GitHub Remote + Use --repo Flag**
+
+1. **Add a direct GitHub remote** (in addition to the proxy remote):
+
+```bash
+# Add direct GitHub remote (replace with your repo)
+git remote add github https://github.com/pierreribeiro/sqlserver-to-postgresql-migration.git
+
+# Verify both remotes exist
+git remote -v
+# Expected output:
+# origin    http://local_proxy@... (proxy, used for push/pull)
+# github    https://github.com/... (direct URL for gh CLI)
+```
+
+2. **Use the --repo flag** with all `gh` commands:
+
+```bash
+# Creating Pull Requests
+gh pr create --repo pierreribeiro/sqlserver-to-postgresql-migration \
+  --title "Your PR Title" \
+  --body "Your PR Description"
+
+# Managing Issues
+gh issue close 21 --repo pierreribeiro/sqlserver-to-postgresql-migration \
+  --comment "Completed in Sprint 4"
+
+gh issue list --repo pierreribeiro/sqlserver-to-postgresql-migration
+
+# Viewing Repository Info
+gh repo view --repo pierreribeiro/sqlserver-to-postgresql-migration
+```
+
+**Important Notes:**
+
+- **Don't use the `github` remote for git operations** (push/pull/fetch) - continue using `origin`
+- The `github` remote is ONLY for `gh` CLI to recognize the repository
+- Always specify `--repo owner/repo-name` when running `gh` commands
+- This workaround is specific to environments where Git operations go through proxies
+
+**Complete Example Workflow:**
+
+```bash
+# 1. Add GitHub remote (one-time setup)
+git remote add github https://github.com/pierreribeiro/sqlserver-to-postgresql-migration.git
+
+# 2. Continue using origin for Git operations
+git push -u origin claude/feature-branch
+
+# 3. Use --repo flag for GitHub CLI operations
+gh pr create --repo pierreribeiro/sqlserver-to-postgresql-migration \
+  --title "feat: Add new procedure correction" \
+  --body "$(cat <<'EOF'
+## Summary
+- Corrected GetMaterialByRunProperties procedure
+- Resolved 13 AWS SCT warnings
+- Added comprehensive unit tests
+
+## Test Plan
+- [x] Syntax validation
+- [x] Unit tests created
+- [ ] Integration testing pending
+EOF
+)"
+
+# 4. Close related issue
+gh issue close 21 --repo pierreribeiro/sqlserver-to-postgresql-migration \
+  --comment "Completed in PR #32"
+```
+
+**Verification:**
+
+Test that the workaround is working:
+
+```bash
+# This should work now (shows repo info)
+gh repo view --repo pierreribeiro/sqlserver-to-postgresql-migration
+
+# This should also work (lists issues)
+gh issue list --repo pierreribeiro/sqlserver-to-postgresql-migration
+```
+
+**When This Workaround Is Needed:**
+
+- ✅ Claude Code Web environment
+- ✅ Docker containers with Git proxy configuration
+- ✅ Corporate networks with proxy Git servers
+- ✅ Any environment where `git remote -v` shows proxy URLs (127.0.0.1, local_proxy, etc.)
+- ❌ Standard local development (direct GitHub access)
+- ❌ GitHub Codespaces (has built-in GitHub integration)
 
 ---
 

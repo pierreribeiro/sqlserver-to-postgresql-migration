@@ -1,0 +1,1 @@
+$(cat /home/claude/prompt-issue24-materialtotransition-execution.md)

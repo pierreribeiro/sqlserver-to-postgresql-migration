@@ -1,0 +1,1 @@
+$(cat /home/claude/prompt-issue25-updatecontainertypefromargus-execution.md)

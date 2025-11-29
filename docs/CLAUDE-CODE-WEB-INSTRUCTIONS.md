@@ -54,6 +54,7 @@ You are operating in **Claude Code Web** as the **EXECUTION CENTER** (Hands).
 │
 └── tracking/
     └── priority-matrix.csv # 📊 READ: Procedure priorities
+    └── progress-tracker.md # 📊 READ and UPDATE: Work progress
 ```
 
 ---

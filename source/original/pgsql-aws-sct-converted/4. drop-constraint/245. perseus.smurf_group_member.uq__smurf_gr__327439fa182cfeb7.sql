@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.smurf_group_member DROP CONSTRAINT uq__smurf_gr__327439fa182cfeb7;
+

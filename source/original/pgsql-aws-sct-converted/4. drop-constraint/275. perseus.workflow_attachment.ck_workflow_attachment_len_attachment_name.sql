@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.workflow_attachment DROP CONSTRAINT ck_workflow_attachment_len_attachment_name;
+

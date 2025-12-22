@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.submission_entry DROP CONSTRAINT ck_submission_entry_len_status;
+

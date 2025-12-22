@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.coa
+ADD CONSTRAINT coa_pk_611025458 PRIMARY KEY (id);
+

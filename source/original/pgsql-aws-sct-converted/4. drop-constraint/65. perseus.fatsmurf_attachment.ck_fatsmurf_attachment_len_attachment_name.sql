@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.fatsmurf_attachment DROP CONSTRAINT ck_fatsmurf_attachment_len_attachment_name;
+

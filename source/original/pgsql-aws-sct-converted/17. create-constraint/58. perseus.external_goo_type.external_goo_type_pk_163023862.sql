@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.external_goo_type
+ADD CONSTRAINT external_goo_type_pk_163023862 PRIMARY KEY (id);
+

@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.field_map_display_type DROP CONSTRAINT uq__field_ma__f9589110301ac9fb;
+

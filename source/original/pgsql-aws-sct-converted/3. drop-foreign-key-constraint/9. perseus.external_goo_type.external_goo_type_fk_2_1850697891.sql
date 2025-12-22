@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.external_goo_type DROP CONSTRAINT external_goo_type_fk_2_1850697891;
+

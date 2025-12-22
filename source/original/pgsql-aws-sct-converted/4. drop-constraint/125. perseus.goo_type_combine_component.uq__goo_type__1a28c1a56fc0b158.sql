@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.goo_type_combine_component DROP CONSTRAINT uq__goo_type__1a28c1a56fc0b158;
+

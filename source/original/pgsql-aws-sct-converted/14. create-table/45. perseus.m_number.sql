@@ -1,0 +1,7 @@
+CREATE TABLE perseus_dbo.m_number(
+    id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY(START WITH 900000)
+)
+        WITH (
+        OIDS=FALSE
+        );
+

@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.smurf
+ADD CONSTRAINT smurf_pk_773577794 PRIMARY KEY (id);
+

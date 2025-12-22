@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.cm_unit_dimensions DROP CONSTRAINT ck_cm_unit_dimensions_len_name;
+

@@ -1,0 +1,4 @@
+CREATE INDEX ix_material_inventory_threshold_material_type_id
+ON perseus_dbo.material_inventory_threshold
+USING BTREE (material_type_id ASC);
+

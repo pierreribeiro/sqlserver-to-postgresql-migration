@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.material_transition DROP CONSTRAINT ck_material_transition_len_material_id;
+

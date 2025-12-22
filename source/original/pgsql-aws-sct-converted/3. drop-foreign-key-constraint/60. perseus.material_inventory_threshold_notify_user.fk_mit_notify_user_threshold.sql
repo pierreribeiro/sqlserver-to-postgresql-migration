@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.material_inventory_threshold_notify_user DROP CONSTRAINT fk_mit_notify_user_threshold_1535864013;
+

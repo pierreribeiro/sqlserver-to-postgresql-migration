@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.m_upstream_dirty_leaves DROP CONSTRAINT ck_m_upstream_dirty_leaves_len_material_uid;
+

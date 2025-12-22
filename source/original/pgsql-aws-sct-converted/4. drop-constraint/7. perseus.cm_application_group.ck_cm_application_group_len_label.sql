@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.cm_application_group DROP CONSTRAINT ck_cm_application_group_len_label;
+

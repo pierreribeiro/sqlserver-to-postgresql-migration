@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.fatsmurf_reading DROP CONSTRAINT fatsmurf_reading_pk_1494504603;
+

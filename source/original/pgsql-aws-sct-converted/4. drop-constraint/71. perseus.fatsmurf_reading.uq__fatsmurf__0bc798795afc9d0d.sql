@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.fatsmurf_reading DROP CONSTRAINT uq__fatsmurf__0bc798795afc9d0d;
+

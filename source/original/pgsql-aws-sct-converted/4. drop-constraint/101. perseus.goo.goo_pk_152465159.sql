@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.goo DROP CONSTRAINT goo_pk_152465159;
+

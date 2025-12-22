@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.material_transition DROP CONSTRAINT fk_material_transition_fatsmurf_648466926;
+

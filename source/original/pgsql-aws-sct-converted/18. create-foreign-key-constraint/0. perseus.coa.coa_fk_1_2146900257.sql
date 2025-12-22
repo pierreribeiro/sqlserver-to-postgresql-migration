@@ -1,0 +1,6 @@
+ALTER TABLE perseus_dbo.coa
+ADD CONSTRAINT coa_fk_1_2146900257 FOREIGN KEY (goo_type_id) 
+REFERENCES perseus_dbo.goo_type (id)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION;
+

@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.transition_material DROP CONSTRAINT fk_transition_material_goo_946232013;
+

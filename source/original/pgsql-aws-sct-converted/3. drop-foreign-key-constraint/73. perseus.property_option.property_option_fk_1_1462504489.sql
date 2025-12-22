@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.property_option DROP CONSTRAINT property_option_fk_1_1462504489;
+

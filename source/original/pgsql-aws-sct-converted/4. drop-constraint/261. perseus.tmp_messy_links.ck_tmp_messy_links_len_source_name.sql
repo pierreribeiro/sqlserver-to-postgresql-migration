@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.tmp_messy_links DROP CONSTRAINT ck_tmp_messy_links_len_source_name;
+

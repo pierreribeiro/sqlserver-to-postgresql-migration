@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.smurf_property DROP CONSTRAINT uq__smurf_pr__92833c0b5be2a6f2_1122103038;
+

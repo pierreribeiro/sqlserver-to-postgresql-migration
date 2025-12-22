@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS perseus_dbo.ix_robot_log_transfer_ix_robot_log_transfer_robot_log_id;
+

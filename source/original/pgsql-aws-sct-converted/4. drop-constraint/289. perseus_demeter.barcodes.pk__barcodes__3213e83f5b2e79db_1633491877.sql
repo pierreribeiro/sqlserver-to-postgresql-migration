@@ -1,0 +1,2 @@
+ALTER TABLE perseus_demeter.barcodes DROP CONSTRAINT pk__barcodes__3213e83f5b2e79db_1633491877;
+

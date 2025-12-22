@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.goo_attachment_type DROP CONSTRAINT ck_goo_attachment_type_len_name;
+

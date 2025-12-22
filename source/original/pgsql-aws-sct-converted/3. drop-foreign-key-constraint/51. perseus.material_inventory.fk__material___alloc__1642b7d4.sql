@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.material_inventory DROP CONSTRAINT fk__material___alloc__1642b7d4;
+

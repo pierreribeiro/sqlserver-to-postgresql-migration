@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.submission_entry DROP CONSTRAINT ck__submissio__sampl__4814495f;
+

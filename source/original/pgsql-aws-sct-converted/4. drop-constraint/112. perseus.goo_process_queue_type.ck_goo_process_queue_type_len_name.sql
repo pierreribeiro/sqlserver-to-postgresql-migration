@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.goo_process_queue_type DROP CONSTRAINT ck_goo_process_queue_type_len_name;
+

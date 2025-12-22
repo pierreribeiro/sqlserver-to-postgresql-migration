@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.workflow_step_type DROP CONSTRAINT workflow_step_type_pk_154704595;
+

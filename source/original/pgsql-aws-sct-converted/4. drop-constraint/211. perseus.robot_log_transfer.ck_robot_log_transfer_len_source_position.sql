@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.robot_log_transfer DROP CONSTRAINT ck_robot_log_transfer_len_source_position;
+

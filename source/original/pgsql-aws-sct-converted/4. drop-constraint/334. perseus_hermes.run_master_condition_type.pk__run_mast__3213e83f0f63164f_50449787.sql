@@ -1,0 +1,2 @@
+ALTER TABLE perseus_hermes.run_master_condition_type DROP CONSTRAINT pk__run_mast__3213e83f0f63164f_50449787;
+

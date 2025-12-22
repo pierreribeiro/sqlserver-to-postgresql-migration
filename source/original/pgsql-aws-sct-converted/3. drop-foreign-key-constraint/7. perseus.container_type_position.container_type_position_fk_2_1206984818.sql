@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.container_type_position DROP CONSTRAINT container_type_position_fk_2_1206984818;
+

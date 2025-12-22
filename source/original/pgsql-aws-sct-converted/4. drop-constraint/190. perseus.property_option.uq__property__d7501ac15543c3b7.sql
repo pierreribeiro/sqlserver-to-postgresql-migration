@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.property_option DROP CONSTRAINT uq__property__d7501ac15543c3b7;
+

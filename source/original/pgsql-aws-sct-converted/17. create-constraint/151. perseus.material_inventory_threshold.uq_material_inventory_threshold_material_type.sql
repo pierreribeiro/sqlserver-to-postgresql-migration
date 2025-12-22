@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.material_inventory_threshold
+ADD CONSTRAINT uq_material_inventory_threshold_material_type UNIQUE (material_type_id);
+

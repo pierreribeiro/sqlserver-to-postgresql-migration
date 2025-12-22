@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.prefix_incrementor DROP CONSTRAINT prefix_incrementor_pk_80744832;
+

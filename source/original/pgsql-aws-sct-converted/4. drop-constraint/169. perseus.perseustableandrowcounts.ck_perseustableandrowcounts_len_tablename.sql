@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.perseustableandrowcounts DROP CONSTRAINT ck_perseustableandrowcounts_len_tablename;
+

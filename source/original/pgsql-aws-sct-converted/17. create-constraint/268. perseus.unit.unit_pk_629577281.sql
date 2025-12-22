@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.unit
+ADD CONSTRAINT unit_pk_629577281 PRIMARY KEY (id);
+

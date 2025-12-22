@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS perseus_dbo.ix_transition_material_ix_transition_material_material_id;
+

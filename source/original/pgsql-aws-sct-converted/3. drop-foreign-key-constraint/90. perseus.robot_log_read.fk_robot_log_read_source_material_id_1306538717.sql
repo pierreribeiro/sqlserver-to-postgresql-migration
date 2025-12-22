@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.robot_log_read DROP CONSTRAINT fk_robot_log_read_source_material_id_1306538717;
+

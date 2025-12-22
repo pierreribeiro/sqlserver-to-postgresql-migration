@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.transition_material DROP CONSTRAINT pk__transiti__a691e4b26dcf7a5f_568466641;
+

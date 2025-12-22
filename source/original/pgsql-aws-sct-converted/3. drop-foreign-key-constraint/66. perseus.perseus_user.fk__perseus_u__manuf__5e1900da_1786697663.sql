@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.perseus_user DROP CONSTRAINT fk__perseus_u__manuf__5e1900da_1786697663;
+

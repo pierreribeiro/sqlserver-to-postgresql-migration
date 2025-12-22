@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.fatsmurf_history DROP CONSTRAINT fatsmurf_history_fk_1_687549733;
+

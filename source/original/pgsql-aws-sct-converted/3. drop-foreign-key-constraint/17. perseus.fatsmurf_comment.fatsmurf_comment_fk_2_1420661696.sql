@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.fatsmurf_comment DROP CONSTRAINT fatsmurf_comment_fk_2_1420661696;
+

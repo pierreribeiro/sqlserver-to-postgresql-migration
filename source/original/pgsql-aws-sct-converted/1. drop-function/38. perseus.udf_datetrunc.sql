@@ -1,0 +1,2 @@
+DROP ROUTINE IF EXISTS perseus_dbo.udf_datetrunc(IN TIMESTAMP WITHOUT TIME ZONE);
+

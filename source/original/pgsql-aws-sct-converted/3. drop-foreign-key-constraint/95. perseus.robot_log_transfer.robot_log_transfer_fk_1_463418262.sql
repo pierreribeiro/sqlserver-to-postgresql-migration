@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.robot_log_transfer DROP CONSTRAINT robot_log_transfer_fk_1_463418262;
+

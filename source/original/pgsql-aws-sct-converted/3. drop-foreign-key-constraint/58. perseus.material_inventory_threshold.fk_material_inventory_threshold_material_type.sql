@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.material_inventory_threshold DROP CONSTRAINT fk_material_inventory_threshold_material_type_1455863728;
+

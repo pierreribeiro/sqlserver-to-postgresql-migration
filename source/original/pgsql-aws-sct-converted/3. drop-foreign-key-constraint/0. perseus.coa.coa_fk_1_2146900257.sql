@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.coa DROP CONSTRAINT coa_fk_1_2146900257;
+

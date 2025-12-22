@@ -1,0 +1,2 @@
+ALTER TABLE perseus_hermes.run_master_condition DROP CONSTRAINT ck_run_master_condition_len_units;
+

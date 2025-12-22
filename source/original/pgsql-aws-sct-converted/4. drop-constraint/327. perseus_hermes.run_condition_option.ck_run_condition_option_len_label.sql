@@ -1,0 +1,2 @@
+ALTER TABLE perseus_hermes.run_condition_option DROP CONSTRAINT ck_run_condition_option_len_label;
+

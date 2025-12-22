@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.robot_log_transfer DROP CONSTRAINT fk_robot_log_transfer_destination_material_id_1370538945;
+

@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.cm_application_group DROP CONSTRAINT pk_cm_application_group_960252909;
+

@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.poll DROP CONSTRAINT poll_pk_372586253;
+

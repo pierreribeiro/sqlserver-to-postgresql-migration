@@ -1,0 +1,6 @@
+ALTER TABLE perseus_dbo.coa_spec
+ADD CONSTRAINT coa_spec_fk_1_771026028 FOREIGN KEY (coa_id) 
+REFERENCES perseus_dbo.coa (id)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION;
+

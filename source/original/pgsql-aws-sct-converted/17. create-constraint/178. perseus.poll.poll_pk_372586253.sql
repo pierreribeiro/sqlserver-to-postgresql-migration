@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.poll
+ADD CONSTRAINT poll_pk_372586253 PRIMARY KEY (id);
+

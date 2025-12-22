@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.prefix_incrementor DROP CONSTRAINT ck_prefix_incrementor_len_prefix;
+

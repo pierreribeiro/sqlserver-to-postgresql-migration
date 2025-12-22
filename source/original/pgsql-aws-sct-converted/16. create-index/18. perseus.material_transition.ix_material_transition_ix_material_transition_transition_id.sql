@@ -1,0 +1,4 @@
+CREATE INDEX ix_material_transition_ix_material_transition_transition_id
+ON perseus_dbo.material_transition
+USING BTREE (transition_id ASC);
+

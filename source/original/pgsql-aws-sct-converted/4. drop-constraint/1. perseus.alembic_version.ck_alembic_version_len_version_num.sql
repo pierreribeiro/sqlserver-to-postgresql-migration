@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.alembic_version DROP CONSTRAINT ck_alembic_version_len_version_num;
+

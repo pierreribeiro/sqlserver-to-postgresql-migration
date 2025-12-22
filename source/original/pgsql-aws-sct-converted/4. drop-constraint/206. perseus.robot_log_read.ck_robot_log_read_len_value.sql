@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.robot_log_read DROP CONSTRAINT ck_robot_log_read_len_value;
+

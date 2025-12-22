@@ -1,0 +1,3 @@
+ALTER TABLE perseus_dbo.goo
+ADD CONSTRAINT goo_pk_152465159 PRIMARY KEY (id);
+

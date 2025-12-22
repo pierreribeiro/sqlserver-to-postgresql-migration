@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.smurf_property DROP CONSTRAINT ck_smurf_property_len_calculated;
+

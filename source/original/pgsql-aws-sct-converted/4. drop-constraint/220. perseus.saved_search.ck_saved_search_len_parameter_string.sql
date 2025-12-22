@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.saved_search DROP CONSTRAINT ck_saved_search_len_parameter_string;
+

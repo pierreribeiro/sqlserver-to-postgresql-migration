@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS perseus_dbo.ix_fatsmurf_ix_fatsmurf_container_id;
+

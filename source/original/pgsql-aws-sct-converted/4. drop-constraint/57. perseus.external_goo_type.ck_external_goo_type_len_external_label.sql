@@ -1,0 +1,2 @@
+ALTER TABLE perseus_dbo.external_goo_type DROP CONSTRAINT ck_external_goo_type_len_external_label;
+

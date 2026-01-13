@@ -1,5 +1,5 @@
 # Força o Git a detectar automaticamente se o arquivo é texto
-* text=auto
+* text=auto eol=lf
 
 # Arquivos de código fonte: Garante que no repositório fiquem como LF
 # mas no seu Windows eles serão CRLF

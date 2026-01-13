@@ -1,0 +1,23 @@
+# Força o Git a detectar automaticamente se o arquivo é texto
+* text=auto
+
+# Arquivos de código fonte: Garante que no repositório fiquem como LF
+# mas no seu Windows eles serão CRLF
+*.sql text
+*.js text
+*.json text
+*.py text
+*.html text
+*.css text
+
+# Se você quiser que os arquivos SQL especificamente SEMPRE mantenham 
+# o padrão Windows (CRLF) mesmo no repositório:
+# *.sql text eol=crlf
+
+# Arquivos Binários (não devem ser alterados pelo Git)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

@@ -1,0 +1,24 @@
+/speckit.specify
+Migrate T-SQL (SQL Server) objects to PGSQL (PostgreSQL)
+## Contexto
+1. Cenário Atual (As-Is)
+O banco de dados Perseus é o backend da aplicação Pegasus, responsável pelo rastreamento de amostras de materiais, processos, mídia e receitas de matéria-prima.
+1.1. Infraestrutura e Contexto
+Origem:Cluster MSSQL Server (instance sqlappsta), versão SQL Server 2014 Enterprise.
+1.2. Inventário de Objetos (Produção)
+Leia o documento docs/PROJECT-SPECIFICATION.md
+1.3. Dependências e Integrações
+Leia o documento docs/PROJECT-SPECIFICATION.md
+2. Cenário Futuro (To-Be)
+Ter o banco de dados Perseus rodando em um cluster PostgreSQL com todas as replicações e integrações em funcionamento.
+## Objetivo
+1. Objetivo do projeto
+1.1 Refatorar (reescrever) todos os objetos (metadados) em linguagem T-SQL (SQL Server) para PGSQL (PostgreSQL)
+## Atividades
+1. Revisar e utilizar como modelo o arquivo em docs/PROJECT-SPECIFICATION.md
+2. Cada objeto deverá passar pelo seguinte ciclo Análise, Refatoração (correção), Validação (testes), Deployment
+3. Os arquivos em docs/code-analysis/dependency-analysis* apresentam analises de dependência de objetos e DEVEM ser reutilizados no projeto.
+4. Criar um novo documento de especificação do projeto abrangendo a refatoração de todos os objetos do database Perseus. Utilize como apoio os documentos: 
+a) legacy/docs/TODO/Template-Project-Plan.md
+b) .specify/memory/constitution.md
+5. Os objetos procedures já foram refatorados e estão fora do escopo.

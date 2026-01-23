@@ -226,6 +226,13 @@ Exit: All 22 views pass validation + performance benchmarks within ±20%
 
 Use `ToolSearch` to discover full MCP catalog.
 
+## Database Agents (Use PROACTIVELY)
+
+**1. sql-pro** ⭐⭐⭐⭐⭐ - ALL SQL refactoring (analysis T034-T038, refactoring T040-T073, validation T047-T091)
+**2. database-optimization** ⭐⭐⭐⭐ - Performance ±20% (T052, T118, T179-T183, T220-T222) + EXPLAIN ANALYZE
+**3. shell-scripting-pro** ⭐⭐⭐⭐ - Bash scripts (T013-T021, T030) with `set -euo pipefail`
+**4. database-admin** ⭐⭐⭐ - Infrastructure only (T006, T027, T254-T262, T291-T293)
+
 ## Naming Conventions
 
 **PascalCase → snake_case (MANDATORY):**
@@ -247,16 +254,9 @@ usp_UpdateContainerType    → update_container_type (drop usp_)
 
 ## Common Pitfalls
 
-1. Implicit type casting → Always explicit CAST or ::
-2. Transaction scope in functions → Use procedures for autonomous transactions
-3. Temp table syntax (#temp → CREATE TEMPORARY TABLE tmp_)
-4. Search path reliance → Schema-qualify everything
-5. WHILE loops → Set-based operations (CTEs, window functions)
-6. Generic exceptions (WHEN OTHERS only) → Specific exception types
-7. AWS SCT blind trust → Always manual review (~30% requires fixes)
-8. Missing transaction control → Explicit BEGIN/COMMIT in procedures
-9. Case-sensitive comparisons → Use LOWER() or ILIKE
-10. Unqualified object names → Always use schema_name.object_name
+1. Implicit casting → CAST() or :: | 2. #temp → CREATE TEMPORARY TABLE | 3. Search path → schema.object
+4. WHILE loops → CTEs/window functions | 5. WHEN OTHERS only → Specific exceptions | 6. AWS SCT blind trust
+7. Missing BEGIN/COMMIT | 8. Unqualified names | 9. Case-sensitive → LOWER()/ILIKE
 
 ## Documentation References
 

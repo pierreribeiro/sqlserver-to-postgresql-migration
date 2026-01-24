@@ -67,18 +67,18 @@ This is a database migration project with the following structure:
 
 **Purpose**: Project initialization, tooling, and basic migration framework
 
-- [ ] T001 Create complete project directory structure per plan.md
-- [ ] T002 [P] Initialize tracking inventory in tracking/database-objects-inventory.csv with all 769 objects
-- [ ] T003 [P] Create priority matrix in tracking/priority-matrix.csv mapping objects to P1/P2/P3
-- [ ] T004 [P] Initialize progress tracker in tracking/progress-tracker.md
-- [ ] T005 [P] Create risk register in tracking/risk-register.md
+- [X] T001 Create complete project directory structure per plan.md
+- [X] T002 [P] Initialize tracking inventory in tracking/database-objects-inventory.csv with all 769 objects
+- [X] T003 [P] Create priority matrix in tracking/priority-matrix.csv mapping objects to P1/P2/P3
+- [X] T004 [P] Initialize progress tracker in tracking/progress-tracker.md
+- [X] T005 [P] Create risk register in tracking/risk-register.md
 - [ ] T006 Setup PostgreSQL 17 development environment (local or AWS RDS)
 - [ ] T007 [P] Configure AWS Schema Conversion Tool (SCT) for baseline conversion
 - [ ] T008 [P] Extract all SQL Server object definitions to source/original/sqlserver/
 - [ ] T009 Run AWS SCT baseline conversion to source/original/pgsql-aws-sct-converted/
-- [ ] T010 [P] Create analysis template in templates/analysis-template.md
-- [ ] T011 [P] Create object template in templates/object-template.sql
-- [ ] T012 [P] Create test templates in templates/test-templates/
+- [X] T010 [P] Create analysis template in templates/analysis-template.md
+- [X] T011 [P] Create object template in templates/object-template.sql
+- [X] T012 [P] Create test templates in templates/test-templates/
 
 ---
 

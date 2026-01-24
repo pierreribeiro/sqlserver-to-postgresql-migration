@@ -23,6 +23,46 @@ This is a database migration project with the following structure:
 
 ---
 
+## Clarifications Applied (2026-01-23)
+
+**60 clarification questions answered** affecting task execution. Key decisions for implementers:
+
+### Validation Tasks
+- **Row validation**: Use row-by-row MD5/SHA256 hash comparison
+- **Floating-point tolerance**: 1e-10 relative tolerance acceptable
+- **NULL validation**: Compare column-level NULL counts
+- **Performance baseline**: Warm cache, 3-run median, production-equivalent data
+
+### Rollback & Recovery Tasks
+- **Rollback window**: 7 days (not 30 days)
+- **Rollback scope**: Object-level (revert failed object only, keep successful ones)
+- **Cutover checkpoint**: Go/no-go decision at hour 6
+
+### Quality Gate Tasks
+- **Quality scores**: Tiered by priority (P0≥9.0, P1≥8.0, P2/P3≥7.0)
+- **Test coverage**: 100% P0 objects, 90% P1, 80% P2/P3
+- **Constitution gate**: Block PROD only (allow DEV/STAGING for iteration)
+
+### Integration Tasks
+- **FDW retry**: 3x exponential backoff (1s, 2s, 4s)
+- **FDW pool**: Size 10, lifetime 30 min, idle timeout 5 min
+- **FDW validation**: Pre-migration connectivity test in staging
+- **Replication SLA**: p95 within 5 minutes
+- **Replication alerts**: 2 min info, 5 min warning, 10 min critical
+
+### Deployment Tasks
+- **Phase gates**: Automated prerequisite checks, block on failure
+- **Schema validation**: Automated pre-deployment scan for unqualified references
+- **Constitution compliance**: Automated linting + manual spot-check
+
+### Edge Case Tasks
+- **Original 8 edge cases**: P0 priority, mandatory 100% test coverage
+- **3 new edge cases**: Empty tables, max-row tables, concurrent DDL
+
+**Full details**: See `spec.md` Clarifications section and `plan.md` Clarifications Applied section
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization, tooling, and basic migration framework
@@ -567,7 +607,7 @@ This is a database migration project with the following structure:
 ### Pre-Cutover Preparation
 
 - [ ] T274 Create production cutover runbook
-- [ ] T275 [P] Validate all STAGING deployments are stable (30-day measurement)
+- [ ] T275 [P] Validate all STAGING deployments are stable (7-day measurement)
 - [ ] T276 [P] Verify all quality scores ≥8.0/10 average (SC-013)
 - [ ] T277 [P] Verify all performance baselines within 20% degradation (SC-004)
 - [ ] T278 Create production backup and rollback procedures
@@ -599,7 +639,7 @@ This is a database migration project with the following structure:
 - [ ] T298 Verify zero production incidents (SC-010)
 - [ ] T299 Confirm cutover downtime <8 hours (SC-011)
 
-### Post-Production Monitoring (30-day period)
+### Post-Production Monitoring (7-day period)
 
 - [ ] T300 Monitor database availability (target: 99.9% uptime per SC-015)
 - [ ] T301 Monitor query performance trends
@@ -607,8 +647,8 @@ This is a database migration project with the following structure:
 - [ ] T303 Monitor FDW connection stability
 - [ ] T304 Monitor materialized view refresh performance
 - [ ] T305 Monitor job execution success rates
-- [ ] T306 Maintain rollback capability for 30 days (AS-014)
-- [ ] T307 Decommission SQL Server after 30-day stability period
+- [ ] T306 Maintain rollback capability for 7 days (AS-014 aligned with CN-023)
+- [ ] T307 Decommission SQL Server after 7-day stability period
 
 ---
 
@@ -769,7 +809,7 @@ Task: "Create check constraints in source/building/pgsql/refactored/constraints/
 3. **External Integration** (Week 6): US4 (FDW) → Cross-database queries restored
 4. **Data Synchronization** (Week 7): US5 (Replication) → Warehouse integration restored
 5. **Automation** (Week 8): US6 (Jobs) → Full operational capability
-6. **Production Cutover** (Week 9): Cutover + 30-day monitoring
+6. **Production Cutover** (Week 9): Cutover + 7-day monitoring
 7. Each phase adds value without breaking previous phases
 
 ### Parallel Team Strategy
@@ -807,7 +847,7 @@ With multiple database engineers:
 - Verify quality scores ≥7.0/10 before proceeding to deployment phase
 - Document all naming conversions in the mapping table
 - Follow constitution's seven core principles throughout implementation
-- Maintain SQL Server rollback capability for 30 days post-migration
+- Maintain SQL Server rollback capability for 7 days post-migration
 
 ---
 

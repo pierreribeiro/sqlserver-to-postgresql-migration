@@ -14,7 +14,7 @@
 - Follow dependency-driven sequencing from analysis documents (lote1-4)
 - Apply four-phase workflow per object: Analysis → Refactoring → Validation → Deployment
 - Enforce constitution compliance (7 core principles) with ≥7.0/10 quality scores
-- Maintain SQL Server rollback capability for 30 days post-migration
+- Maintain SQL Server rollback capability for 7 days post-migration
 
 ## Technical Context
 
@@ -36,13 +36,13 @@
 - Query execution within 20% of SQL Server baseline
 - FDW query latency <2x SQL Server linked server latency
 - Replication lag <5 minutes (p95)
-- Materialized view refresh performance: NEEDS CLARIFICATION (frequency, data volume impact)
+- Materialized view refresh performance: Under 10 minutes with REFRESH CONCURRENTLY (no query blocking)
 **Constraints**:
 - Zero data loss (100% integrity via row count + checksum)
 - <8 hour cutover downtime window
 - 99.9% availability post-migration (30-day measurement)
 - Quality score ≥7.0/10 per object (≥8.0/10 average)
-- Rollback capability maintained for 30 days
+- Rollback capability maintained for 7 days
 - Schema-qualified references only (no search_path usage)
 **Scale/Scope**:
 - 22 views (including materialized views for indexed views)
@@ -386,6 +386,77 @@ However, this complexity is **justified and unavoidable** for a production datab
 2. **Execute tasks** following dependency order from data-model.md
 3. **Track progress** using task checklist and quality gates
 4. **Deploy incrementally** DEV → STAGING → PRODUCTION per phase 4 contracts
+
+---
+
+## Clarifications Applied (Session 2026-01-23)
+
+**60 clarification questions answered** to achieve ~100% coverage of migration-thorough-gate.md checklist. Key decisions:
+
+### Data Integrity & Validation
+- **Row validation**: Row-by-row hash comparison (MD5/SHA256 per row)
+- **Floating-point tolerance**: 1e-10 relative tolerance
+- **NULL validation**: Column-level NULL counts comparison
+- **Column length mismatch**: Auto-expand PostgreSQL column to accommodate data
+
+### Migration Workflow & Sequencing
+- **Rollback scope**: Object-level rollback (revert failed object only)
+- **Rollback window**: 7 days (aligned AS-014 and CN-023)
+- **Cutover allocation**: 1h pre-checks, 4h migration, 2h validation, 1h buffer
+- **Cutover checkpoint**: Go/no-go at hour 6; rollback if projected >8h
+- **Phase gates**: Automated prerequisite checks, block on failure
+- **Dependency validation**: Automated cross-reference with sys.sql_expression_dependencies
+
+### External Integration
+- **FDW retry**: 3 retries with exponential backoff (1s, 2s, 4s)
+- **FDW connection pool**: Size 10, lifetime 30 min, idle timeout 5 min
+- **FDW pushdown validation**: EXPLAIN ANALYZE verification for key queries
+- **FDW compatibility**: Pre-migration connectivity test in staging
+- **Replication SLA**: p95 within 5 minutes
+- **Replication conflicts**: Source wins (PostgreSQL overwrites sqlwarehouse2)
+- **Replication recovery**: Auto-recovery with batch catch-up
+- **Replication alerts**: Three-tier (2 min info, 5 min warning, 10 min critical)
+
+### Exception & Error Handling
+- **PostgreSQL exceptions**: Catch and wrap in standardized format
+- **Deadlock handling**: 3 retries with exponential backoff (100ms/200ms/400ms)
+- **Validation failure**: Block deployment, generate detailed diff report
+- **Performance degradation**: Flag for optimization, allow with documented exception
+- **Migration failure alerts**: Auto-alert DBA, escalate after 30 minutes
+
+### Non-Functional Requirements
+- **Performance baseline**: Warm cache, 3-run median, production-equivalent data
+- **Concurrent load**: Production-equivalent user load
+- **Materialized view refresh**: Under 10 minutes with REFRESH CONCURRENTLY
+- **Failover time**: Under 60 seconds automatic failover
+- **Disaster recovery**: RPO 5 minutes / RTO 1 hour
+- **Encryption**: TLS 1.3 for transit, AES-256 for at rest
+- **Maintenance window**: Monthly 4-hour window
+- **Audit logging**: DDL and security events only
+- **Auto-scaling**: Cloud-native infrastructure (AWS RDS/Aurora)
+
+### Quality & Compliance
+- **Quality scores**: Tiered by priority (P0=9.0, P1=8.0, P2/P3=7.0 minimum)
+- **Constitution compliance**: Automated linting + manual spot-check
+- **Constitution gate**: Production only (allow DEV/STAGING for iteration)
+- **Schema qualification**: Automated pre-deployment scan
+- **Test coverage**: 100% P0 objects, 90% P1, 80% P2/P3
+- **Naming convention**: Full snake_case, mapping table for reference
+
+### Edge Cases
+- **Original 8 edge cases**: Marked as P0 with mandatory 100% test coverage
+- **Added 3 new edge cases**: Empty tables, max-row tables, concurrent DDL
+- **Circular dependencies**: Refactor to eliminate before migration
+- **Encoding conversion**: UTF-8 with validation, flag unconvertible characters
+- **Datetime handling**: Treat as UTC → TIMESTAMP WITH TIME ZONE
+- **Constraint loading**: Load data first, enable constraints with violation report
+
+### Traceability
+- **User story alignment**: All acceptance scenarios map to functional requirements
+- **AWS SCT validation**: Trust assumption, validate during object migration
+- **Zero data loss**: Current methods sufficient (row count + hash + NULL counts)
+
+**Full details**: See `spec.md` Clarifications section (60 Q&A entries)
 
 ---
 

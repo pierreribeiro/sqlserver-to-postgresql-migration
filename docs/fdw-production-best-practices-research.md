@@ -76,8 +76,7 @@ CREATE SERVER hermes_fdw
     -- Performance settings
     fetch_size '5000',                -- Batch size for SELECT queries
     use_remote_estimate 'true',       -- Get accurate costs from remote
-    async_capable 'true',             -- Enable asynchronous execution (PG14+)
-    extensions 'pg_stat_statements'   -- Shared extensions (if applicable)
+    async_capable 'true'              -- Enable asynchronous execution (PG14+)
   );
 
 -- User Mapping with SCRAM authentication

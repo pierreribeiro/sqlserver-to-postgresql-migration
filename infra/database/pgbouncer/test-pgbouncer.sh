@@ -289,14 +289,16 @@ test_direct_vs_pooled_performance() {
 
 test_authentication() {
     print_test "Authentication file is secure"
-    local userlist_path="/Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/userlist.txt"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local userlist_path="${script_dir}/userlist.txt"
 
-    if [ -f "$userlist_path" ]; then
-        local perms=$(stat -f "%Lp" "$userlist_path" 2>/dev/null || stat -c "%a" "$userlist_path" 2>/dev/null)
-        if [ "$perms" = "600" ]; then
-            test_pass "File permissions: $perms (secure)"
+    if [ -f "${userlist_path}" ]; then
+        local perms=$(stat -f "%Lp" "${userlist_path}" 2>/dev/null || stat -c "%a" "${userlist_path}" 2>/dev/null)
+        if [ "${perms}" = "600" ]; then
+            test_pass "File permissions: ${perms} (secure)"
         else
-            test_fail "File permissions: $perms (should be 600)"
+            test_fail "File permissions: ${perms} (should be 600)"
             return 1
         fi
     else

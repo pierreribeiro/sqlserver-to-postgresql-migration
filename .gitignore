@@ -43,4 +43,4 @@ build/
 
 # Infrastructure - local development
 infra/database/.secrets/
-infra/database/pgdata/.claude/command-log.txt
+infra/database/pgdata/

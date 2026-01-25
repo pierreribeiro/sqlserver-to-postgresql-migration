@@ -599,20 +599,23 @@ CREATE USER MAPPING FOR perseus_app
 **Recommendation for Perseus:**
 - **Production:** SCRAM-SHA-256 with passwords in user mappings (encrypted in pg_user_mapping)
 - **CI/CD:** Use .pgpass file with restricted permissions
-- **Future:** Integrate with enterprise secret management (Vault, AWS Secrets Manager)
+-- Make FDW sessions identifiable on the *foreign* server (libpq GUC pass-through)
+ALTER SERVER hermes_fdw OPTIONS (ADD options '-c application_name=perseus_fdw');
 
----
-
-## 5. Monitoring & Observability
-
-### 5.1 Key Metrics to Monitor
-
-#### 5.1.1 Connection Metrics
-
-```sql
--- View active FDW connections from local server
+-- View active FDW connections (run on each foreign server)
 SELECT
     usename,
+    application_name,
+    client_addr,
+    state,
+    query_start,
+    state_change,
+    wait_event_type,
+    wait_event,
+    query
+FROM pg_stat_activity
+WHERE application_name = 'perseus_fdw'
+ORDER BY query_start DESC;
     application_name,
     client_addr,
     state,

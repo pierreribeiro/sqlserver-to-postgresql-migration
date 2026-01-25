@@ -583,6 +583,7 @@ DECLARE
     v_test_status VARCHAR(20);
     v_delta_pct NUMERIC;
     v_error_msg TEXT;
+    v_rec RECORD;
 BEGIN
     RAISE NOTICE '';
     RAISE NOTICE '===================================================================';
@@ -721,7 +722,7 @@ BEGIN
 
     RAISE NOTICE '';
     RAISE NOTICE 'Detailed Results:';
-    FOR v_test_status, v_delta_pct IN
+    FOR v_rec IN
         SELECT
             object_name,
             status
@@ -729,7 +730,7 @@ BEGIN
         WHERE test_run_id = v_test_run_id
         ORDER BY status, object_name
     LOOP
-        RAISE NOTICE '  % - %', RPAD(v_test_status, 40), v_delta_pct;
+        RAISE NOTICE '  % - %', RPAD(v_rec.object_name, 40), v_rec.status;
     END LOOP;
 
     RAISE NOTICE '';

@@ -354,23 +354,22 @@ calculate_quality_score() {
     [ "$TESTS_PASSED" -ge 5 ] && syntax_score=15
     [ "$TESTS_PASSED" -ge 8 ] && syntax_score=20
 
-    # 2. Configuration Correctness (30 points)
-    grep -q "pool_size=10" /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/pgbouncer.ini && config_score=$((config_score + 10))
-    grep -q "server_lifetime = 1800" /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/pgbouncer.ini && config_score=$((config_score + 10))
-    grep -q "server_idle_timeout = 300" /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/pgbouncer.ini && config_score=$((config_score + 10))
+    local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local pgbouncer_ini="${SCRIPT_DIR}/pgbouncer.ini"
 
-    # 3. Performance (20 points)
-    [ "$TESTS_PASSED" -ge 10 ] && performance_score=10
-    [ "$TESTS_PASSED" -ge 12 ] && performance_score=20
+    # 2. Configuration Correctness (30 points)
+    grep -q "pool_size=10" "${pgbouncer_ini}" && config_score=$((config_score + 10))
+    grep -q "server_lifetime = 1800" "${pgbouncer_ini}" && config_score=$((config_score + 10))
+    grep -q "server_idle_timeout = 300" "${pgbouncer_ini}" && config_score=$((config_score + 10))
 
     # 4. Security (15 points)
-    [ -f "/Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/.gitignore" ] && security_score=$((security_score + 5))
-    [ -f "/Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/userlist.txt" ] && security_score=$((security_score + 5))
-    grep -q "auth_type = md5" /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/pgbouncer.ini && security_score=$((security_score + 5))
+    [ -f "${SCRIPT_DIR}/.gitignore" ] && security_score=$((security_score + 5))
+    [ -f "${SCRIPT_DIR}/userlist.txt" ] && security_score=$((security_score + 5))
+    grep -q "auth_type = md5" "${pgbouncer_ini}" && security_score=$((security_score + 5))
 
     # 5. Documentation (15 points)
-    [ -f "/Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/README.md" ] && documentation_score=$((documentation_score + 10))
-    [ -f "/Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/monitor-pgbouncer.sh" ] && documentation_score=$((documentation_score + 5))
+    [ -f "${SCRIPT_DIR}/README.md" ] && documentation_score=$((documentation_score + 10))
+    [ -f "${SCRIPT_DIR}/monitor-pgbouncer.sh" ] && documentation_score=$((documentation_score + 5))
 
     # Calculate total score
     local total_score=$((syntax_score + config_score + performance_score + security_score + documentation_score))

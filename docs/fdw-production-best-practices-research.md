@@ -167,12 +167,19 @@ DECLARE
     v_backoff_ms INTEGER := 100;
     v_safe_query TEXT;
     v_quoted_params TEXT[];
-BEGIN
-    -- SAFETY: p_query_template must be trusted and use only %s placeholders.
-    -- Parameters are always passed through quote_literal() before substitution.
-    IF array_length(p_params, 1) > 0 THEN
-        SELECT array_agg(quote_literal(p))
-        INTO v_quoted_params
+    BEGIN
+        -- SAFETY: `p_query_template` must be a single trusted SELECT statement and use only %L placeholders.
+        IF p_query_template ~ ';' THEN
+            RAISE EXCEPTION 'FDW query template must be a single statement (no semicolons)';
+        END IF;
+
+        IF p_query_template !~* '^\s*select\b' THEN
+            RAISE EXCEPTION 'FDW query template must be a SELECT statement';
+        END IF;
+
+        IF array_length(p_params, 1) > 0 THEN
+            SELECT array_agg(p)
+            INTO v_quoted_params
         FROM unnest(p_params) AS p;
 
         v_safe_query := format(p_query_template, VARIADIC v_quoted_params);

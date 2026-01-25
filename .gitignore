@@ -40,3 +40,7 @@ logs/
 dist/
 build/
 *.pyc
+
+# Infrastructure - local development
+infra/database/.secrets/
+infra/database/pgdata/

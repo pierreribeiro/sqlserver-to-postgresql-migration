@@ -1,0 +1,150 @@
+# Perseus Database Migration - PostgreSQL 17 Development Environment
+# Docker Compose configuration for local PostgreSQL instance
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: perseus-postgres-dev
+    restart: unless-stopped
+
+    # Port mapping - accessible from macOS host
+    ports:
+      - "5432:5432"
+
+    # Environment variables for database initialization
+    environment:
+      # Database credentials - password from Docker Secret
+      POSTGRES_USER: perseus_admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: perseus_dev
+
+      # Locale and encoding settings (UTF-8 compliance per spec)
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8 --data-checksums"
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+
+      # Timezone configuration
+      TZ: America/Sao_Paulo
+      PGTZ: America/Sao_Paulo
+
+    # Volume for data persistence
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+
+    # Docker Secrets for password
+    secrets:
+      - postgres_password
+
+    # PostgreSQL configuration tuning for development
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "wal_buffers=8MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "log_destination=stderr"
+      - "-c"
+      - "logging_collector=on"
+      - "-c"
+      - "log_directory=/var/lib/postgresql/data/pg_log"
+      - "-c"
+      - "log_filename=postgresql-%Y-%m-%d_%H%M%S.log"
+      - "-c"
+      - "log_rotation_age=1d"
+      - "-c"
+      - "log_rotation_size=100MB"
+      - "-c"
+      - "log_statement=ddl"
+      - "-c"
+      - "log_duration=on"
+      - "-c"
+      - "log_line_prefix=%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h "
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perseus_admin -d perseus_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    # Network configuration
+    networks:
+      - perseus-network
+
+  # PgBouncer connection pooler
+  pgbouncer:
+    build:
+      context: ./pgbouncer
+      dockerfile: Dockerfile
+    container_name: perseus-pgbouncer-dev
+    restart: unless-stopped
+
+    # Port mapping - PgBouncer accessible on port 6432
+    ports:
+      - "6432:6432"
+
+    # Environment variables
+    environment:
+      # Database connection settings
+      PGBOUNCER_AUTH_TYPE: md5
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 1000
+      PGBOUNCER_DEFAULT_POOL_SIZE: 25
+
+    # Volumes for configuration and logs
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+      - pgbouncer-logs:/var/log/pgbouncer
+
+    # Depends on PostgreSQL being available
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "psql -h localhost -p 6432 -U pgbouncer -d pgbouncer -c 'SHOW POOLS;' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    # Network configuration
+    networks:
+      - perseus-network
+
+# Docker Secrets definition
+secrets:
+  postgres_password:
+    file: ./.secrets/postgres_password.txt
+
+# Volume definitions
+volumes:
+  pgbouncer-logs:
+    name: perseus-pgbouncer-logs
+
+# Network definition
+networks:
+  perseus-network:
+    driver: bridge
+    name: perseus-dev-network

@@ -84,7 +84,7 @@ CREATE USER MAPPING FOR perseus_app
   SERVER hermes_fdw
   OPTIONS (
     user 'perseus_readonly',
-    password 'SCRAM-SHA-256$...'  -- Use SCRAM-hashed password
+    password 'secure_password_here'  -- Store securely (e.g., secrets manager); SCRAM is negotiated by the server
   );
 ```
 

@@ -227,12 +227,12 @@ $$;
 Protect against hanging queries on foreign servers:
 
 ```sql
--- Set statement timeout for FDW queries
-ALTER SERVER hermes_fdw OPTIONS (ADD statement_timeout '30000');  -- 30 seconds
+-- Set statement timeout for FDW queries (pass GUC via libpq)
+ALTER SERVER hermes_fdw OPTIONS (ADD options '-c statement_timeout=30s');
 
 -- Or per-user mapping
 ALTER USER MAPPING FOR perseus_app SERVER hermes_fdw
-  OPTIONS (ADD statement_timeout '30000');
+  OPTIONS (ADD options '-c statement_timeout=30s');
 
 -- Application-level override for long-running queries
 SET LOCAL statement_timeout = '300000';  -- 5 minutes for specific query

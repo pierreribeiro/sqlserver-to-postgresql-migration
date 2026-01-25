@@ -413,7 +413,11 @@ CREATE TABLE sqlapps_lookups_cached AS
 SELECT * FROM sqlapps_lookups_fdw;
 
 -- Refresh periodically (e.g., daily via cron job)
-REFRESH TABLE sqlapps_lookups_cached;
+BEGIN;
+TRUNCATE TABLE sqlapps_lookups_cached;
+INSERT INTO sqlapps_lookups_cached
+SELECT * FROM sqlapps_lookups_fdw;
+COMMIT;
 
 -- Query uses local copy
 SELECT hr.experiment_id, lu.description

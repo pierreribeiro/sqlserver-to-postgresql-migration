@@ -212,8 +212,18 @@ display_health() {
 
     # Check 3: Pool utilization
     local sv_active=$(pgb_query "SELECT SUM(sv_active) FROM pools WHERE database != 'pgbouncer';" || echo "0")
-    local pool_size=$(grep "^default_pool_size" /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration/infra/database/pgbouncer/pgbouncer.ini | awk '{print $3}' || echo "25")
-    local utilization=$(bc <<< "scale=2; (${sv_active}/${pool_size})*100" 2>/dev/null || echo "0")
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local pgbouncer_ini="${script_dir}/pgbouncer.ini"
+
+    local pool_size
+    pool_size="$(grep -E '^[[:space:]]*default_pool_size' "${pgbouncer_ini}" 2>/dev/null | awk -F'=' '{gsub(/[[:space:]]/, "", $2); print $2}' || true)"
+    pool_size="${pool_size:-25}"
+
+    local utilization="0"
+    if [ "${pool_size}" -gt 0 ] 2>/dev/null; then
+        utilization=$(bc <<< "scale=2; (${sv_active}/${pool_size})*100" 2>/dev/null || echo "0")
+    fi
 
     if (( $(echo "${utilization} < 50" | bc -l) )); then
         echo -e "Pool Utilization: ${GREEN}✓ ${utilization}% (${sv_active}/${pool_size})${NC}"

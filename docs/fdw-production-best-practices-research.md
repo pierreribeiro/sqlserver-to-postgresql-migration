@@ -412,12 +412,17 @@ FROM hermes_data hd
 JOIN sqlapps_data sd ON hd.status_code = sd.code;
 ```
 
-**Solution 2: Local Caching for Lookup Tables**
+-- Refresh periodically (e.g., daily via cron job) - atomic swap pattern
+BEGIN;
+CREATE TEMP TABLE tmp_sqlapps_lookups_cached (LIKE sqlapps_lookups_cached INCLUDING ALL) ON COMMIT DROP;
 
-```sql
--- BEST: Replicate small lookup tables locally
-CREATE TABLE sqlapps_lookups_cached AS
+INSERT INTO tmp_sqlapps_lookups_cached
 SELECT * FROM sqlapps_lookups_fdw;
+
+TRUNCATE TABLE sqlapps_lookups_cached;
+INSERT INTO sqlapps_lookups_cached
+SELECT * FROM tmp_sqlapps_lookups_cached;
+COMMIT;
 
 -- Refresh periodically (e.g., daily via cron job)
 BEGIN;

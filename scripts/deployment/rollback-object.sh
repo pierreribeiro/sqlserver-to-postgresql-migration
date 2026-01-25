@@ -80,7 +80,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Default configuration
 DEFAULT_ENVIRONMENT="dev"
-BACKUP_DIR="${PROJECT_ROOT}/backups/objects"
+BACKUP_DIR="${SCRIPT_DIR}/backups"  # Match deploy-object.sh backup location
 LOGS_DIR="${PROJECT_ROOT}/logs/deployment"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="${LOGS_DIR}/rollback_${TIMESTAMP}.log"

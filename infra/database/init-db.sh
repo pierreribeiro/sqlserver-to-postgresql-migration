@@ -79,7 +79,7 @@ setup() {
         echo -n "${GENERATED_PASSWORD}" > "${PASSWORD_FILE}"
         chmod 600 "${PASSWORD_FILE}"
         log_success "Generated PostgreSQL password and saved to ${PASSWORD_FILE}"
-        log_warning "IMPORTANT: Save this password securely. Password: ${GENERATED_PASSWORD}"
+        log_warning "IMPORTANT: The new password is in ${PASSWORD_FILE}. Keep this file secure."
     else
         log_info "Password file already exists: ${PASSWORD_FILE}"
     fi

@@ -149,11 +149,15 @@ GROUP BY usename, application_name;
 
 ### 2.3 Recommended Error Handling Pattern
 
+**SECURITY WARNING:** The pattern below is for wrapping retry logic around **pre-validated, trusted queries only**. Never pass user input directly to this function, as it uses dynamic SQL execution which is vulnerable to SQL injection.
+
 ```sql
--- Application-level retry wrapper (pseudo-code)
+-- Application-level retry wrapper for TRUSTED queries only
+-- DO NOT pass user input to p_query_template - SQL INJECTION RISK!
 CREATE OR REPLACE FUNCTION perseus_fdw_query_with_retry(
-    p_query TEXT,
-    p_max_retries INTEGER DEFAULT 3
+    p_query_template TEXT,
+    p_max_retries INTEGER DEFAULT 3,
+    VARIADIC p_params TEXT[] DEFAULT '{}'
 )
 RETURNS SETOF RECORD
 LANGUAGE plpgsql
@@ -161,11 +165,20 @@ AS $$
 DECLARE
     v_retry_count INTEGER := 0;
     v_backoff_ms INTEGER := 100;
+    v_safe_query TEXT;
 BEGIN
+    -- Build safe query using format() with proper parameter substitution
+    -- This prevents SQL injection by treating parameters as literals
+    IF array_length(p_params, 1) > 0 THEN
+        v_safe_query := format(p_query_template, VARIADIC p_params);
+    ELSE
+        v_safe_query := p_query_template;
+    END IF;
+
     LOOP
         BEGIN
-            -- Execute the FDW query
-            RETURN QUERY EXECUTE p_query;
+            -- Execute the sanitized FDW query
+            RETURN QUERY EXECUTE v_safe_query;
             EXIT;  -- Success, exit loop
         EXCEPTION
             WHEN sqlstate '08000' THEN  -- Connection exceptions
@@ -188,6 +201,18 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+-- SECURE USAGE EXAMPLE:
+-- Call with literal query template and parameters
+-- SELECT * FROM perseus_fdw_query_with_retry(
+--     'SELECT * FROM hermes.materials WHERE material_id = %L',
+--     3,
+--     '12345'  -- Parameter is properly quoted by format()
+-- );
+--
+-- DANGEROUS USAGE (DO NOT DO THIS):
+-- user_input := get_user_input();
+-- SELECT * FROM perseus_fdw_query_with_retry(user_input);  -- SQL INJECTION!
 ```
 
 ### 2.4 Statement Timeout Configuration

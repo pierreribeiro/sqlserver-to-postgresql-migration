@@ -245,8 +245,18 @@ run_psql() {
     if [[ "${USE_DOCKER}" == "true" ]]; then
         docker exec -i "${DOCKER_CONTAINER}" psql -U "${DB_USER}" -d "${DB_NAME}" "$@"
     else
-        export PGPASSWORD=$(cat "${PGPASSWORD_FILE}")
+        # Use PGPASSFILE instead of PGPASSWORD for better security
+        # PGPASSFILE prevents password from appearing in process list
+        local temp_pgpass=$(mktemp)
+        trap "rm -f ${temp_pgpass}" RETURN
+
+        # Create .pgpass format: hostname:port:database:username:password
+        echo "${DB_HOST}:${DB_PORT}:${DB_NAME}:${DB_USER}:$(cat "${PGPASSWORD_FILE}")" > "${temp_pgpass}"
+        chmod 600 "${temp_pgpass}"
+
+        export PGPASSFILE="${temp_pgpass}"
         psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" "$@"
+        unset PGPASSFILE
     fi
 }
 

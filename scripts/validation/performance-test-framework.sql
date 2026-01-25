@@ -386,17 +386,17 @@ BEGIN
         RAISE NOTICE '[capture_baseline] Captured: execution=% ms, planning=% ms, rows=%',
             v_execution_time_ms, v_planning_time_ms, v_rows_returned;
 
-        COMMIT;
+        -- Transaction control removed: let caller manage transaction
 
     EXCEPTION
         WHEN unique_violation THEN
             RAISE NOTICE '[capture_baseline] Baseline already exists for % at current timestamp',
                 object_name_;
-            ROLLBACK;
+            -- ROLLBACK removed: exception handler automatically rolls back subtransaction
         WHEN OTHERS THEN
             RAISE EXCEPTION '[capture_baseline] Failed to insert baseline: % (SQLSTATE: %)',
                 SQLERRM, SQLSTATE;
-            ROLLBACK;
+            -- ROLLBACK removed: exception handler automatically rolls back subtransaction
     END;
 
     RAISE NOTICE '[capture_baseline] Completed in: % ms',
@@ -476,7 +476,8 @@ BEGIN
                 0, test_status, error_msg, environment_
             );
 
-            COMMIT;
+            -- Transaction control removed: cannot COMMIT inside exception block
+            -- The exception handler already manages subtransaction rollback
             RETURN;
     END;
 
@@ -549,7 +550,8 @@ BEGIN
             environment_
         );
 
-        COMMIT;
+        -- Transaction control removed: let caller manage transaction
+        -- This allows the procedure to work within larger transaction contexts
 
         RAISE NOTICE '[run_performance_test] Results: execution=% ms, baseline=% ms, delta=%.2f%%, status=%',
             v_execution_time_ms, COALESCE(v_baseline_time_ms::TEXT, 'N/A'),
@@ -559,7 +561,7 @@ BEGIN
         WHEN OTHERS THEN
             RAISE EXCEPTION '[run_performance_test] Failed to insert test results: % (SQLSTATE: %)',
                 SQLERRM, SQLSTATE;
-            ROLLBACK;
+            -- ROLLBACK removed: exception handler automatically rolls back subtransaction
     END;
 
     RAISE NOTICE '[run_performance_test] Completed in: % ms',

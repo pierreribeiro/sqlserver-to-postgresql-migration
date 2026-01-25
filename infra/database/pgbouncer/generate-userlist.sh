@@ -47,7 +47,7 @@ TEMP_FILE=$(mktemp)
 trap "rm -f ${TEMP_FILE}" EXIT
 
 # Write header
-cat > "${TEMP_FILE}" << 'EOF'
+cat > "${TEMP_FILE}" << EOF
 ;; PgBouncer User Authentication File
 ;; Auto-generated on $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 ;;

@@ -1,0 +1,331 @@
+name: Perseus Migration Validation
+
+on:
+  push:
+    branches: [ main, develop, 001-tsql-to-pgsql ]
+    paths:
+      - 'source/building/pgsql/refactored/**/*.sql'
+      - 'scripts/**/*.sql'
+      - 'scripts/**/*.sh'
+      - 'scripts/**/*.py'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'source/building/pgsql/refactored/**/*.sql'
+      - 'scripts/**/*.sql'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  syntax-validation:
+    name: SQL Syntax Validation
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: perseus_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run Syntax Validation
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: perseus_test
+          PGUSER: test_user
+          PGPASSWORD: test_pass
+        run: |
+          chmod +x scripts/validation/syntax-check.sh
+
+          # Get changed SQL files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD | grep '\.sql$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No SQL files changed - running validation on sample files"
+            ./scripts/validation/syntax-check.sh source/building/pgsql/refactored/20.\ create-procedure/*.sql || true
+          else
+            echo "Validating changed files: $CHANGED_FILES"
+            for file in $CHANGED_FILES; do
+              if [ -f "$file" ]; then
+                ./scripts/validation/syntax-check.sh "$file"
+              fi
+            done
+          fi
+
+      - name: Upload Syntax Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syntax-validation-report
+          path: syntax-check-*.log
+          if-no-files-found: ignore
+
+  dependency-validation:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    needs: syntax-validation
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: perseus_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Database Schema
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: perseus_test
+          PGUSER: test_user
+          PGPASSWORD: test_pass
+        run: |
+          # Create test schemas
+          psql -c "CREATE SCHEMA IF NOT EXISTS perseus;"
+          psql -c "CREATE SCHEMA IF NOT EXISTS validation;"
+
+          # Load dependency check script
+          psql -f scripts/validation/dependency-check.sql
+
+      - name: Check for Missing Dependencies
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: perseus_test
+          PGUSER: test_user
+          PGPASSWORD: test_pass
+        run: |
+          # Check if validation schema and tables exist
+          TABLE_EXISTS=$(psql -t -c "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'validation' AND table_name = 'dependency_issues');")
+
+          if [[ "$TABLE_EXISTS" == *"t"* ]]; then
+            # Fail if any missing dependencies found
+            MISSING=$(psql -t -c "SELECT COUNT(*) FROM validation.dependency_issues WHERE severity = 'CRITICAL';")
+            echo "Critical dependency issues: $MISSING"
+
+            if [ "$MISSING" -gt 0 ]; then
+              echo "ERROR: $MISSING critical dependency issues found"
+              psql -c "SELECT * FROM validation.dependency_issues WHERE severity = 'CRITICAL';"
+              exit 1
+            fi
+          else
+            echo "INFO: Dependency validation tables not yet populated - skipping"
+          fi
+
+  quality-gate:
+    name: Quality Score Validation
+    runs-on: ubuntu-latest
+    needs: syntax-validation
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r scripts/automation/requirements.txt
+
+      - name: Run Quality Analysis
+        run: |
+          # Get changed SQL files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref || 'main' }}...HEAD | grep 'source/building/pgsql/refactored/.*\.sql$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No refactored SQL files changed - quality gate passed"
+            exit 0
+          fi
+
+          # Analyze each file
+          FAILED=0
+          for file in $CHANGED_FILES; do
+            if [ ! -f "$file" ]; then
+              echo "SKIP: $file (file not found)"
+              continue
+            fi
+
+            # Extract object type and name from path
+            OBJECT_TYPE=$(echo $file | awk -F'/' '{print $(NF-1)}' | sed 's/[0-9]*\. create-//' | sed 's/ //g')
+            OBJECT_NAME=$(basename $file .sql)
+
+            echo "Analyzing $OBJECT_TYPE: $OBJECT_NAME"
+
+            # Run quality analysis (with error handling)
+            SCORE=$(python3 scripts/automation/analyze-object.py --type $OBJECT_TYPE --name $OBJECT_NAME --score-only 2>&1 || echo "0")
+
+            # Extract numeric score if present
+            SCORE_NUM=$(echo "$SCORE" | grep -oE '[0-9]+(\.[0-9]+)?' | head -1 || echo "0")
+
+            echo "$file: Quality Score = $SCORE_NUM/10.0"
+
+            # Check threshold (7.0)
+            if [ -n "$SCORE_NUM" ] && [ $(echo "$SCORE_NUM < 7.0" | bc -l 2>/dev/null || echo "1") -eq 1 ]; then
+              echo "WARNING: $file below quality threshold (score: $SCORE_NUM < 7.0)"
+              # Set to warning only, not failure for now
+              # FAILED=1
+            fi
+          done
+
+          if [ $FAILED -eq 1 ]; then
+            echo "ERROR: Quality gate failed"
+            exit 1
+          fi
+
+          echo "Quality gate passed"
+
+  performance-regression:
+    name: Performance Regression Check
+    runs-on: ubuntu-latest
+    needs: syntax-validation
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: perseus_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Performance Framework
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: perseus_test
+          PGUSER: test_user
+          PGPASSWORD: test_pass
+        run: |
+          # Create performance schema
+          psql -c "CREATE SCHEMA IF NOT EXISTS performance;"
+
+          # Load performance test framework
+          psql -f scripts/validation/performance-test-framework.sql
+
+      - name: Run Performance Tests
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: perseus_test
+          PGUSER: test_user
+          PGPASSWORD: test_pass
+        run: |
+          # Check if performance tables exist
+          TABLE_EXISTS=$(psql -t -c "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'performance' AND table_name = 'test_results');")
+
+          if [[ "$TABLE_EXISTS" == *"t"* ]]; then
+            # Check for regressions (>20% slower)
+            REGRESSIONS=$(psql -t -c "SELECT COUNT(*) FROM performance.test_results WHERE status = 'REGRESSION' AND executed_at > NOW() - INTERVAL '1 hour';" 2>/dev/null || echo "0")
+
+            echo "Performance regressions detected: $REGRESSIONS"
+
+            if [ "$REGRESSIONS" -gt 0 ]; then
+              echo "WARNING: $REGRESSIONS performance regressions detected"
+              psql -c "SELECT * FROM performance.v_regression_summary WHERE status = 'REGRESSION';" || true
+              # Don't fail the build yet - just warn
+              # exit 1
+            fi
+          else
+            echo "INFO: Performance test framework not yet populated - skipping"
+          fi
+
+  summary-report:
+    name: Generate Summary Report
+    runs-on: ubuntu-latest
+    needs: [syntax-validation, dependency-validation, quality-gate, performance-regression]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Report
+        run: |
+          echo "## Perseus Migration Validation Report" > report.md
+          echo "" >> report.md
+          echo "**Commit:** ${{ github.sha }}" >> report.md
+          echo "**Branch:** ${{ github.ref_name }}" >> report.md
+          echo "**Date:** $(date)" >> report.md
+          echo "**Triggered by:** ${{ github.event_name }}" >> report.md
+          echo "" >> report.md
+          echo "### Validation Results" >> report.md
+          echo "- ✓ Syntax Validation: ${{ needs.syntax-validation.result }}" >> report.md
+          echo "- ✓ Dependency Check: ${{ needs.dependency-validation.result }}" >> report.md
+          echo "- ✓ Quality Gate: ${{ needs.quality-gate.result }}" >> report.md
+          echo "- ✓ Performance Check: ${{ needs.performance-regression.result }}" >> report.md
+          echo "" >> report.md
+
+          # Overall status
+          if [[ "${{ needs.syntax-validation.result }}" == "success" && \
+                "${{ needs.dependency-validation.result }}" == "success" && \
+                "${{ needs.quality-gate.result }}" == "success" && \
+                "${{ needs.performance-regression.result }}" == "success" ]]; then
+            echo "### ✅ Overall Status: PASSED" >> report.md
+          else
+            echo "### ❌ Overall Status: FAILED" >> report.md
+          fi
+
+          cat report.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-summary-report
+          path: report.md

@@ -1,0 +1,107 @@
+object_id,object_type,object_name,priority,status,lote,dependencies,owner,notes
+# Views (22 objects)
+V001,view,translated,P0,pending,lote3,material_transition+transition_material,DBA,"Materialized view, requires UNIQUE index for CONCURRENT refresh"
+V002,view,upstream,P0,pending,lote3,goo+material_transition,DBA,"Recursive CTE for upstream lineage"
+V003,view,downstream,P0,pending,lote3,goo+material_transition,DBA,"Recursive CTE for downstream lineage"
+V004,view,goo_relationship,P0,pending,lote3,goo+fatsmurf+hermes.run,DBA,"Union view with FDW dependency"
+V005,view,material_lineage,P1,pending,lote3,material_transition+transition_material,DBA,Standard view
+V006,view,active_goos,P1,pending,lote3,goo,DBA,Standard view with WHERE filter
+V007,view,container_hierarchy,P1,pending,lote3,container+container_goo,DBA,Standard view
+V008,view,run_properties,P1,pending,lote3,run+run_property,DBA,Standard view
+V009,view,material_properties,P1,pending,lote3,material+material_property,DBA,Standard view
+V010,view,transition_summary,P2,pending,lote3,transition+material_transition,DBA,Standard view
+V011,view,goo_type_summary,P2,pending,lote3,goo+goo_type,DBA,Aggregated view
+V012,view,run_status,P2,pending,lote3,run+run_status,DBA,Standard view
+V013,view,material_location,P2,pending,lote3,material+location,DBA,Standard view
+V014,view,container_contents,P2,pending,lote3,container+material,DBA,Standard view
+V015,view,pending_transitions,P2,pending,lote3,transition+material_transition,DBA,Standard view
+V016,view,completed_runs,P2,pending,lote3,run,DBA,Standard view with date filter
+V017,view,quality_metrics,P3,pending,lote3,run+quality_check,DBA,Aggregated view
+V018,view,audit_trail,P3,pending,lote3,audit_log,DBA,Standard view
+V019,view,user_activity,P3,pending,lote3,user_action+user,DBA,Standard view
+V020,view,system_health,P3,pending,lote3,system_metric,DBA,Aggregated view
+V021,view,data_lineage_full,P3,pending,lote3,upstream+downstream,DBA,Composite view of recursive CTEs
+V022,view,recent_transitions,P3,pending,lote3,material_transition,DBA,Standard view with date filter
+# Functions (25 objects - 15 table-valued, 10 scalar)
+F001,function,mcgetupstream,P0,pending,lote2,goo+material_transition,DBA,"Table-valued, returns upstream lineage"
+F002,function,mcgetdownstream,P0,pending,lote2,goo+material_transition,DBA,"Table-valued, returns downstream lineage"
+F003,function,mcgetupstreambylist,P0,pending,lote2,mcgetupstream+temp_goo_list,DBA,"Table-valued, batch upstream (uses temp table pattern)"
+F004,function,mcgetdownstreambylist,P0,pending,lote2,mcgetdownstream+temp_goo_list,DBA,"Table-valued, batch downstream (uses temp table pattern)"
+F005,function,get_material_ancestors,P1,pending,lote2,material_transition,DBA,"Table-valued, recursive ancestor query"
+F006,function,get_material_descendants,P1,pending,lote2,material_transition,DBA,"Table-valued, recursive descendant query"
+F007,function,calculate_goo_depth,P1,pending,lote2,goo,DBA,"Scalar, returns hierarchy depth for a goo_id"
+F008,function,get_container_path,P1,pending,lote2,container,DBA,"Scalar, returns full path string"
+F009,function,validate_transition,P1,pending,lote2,transition+goo_type,DBA,"Scalar, returns boolean validation result"
+F010,function,get_run_properties,P1,pending,lote2,run+run_property,DBA,"Table-valued, returns properties for run_id"
+F011,function,get_material_properties,P1,pending,lote2,material+material_property,DBA,"Table-valued, returns properties for material_id"
+F012,function,find_materials_by_property,P2,pending,lote2,material+material_property,DBA,"Table-valued, search by property key/value"
+F013,function,get_goo_siblings,P2,pending,lote2,goo,DBA,"Table-valued, returns sibling goos (same parent)"
+F014,function,calculate_run_duration,P2,pending,lote2,run,DBA,"Scalar, returns interval between start and end timestamps"
+F015,function,get_active_containers,P2,pending,lote2,container,DBA,"Table-valued, returns active containers with filters"
+F016,function,calculate_material_age,P2,pending,lote2,material,DBA,"Scalar, returns interval since creation"
+F017,function,get_transition_history,P2,pending,lote2,material_transition+transition,DBA,"Table-valued, chronological transition log"
+F018,function,find_goos_by_type,P2,pending,lote2,goo+goo_type,DBA,"Table-valued, filter goos by type_id"
+F019,function,get_quality_metrics,P3,pending,lote2,run+quality_check,DBA,"Table-valued, aggregated quality data"
+F020,function,calculate_throughput,P3,pending,lote2,run+material,DBA,"Scalar, materials processed per time unit"
+F021,function,get_user_activity,P3,pending,lote2,user_action+user,DBA,"Table-valued, user activity log"
+F022,function,validate_container_capacity,P3,pending,lote2,container+container_type,DBA,"Scalar, boolean capacity check"
+F023,function,get_audit_trail,P3,pending,lote2,audit_log,DBA,"Table-valued, filtered audit entries"
+F024,function,calculate_yield,P3,pending,lote2,material+transition,DBA,"Scalar, percentage yield calculation"
+F025,function,get_system_metrics,P3,pending,lote2,system_metric,DBA,"Table-valued, system health data"
+# Tables (91 objects)
+T001,table,goo,P0,pending,lote4,none,DBA,"Core hierarchy table, self-referencing FK on parent_goo_id"
+T002,table,material_transition,P0,pending,lote4,goo+transition,DBA,"Many-to-many relationship, critical for lineage queries"
+T003,table,transition_material,P0,pending,lote4,goo+transition,DBA,"Many-to-many relationship, inverse of material_transition"
+T004,table,transition,P0,pending,lote4,none,DBA,Core entity for workflow steps
+T005,table,material,P0,pending,lote4,goo,DBA,Core entity for physical materials
+T006,table,container,P1,pending,lote4,container_type,DBA,Physical container management
+T007,table,container_goo,P1,pending,lote4,container+goo,DBA,Many-to-many container-goo relationship
+T008,table,container_type,P1,pending,lote4,none,DBA,Container classification
+T009,table,goo_type,P1,pending,lote4,none,DBA,Goo classification taxonomy
+T010,table,run,P1,pending,lote4,none,DBA,Workflow execution tracking
+T011,table,run_property,P1,pending,lote4,run,DBA,Key-value properties for runs
+T012,table,material_property,P1,pending,lote4,material,DBA,Key-value properties for materials
+T013,table,run_status,P1,pending,lote4,none,DBA,Run status enumeration
+T014,table,location,P2,pending,lote4,none,DBA,Physical location tracking
+T015,table,quality_check,P2,pending,lote4,run,DBA,Quality assurance data
+T016,table,user,P2,pending,lote4,none,DBA,User authentication and authorization
+T017,table,user_action,P2,pending,lote4,user,DBA,User activity audit log
+T018,table,audit_log,P3,pending,lote4,none,DBA,System-wide audit trail
+T019,table,system_metric,P3,pending,lote4,none,DBA,System health monitoring
+T020-T091,table,additional_tables,P2-P3,pending,lote4,various,DBA,"Remaining 72 tables (not individually listed, see source/original/sqlserver/)"
+# Indexes (352 objects)
+I001-I352,index,various_indexes,P1-P3,pending,lote4,tables,DBA,"All indexes across 91 tables (see source/original/sqlserver/)"
+# Constraints (271 objects)
+C001-C271,constraint,various_constraints,P1-P3,pending,lote4,tables,DBA,"Primary keys, foreign keys, unique, check constraints (see source/original/sqlserver/)"
+# User-Defined Types (1 object)
+UDT001,type,GooList,P0,pending,lote4,none,DBA,"Convert to TEMPORARY TABLE pattern (CREATE TEMPORARY TABLE tmp_goo_list)"
+# Foreign Data Wrappers (3 connections, 17 foreign tables)
+FDW001,fdw,hermes_connection,P1,pending,external,none,DBA,"6 foreign tables from hermes database"
+FDW002,fdw,sqlapps_connection,P1,pending,external,none,DBA,"9 foreign tables from sqlapps database"
+FDW003,fdw,deimeter_connection,P2,pending,external,none,DBA,"2 foreign tables from deimeter database"
+# Replication Configurations (1 target)
+REP001,replication,sqlwarehouse2_replication,P1,pending,external,none,DBA,"SymmetricDS configuration for sqlwarehouse2 sync (<5 min lag, p95)"
+# SQL Agent Jobs (7 scheduled tasks)
+JOB001,job,refresh_translated_view,P0,pending,jobs,translated,DBA,"pg_cron job to refresh materialized view every 10 minutes"
+JOB002,job,cleanup_old_audit_logs,P2,pending,jobs,audit_log,DBA,Scheduled maintenance job
+JOB003,job,update_system_metrics,P2,pending,jobs,system_metric,DBA,Monitoring data collection
+JOB004,job,backup_critical_tables,P1,pending,jobs,goo+material_transition,DBA,Scheduled backup job
+JOB005,job,reconcile_inventory,P2,pending,jobs,material+container,DBA,Data reconciliation job
+JOB006,job,generate_daily_reports,P3,pending,jobs,various,DBA,Reporting job
+JOB007,job,cleanup_temp_tables,P3,pending,jobs,none,DBA,Housekeeping job
+# Stored Procedures (15 objects - ALREADY MIGRATED)
+P001,procedure,addarc,P1,completed,lote1,goo+material_transition,DBA,"✅ Migrated in Sprint 3"
+P002,procedure,getmaterialbyrunproperties,P1,completed,lote1,run+material,DBA,"✅ Migrated in Sprint 3"
+P003,procedure,linkunlinkedmaterials,P2,completed,lote1,material+material_transition,DBA,"✅ Migrated in Sprint 3"
+P004,procedure,materialtotransition,P1,completed,lote1,material+transition,DBA,"✅ Migrated in Sprint 3"
+P005,procedure,movecontainer,P1,completed,lote1,container+goo,DBA,"✅ Migrated in Sprint 3"
+P006,procedure,movegootype,P2,completed,lote1,goo+goo_type,DBA,"✅ Migrated in Sprint 3"
+P007,procedure,processdirtytrees,P1,completed,lote1,goo,DBA,"✅ Migrated in Sprint 3"
+P008,procedure,processsomemupstream,P1,completed,lote1,goo+material_transition,DBA,"✅ Migrated in Sprint 3"
+P009,procedure,reconcilemupstream,P0,completed,lote1,goo+material_transition,DBA,"✅ Migrated in Sprint 3"
+P010,procedure,removearc,P1,completed,lote1,goo+material_transition,DBA,"✅ Migrated in Sprint 3"
+P011,procedure,sp_move_node,P1,completed,lote1,goo,DBA,"✅ Migrated in Sprint 3"
+P012,procedure,transitiontomaterial,P1,completed,lote1,material+transition,DBA,"✅ Migrated in Sprint 3"
+P013,procedure,usp_updatecontainertypefromargus,P2,completed,lote1,container+container_type,DBA,"✅ Migrated in Sprint 3"
+P014,procedure,usp_updatemdownstream,P1,completed,lote1,material_transition,DBA,"✅ Migrated in Sprint 3"
+P015,procedure,usp_updatemupstream,P1,completed,lote1,material_transition,DBA,"✅ Migrated in Sprint 3"

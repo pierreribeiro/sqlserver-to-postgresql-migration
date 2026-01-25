@@ -1,0 +1,76 @@
+object_type,sqlserver_name,postgresql_name,schema_sqlserver,schema_postgresql,priority,complexity,status,notes
+function,McGetDownStream,mcgetdownstream,dbo,perseus,P0,8/10,PENDING,Single material downstream
+function,McGetDownStreamByList,mcgetdownstreambylist,dbo,perseus,P0,8/10,PENDING,Batch downstream (GooList)
+function,McGetUpStream,mcgetupstream,dbo,perseus,P0,8/10,PENDING,Single material upstream
+function,McGetUpStreamByList,mcgetupstreambylist,dbo,perseus,P0,9/10,PENDING,Batch upstream (GooList)
+function,GetDownStream,getdownstream,dbo,perseus,P1,7/10,PENDING,Legacy downstream (nested sets)
+function,GetDownStreamContainers,getdownstreamcontainers,dbo,perseus,P1,6/10,PENDING,Container filter
+function,GetDownStreamFamily,getdownstreamfamily,dbo,perseus,P1,6/10,PENDING,Extended downstream
+function,GetUnProcessedUpStream,getunprocessedupstream,dbo,perseus,P1,5/10,PENDING,Status filter
+function,GetUpStream,getupstream,dbo,perseus,P1,7/10,PENDING,Legacy upstream (nested sets)
+function,GetUpStreamContainers,getupstreamcontainers,dbo,perseus,P1,6/10,PENDING,Container filter
+function,GetUpStreamFamily,getupstreamfamily,dbo,perseus,P1,6/10,PENDING,Extended upstream
+function,GetExperiment,getexperiment,dbo,perseus,P2,3/10,PENDING,ID extraction
+function,GetFermentationFatSmurf,getfermentationfatsmurf,dbo,perseus,P2,5/10,PENDING,Fermentation module
+function,GetHermesExperiment,gethermesexperiment,dbo,perseus,P2,3/10,PENDING,Hermes ID extraction
+function,GetHermesUID,gethermesuid,dbo,perseus,P2,3/10,PENDING,Hermes UID
+function,GetReadCombos,getreadcombos,dbo,perseus,P2,7/10,PENDING,Robot automation
+function,GetRun,getrun,dbo,perseus,P2,4/10,PENDING,Run ID extraction
+function,GetSampleTime,getsampletime,dbo,perseus,P2,8/10,PENDING,Lab systems
+function,GetTransferCombos,gettransfercombos,dbo,perseus,P2,7/10,PENDING,Robot automation
+function,GetUpstreamMasses,getupstreammasses,dbo,perseus,P2,9/10,PENDING,CURSOR refactoring required
+function,McGetUpDownStream,mcgetupdownstream,dbo,perseus,P2,4/10,PENDING,Combined traversal
+function,ReversePath,reversepath,dbo,perseus,P3,3/10,PENDING,String utility
+function,RoundDateTime,rounddatetime,dbo,perseus,P3,2/10,PENDING,Date utility
+function,initCaps,initcaps,dbo,perseus,P3,3/10,PENDING,Use PostgreSQL initcap()
+function,udf_datetrunc,datetrunc,dbo,perseus,P3,2/10,PENDING,Use PostgreSQL date_trunc()
+procedure,AddArc,addarc,dbo,perseus,P0 Critical,,COMPLETE,P0 Critical - Material lineage creation
+procedure,GetMaterialByRunProperties,get_material_by_run_properties,dbo,perseus,P1 Medium,,COMPLETE,P1 Medium - Search/query
+procedure,LinkUnlinkedMaterials,link_unlinked_materials,dbo,perseus,P1 Medium,,COMPLETE,P1 Medium - Data cleanup
+procedure,MaterialToTransition,material_to_transition,dbo,perseus,P1 Low,,COMPLETE,P1 Low - Simple helper
+procedure,MoveContainer,move_container,dbo,perseus,P1 High,,COMPLETE,P1 High - Inventory management
+procedure,MoveGooType,move_goo_type,dbo,perseus,P1 High,,COMPLETE,P1 High - Type management
+procedure,ProcessDirtyTrees,process_dirty_trees,dbo,perseus,P1 High,,COMPLETE,P1 High - Tree maintenance
+procedure,ProcessSomeMUpstream,process_some_mupstream,dbo,perseus,P1 High,,COMPLETE,P1 High - Batch processor
+procedure,ReconcileMUpstream,reconcile_mupstream,dbo,perseus,P0 Critical,,COMPLETE,P0 Critical - Batch reconciliation
+procedure,RemoveArc,removearc,dbo,perseus,P0 Critical,,COMPLETE,P0 Critical - Material lineage deletion
+procedure,TransitionToMaterial,transition_to_material,dbo,perseus,P2 Medium,,COMPLETE,P2 Medium - Simple helper
+procedure,sp_move_node,move_node,dbo,perseus,P2 Medium,,COMPLETE,P2 Medium - Node management
+procedure,usp_UpdateContainerTypeFromArgus,update_container_type_from_argus,dbo,perseus,P2 Medium,,COMPLETE,P2 Medium - External integration
+procedure,usp_UpdateMDownstream,update_mdownstream,dbo,perseus,P2 Medium,,COMPLETE,P2 Medium - Manual maintenance
+procedure,usp_UpdateMUpstream,update_mupstream,dbo,perseus,P2 Medium,,COMPLETE,P2 Medium - Manual maintenance
+table,goo,goo,dbo,perseus,P0,,PENDING,Material master table
+table,m_downstream,m_downstream,dbo,perseus,P0,,PENDING,Cached downstream graph
+table,m_upstream,m_upstream,dbo,perseus,P0,,PENDING,Cached upstream graph
+table,m_upstream_dirty_leaves,m_upstream_dirty_leaves,dbo,perseus,P0,,PENDING,Reconciliation queue
+table,material_transition,material_transition,dbo,perseus,P0,,PENDING,Parent→Transition edges
+table,transition_material,transition_material,dbo,perseus,P0,,PENDING,Transition→Child edges
+table,container,container,dbo,perseus,P1,,PENDING,Container master
+table,fatsmurf,fatsmurf,dbo,perseus,P1,,PENDING,Process/Experiment data
+table,goo_type,goo_type,dbo,perseus,P1,,PENDING,Material type hierarchy
+table,material_inventory,material_inventory,dbo,perseus,P1,,PENDING,Inventory tracking
+table,container_history,container_history,dbo,perseus,P2,,PENDING,Container audit trail
+table,smurf_property,smurf_property,dbo,perseus,P2,,PENDING,Material properties
+type,GooList,tmp_goo_list,dbo,perseus,P0,,PENDING,TVP → TEMPORARY TABLE pattern
+view,translated,translated,dbo,perseus,P0,8/10,PENDING,INDEXED VIEW → MATERIALIZED VIEW
+view,downstream,downstream,dbo,perseus,P1,7/10,PENDING,Recursive CTE - All downstream paths
+view,goo_relationship,goo_relationship,dbo,perseus,P1,6/10,PENDING,3-way UNION - Explicit relationships
+view,hermes_run,hermes_run,dbo,perseus,P1,6/10,PENDING,Cross-schema integration
+view,upstream,upstream,dbo,perseus,P1,7/10,PENDING,Recursive CTE - All upstream paths
+view,material_transition_material,material_transition_material,dbo,perseus,P2,5/10,PENDING,Flattened relationships
+view,vw_fermentation_upstream,vw_fermentation_upstream,dbo,perseus,P2,6/10,PENDING,Fermentation lineage
+view,vw_lot,vw_lot,dbo,perseus,P2,5/10,PENDING,Business entity
+view,vw_lot_edge,vw_lot_edge,dbo,perseus,P2,5/10,PENDING,Lot tracking
+view,vw_lot_path,vw_lot_path,dbo,perseus,P2,7/10,PENDING,Lot paths
+view,vw_material_transition_material_up,vw_material_transition_material_up,dbo,perseus,P2,4/10,PENDING,Upstream relationships
+view,vw_process_upstream,vw_process_upstream,dbo,perseus,P2,6/10,PENDING,Process lineage
+view,vw_processable_logs,vw_processable_logs,dbo,perseus,P2,6/10,PENDING,Robot logs
+view,vw_recipe_prep,vw_recipe_prep,dbo,perseus,P2,5/10,PENDING,Recipe preparation
+view,vw_recipe_prep_part,vw_recipe_prep_part,dbo,perseus,P2,4/10,PENDING,Recipe parts
+view,combined_field_map,combined_field_map,dbo,perseus,P3,4/10,PENDING,Field mapping
+view,combined_field_map_block,combined_field_map_block,dbo,perseus,P3,4/10,PENDING,Field blocks
+view,combined_field_map_display_type,combined_field_map_display_type,dbo,perseus,P3,4/10,PENDING,Display types
+view,combined_sp_field_map,combined_sp_field_map,dbo,perseus,P3,5/10,PENDING,SP-generated fields
+view,combined_sp_field_map_display_type,combined_sp_field_map_display_type,dbo,perseus,P3,5/10,PENDING,SP display types
+view,vw_jeremy_runs,vw_jeremy_runs,dbo,perseus,P3,5/10,PENDING,User-specific (deprecation candidate)
+view,vw_tom_perseus_sample_prep_materials,vw_tom_perseus_sample_prep_materials,dbo,perseus,P3,6/10,PENDING,User-specific (deprecation candidate)

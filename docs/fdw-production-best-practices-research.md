@@ -608,13 +608,7 @@ CREATE USER MAPPING FOR perseus_app
 -- Use HashiCorp Vault or AWS Secrets Manager via custom extension
 ```
 
-**Recommendation for Perseus:**
-- **Production:** SCRAM-SHA-256 with passwords in user mappings (encrypted in pg_user_mapping)
-- **CI/CD:** Use .pgpass file with restricted permissions
--- Make FDW sessions identifiable on the *foreign* server (libpq GUC pass-through)
-ALTER SERVER hermes_fdw OPTIONS (ADD options '-c application_name=perseus_fdw');
-
--- View active FDW connections (run on each foreign server)
+-- Detailed view of FDW sessions (run on the foreign server)
 SELECT
     usename,
     application_name,
@@ -626,12 +620,20 @@ SELECT
     wait_event,
     query
 FROM pg_stat_activity
-WHERE application_name = 'perseus_fdw'
+WHERE application_name LIKE '%fdw%'
 ORDER BY query_start DESC;
+
+-- Aggregate connection counts (run on the foreign server)
+SELECT
+    usename,
     application_name,
-    client_addr,
-    state,
-    query_start,
+    COUNT(*) AS connection_count,
+    COUNT(*) FILTER (WHERE state = 'active') AS active_count,
+    COUNT(*) FILTER (WHERE state = 'idle') AS idle_count
+FROM pg_stat_activity
+WHERE application_name LIKE '%fdw%'
+GROUP BY usename, application_name
+ORDER BY connection_count DESC;
     state_change,
     wait_event_type,
     wait_event,

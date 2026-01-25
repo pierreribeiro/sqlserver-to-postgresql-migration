@@ -358,14 +358,26 @@ calculate_quality_score() {
     local pgbouncer_ini="${SCRIPT_DIR}/pgbouncer.ini"
 
     # 2. Configuration Correctness (30 points)
-    grep -q "pool_size=10" "${pgbouncer_ini}" && config_score=$((config_score + 10))
-    grep -q "server_lifetime = 1800" "${pgbouncer_ini}" && config_score=$((config_score + 10))
-    grep -q "server_idle_timeout = 300" "${pgbouncer_ini}" && config_score=$((config_score + 10))
+    if [[ -f "${pgbouncer_ini}" ]]; then
+        if grep -q "pool_size=10" "${pgbouncer_ini}"; then
+            config_score=$((config_score + 10))
+        fi
+        if grep -q "server_lifetime = 1800" "${pgbouncer_ini}"; then
+            config_score=$((config_score + 10))
+        fi
+        if grep -q "server_idle_timeout = 300" "${pgbouncer_ini}"; then
+            config_score=$((config_score + 10))
+        fi
+    else
+        test_warn "pgbouncer.ini not found at: ${pgbouncer_ini}"
+    fi
 
     # 4. Security (15 points)
     [ -f "${SCRIPT_DIR}/.gitignore" ] && security_score=$((security_score + 5))
     [ -f "${SCRIPT_DIR}/userlist.txt" ] && security_score=$((security_score + 5))
-    grep -q "auth_type = md5" "${pgbouncer_ini}" && security_score=$((security_score + 5))
+    if [[ -f "${pgbouncer_ini}" ]] && grep -q "auth_type = md5" "${pgbouncer_ini}"; then
+        security_score=$((security_score + 5))
+    fi
 
     # 5. Documentation (15 points)
     [ -f "${SCRIPT_DIR}/README.md" ] && documentation_score=$((documentation_score + 10))

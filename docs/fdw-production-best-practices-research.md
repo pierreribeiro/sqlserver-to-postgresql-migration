@@ -208,12 +208,14 @@ END;
 $$;
 
 -- SECURE USAGE EXAMPLE:
--- Call with literal query template and parameters
--- SELECT * FROM perseus_fdw_query_with_retry(
---     'SELECT * FROM hermes.materials WHERE material_id = %L',
+-- Call with a trusted literal template that uses %s placeholders only,
+-- and provide a column definition list because the function returns RECORD.
+-- SELECT *
+-- FROM perseus_fdw_query_with_retry(
+--     'SELECT * FROM hermes.materials WHERE material_id = %s',
 --     3,
---     '12345'  -- Parameter is properly quoted by format()
--- );
+--     '12345'
+-- ) AS t(material_id BIGINT, ...);
 --
 -- DANGEROUS USAGE (DO NOT DO THIS):
 -- user_input := get_user_input();

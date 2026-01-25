@@ -177,10 +177,10 @@ status() {
         log_success "Container is running"
 
         # Show connection string
-        PASSWORD=$(cat "${PASSWORD_FILE}" 2>/dev/null || echo "PASSWORD_NOT_FOUND")
         log_info ""
         log_info "Connection string:"
-        log_info "  postgresql://${DB_USER}:${PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+        log_info "  postgresql://${DB_USER}:******@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+        log_info "Password file: ${PASSWORD_FILE}"
     else
         log_warning "Container is not running"
     fi

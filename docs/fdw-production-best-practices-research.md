@@ -166,11 +166,16 @@ DECLARE
     v_retry_count INTEGER := 0;
     v_backoff_ms INTEGER := 100;
     v_safe_query TEXT;
+    v_quoted_params TEXT[];
 BEGIN
-    -- Build safe query using format() with proper parameter substitution
-    -- This prevents SQL injection by treating parameters as literals
+    -- SAFETY: p_query_template must be trusted and use only %s placeholders.
+    -- Parameters are always passed through quote_literal() before substitution.
     IF array_length(p_params, 1) > 0 THEN
-        v_safe_query := format(p_query_template, VARIADIC p_params);
+        SELECT array_agg(quote_literal(p))
+        INTO v_quoted_params
+        FROM unnest(p_params) AS p;
+
+        v_safe_query := format(p_query_template, VARIADIC v_quoted_params);
     ELSE
         v_safe_query := p_query_template;
     END IF;
@@ -203,12 +208,14 @@ END;
 $$;
 
 -- SECURE USAGE EXAMPLE:
--- Call with literal query template and parameters
--- SELECT * FROM perseus_fdw_query_with_retry(
---     'SELECT * FROM hermes.materials WHERE material_id = %L',
+-- Call with a trusted literal template that uses %s placeholders only,
+-- and provide a column definition list because the function returns RECORD.
+-- SELECT *
+-- FROM perseus_fdw_query_with_retry(
+--     'SELECT * FROM hermes.materials WHERE material_id = %s',
 --     3,
---     '12345'  -- Parameter is properly quoted by format()
--- );
+--     '12345'
+-- ) AS t(material_id BIGINT, ...);
 --
 -- DANGEROUS USAGE (DO NOT DO THIS):
 -- user_input := get_user_input();
@@ -220,12 +227,12 @@ $$;
 Protect against hanging queries on foreign servers:
 
 ```sql
--- Set statement timeout for FDW queries
-ALTER SERVER hermes_fdw OPTIONS (ADD statement_timeout '30000');  -- 30 seconds
+-- Set statement timeout for FDW queries (pass GUC via libpq)
+ALTER SERVER hermes_fdw OPTIONS (ADD options '-c statement_timeout=30s');
 
 -- Or per-user mapping
 ALTER USER MAPPING FOR perseus_app SERVER hermes_fdw
-  OPTIONS (ADD statement_timeout '30000');
+  OPTIONS (ADD options '-c statement_timeout=30s');
 
 -- Application-level override for long-running queries
 SET LOCAL statement_timeout = '300000';  -- 5 minutes for specific query
@@ -406,7 +413,11 @@ CREATE TABLE sqlapps_lookups_cached AS
 SELECT * FROM sqlapps_lookups_fdw;
 
 -- Refresh periodically (e.g., daily via cron job)
-REFRESH TABLE sqlapps_lookups_cached;
+BEGIN;
+TRUNCATE TABLE sqlapps_lookups_cached;
+INSERT INTO sqlapps_lookups_cached
+SELECT * FROM sqlapps_lookups_fdw;
+COMMIT;
 
 -- Query uses local copy
 SELECT hr.experiment_id, lu.description

@@ -166,11 +166,16 @@ DECLARE
     v_retry_count INTEGER := 0;
     v_backoff_ms INTEGER := 100;
     v_safe_query TEXT;
+    v_quoted_params TEXT[];
 BEGIN
-    -- Build safe query using format() with proper parameter substitution
-    -- This prevents SQL injection by treating parameters as literals
+    -- SAFETY: p_query_template must be trusted and use only %s placeholders.
+    -- Parameters are always passed through quote_literal() before substitution.
     IF array_length(p_params, 1) > 0 THEN
-        v_safe_query := format(p_query_template, VARIADIC p_params);
+        SELECT array_agg(quote_literal(p))
+        INTO v_quoted_params
+        FROM unnest(p_params) AS p;
+
+        v_safe_query := format(p_query_template, VARIADIC v_quoted_params);
     ELSE
         v_safe_query := p_query_template;
     END IF;

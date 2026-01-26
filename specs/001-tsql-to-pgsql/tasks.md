@@ -149,7 +149,7 @@ cd ~/.claude-worktrees/US1-critical-views
 
 **Example Usage**:
 ```bash
-/ralph-loop "Analyze 22 views from User Story 1 (per dependency-analysis-lote3-views.md). Order: P3 (simple) → P2 → P1 → P0 (translated materialized view LAST). Iterate: Read AWS SCT → Apply constitution → Schema-qualify → Syntax validate. Checkpoint: After every 5 views, commit with quality scores. Gate: Before P0 view, validate ALL 21 dependencies resolved. Output <promise>ANALYSIS COMPLETE</promise> when all 22 views analyzed + quality scores ≥7.0/10.0 + no P0/P1 issues." --completion-promise "ANALYSIS COMPLETE" --max-iterations 50
+/ralph-loop "Analyze 22 views from User Story 1 (per dependency-analysis-lote3-views.md). Order: P3 (simple) → P2 → P1 → P0 (translated materialized view LAST). Iterate: Read AWS SCT → Apply constitution → Schema-qualify → Syntax validate. Checkpoint: After every 5 views, commit with quality scores. Gate: Before P0 view, validate ALL 21 dependencies resolved. Output <promise>ANALYSIS COMPLETE</promise> when all 22 views analyzed + quality scores ≥7.0/10.0 + no P0/P1 issues." --completion-promise "ANALYSIS COMPLETE" --max-iterations 10
 ```
 
 #### **Parallelization Strategy**
@@ -271,7 +271,7 @@ cd ~/.claude-worktrees/US2-table-valued-functions
 
 **Example Usage**:
 ```bash
-/ralph-loop "Refactor 15 table-valued functions from T-SQL to PL/pgSQL (per dependency-analysis-lote2-functions.md). Priority: McGet* family first (mcgetupstream, mcgetdownstream, mcgetupstreambylist, mcgetdownstreambylist), then remaining 11 functions. Preserve: input/output signatures, RETURNS TABLE, logic equivalence. Apply: PostgreSQL constitution, schema-qualify all refs, explicit casting. Output <promise>TVF REFACTOR COMPLETE</promise> when all 15 functions refactored + syntax validated + quality scores ≥7.0/10.0." --completion-promise "TVF REFACTOR COMPLETE" --max-iterations 60
+/ralph-loop "Refactor 15 table-valued functions from T-SQL to PL/pgSQL (per dependency-analysis-lote2-functions.md). Priority: McGet* family first (mcgetupstream, mcgetdownstream, mcgetupstreambylist, mcgetdownstreambylist), then remaining 11 functions. Preserve: input/output signatures, RETURNS TABLE, logic equivalence. Apply: PostgreSQL constitution, schema-qualify all refs, explicit casting. Output <promise>TVF REFACTOR COMPLETE</promise> when all 15 functions refactored + syntax validated + quality scores ≥7.0/10.0." --completion-promise "TVF REFACTOR COMPLETE" --max-iterations 10
 ```
 
 #### **Parallelization Strategy**

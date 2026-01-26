@@ -29,7 +29,7 @@ CREATE TABLE perseus.unit (
     description VARCHAR(200),
     dimension_id INTEGER,
     factor DOUBLE PRECISION,
-    offset DOUBLE PRECISION,
+    "offset" DOUBLE PRECISION,
 
     -- Primary key constraint
     CONSTRAINT pk_unit PRIMARY KEY (id)

@@ -6,6 +6,26 @@
 
 ---
 
+## ⚠️ **IMPORTANT: Autonomous Execution by Claude Code**
+
+**WHO EXECUTES**: All commands and workflows in this guide are executed **autonomously by Claude Code agents**, not manually by the user.
+
+**AVAILABLE TOOLS**:
+- ✅ **Local Git Commands**: Claude Code has direct access to execute `git`, `gh` CLI commands
+- ✅ **MCP GitHub Tools**: Claude Code can use `mcp__github-official-tools` for PR/issue management
+- ✅ **File Operations**: Claude Code can read, write, edit files directly
+- ✅ **Shell Execution**: Claude Code can run bash commands, scripts, validation tools
+
+**EXECUTION MODEL**:
+- When this guide says "Create worktree", Claude Code executes `git worktree add` directly
+- When this guide says "Push to remote", Claude Code executes `git push` directly
+- When this guide says "Create PR", Claude Code executes `gh pr create` or MCP tools directly
+- User provides high-level direction ("Start User Story 1"), Claude Code executes all steps autonomously
+
+**USER ROLE**: The user provides strategic direction and approvals; Claude Code handles all tactical execution.
+
+---
+
 ## 🎯 **Core Principles**
 
 1. **Parallel Execution**: Maximize throughput by running independent tasks concurrently
@@ -49,9 +69,13 @@
 
 ## 🌳 **Worktree Setup (Step-by-Step)**
 
+**NOTE**: These steps are executed **autonomously by Claude Code** when starting a User Story. Commands shown are for reference and understanding of the workflow.
+
+---
+
 ### **Before Starting a User Story**
 
-1. **Verify Parent Branch is Clean**
+1. **Verify Parent Branch is Clean** (Claude Code executes)
    ```bash
    cd /Users/pierre.ribeiro/workspace/projects/amyris/sqlserver-to-postgresql-migration
    git checkout 001-tsql-to-pgsql
@@ -59,7 +83,7 @@
    git status  # Should show "working tree clean"
    ```
 
-2. **Create Worktree**
+2. **Create Worktree** (Claude Code executes)
    ```bash
    # For User Story 1
    git worktree add ~/.claude-worktrees/US1-critical-views -b us1-critical-views 001-tsql-to-pgsql
@@ -68,18 +92,18 @@
    cd ~/.claude-worktrees/US1-critical-views
    ```
 
-3. **Verify Worktree Setup**
+3. **Verify Worktree Setup** (Claude Code executes)
    ```bash
    git branch  # Should show: * us1-critical-views
    git log --oneline -3  # Should match 001-tsql-to-pgsql
    ```
 
-4. **Open Worktree in Claude Code**
+4. **Open Worktree in Claude Code** (Claude Code executes)
    ```bash
    # From worktree directory
-   code .
+   claude .
    # OR specify path
-   code ~/.claude-worktrees/US1-critical-views
+   claude ~/.claude-worktrees/US1-critical-views
    ```
 
 ---
@@ -164,17 +188,17 @@ Tasks marked with `[P]` in tasks.md can run in parallel:
 ```bash
 # Terminal 1 - Main worktree
 cd ~/.claude-worktrees/US1-critical-views
-code .
+claude .
 # Work on T034
 
 # Terminal 2 - Same worktree, different task
 cd ~/.claude-worktrees/US1-critical-views
-code .
+claude .
 # Work on T035 (different file)
 
 # Terminal 3 - Same worktree, different task
 cd ~/.claude-worktrees/US1-critical-views
-code .
+claude .
 # Work on T036 (different file)
 ```
 
@@ -245,7 +269,11 @@ After completing a task group, update `tracking/progress-tracker.md`:
 
 ## 🔄 **Worktree Workflow (Complete Cycle)**
 
-### **1. Start User Story**
+**NOTE**: All commands shown below are executed **autonomously by Claude Code**, not manually by the user. When the user requests "Start User Story 1", Claude Code executes these steps automatically using available git/gh tools.
+
+---
+
+### **1. Start User Story** (Claude Code executes)
 
 ```bash
 # Create worktree
@@ -253,10 +281,10 @@ git worktree add ~/.claude-worktrees/US1-critical-views -b us1-critical-views 00
 cd ~/.claude-worktrees/US1-critical-views
 
 # Open in Claude Code
-code .
+claude .
 ```
 
-### **2. Work on Tasks**
+### **2. Work on Tasks** (Claude Code executes)
 
 ```bash
 # Read execution requirements in tasks.md
@@ -268,7 +296,7 @@ git add source/building/pgsql/refactored/views/translated-analysis.md
 git commit -m "feat(US1): complete T034 - analyze translated view (8.5/10.0)"
 ```
 
-### **3. Merge Back to Parent**
+### **3. Merge Back to Parent** (Claude Code executes)
 
 ```bash
 # Push worktree branch
@@ -283,7 +311,7 @@ gh pr create --base 001-tsql-to-pgsql --head us1-critical-views \
 gh pr merge --squash --delete-branch
 ```
 
-### **4. Clean Up Worktree**
+### **4. Clean Up Worktree** (Claude Code executes)
 
 ```bash
 # After merge, remove worktree

@@ -13,6 +13,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current Status:** 15/15 stored procedures complete ✅ | Ready for views/functions/tables phase
 
+---
+
+## ⚠️ MANDATORY: User Story Workflow (READ FIRST)
+
+**CRITICAL**: Before starting ANY User Story work, you MUST read and follow:
+
+📖 **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`**
+
+This guide defines **REQUIRED** practices for:
+1. **Worktree Strategy**: Each User Story works in isolated git worktree (`~/.claude-worktrees/`)
+2. **Parallel Execution**: Maximize throughput with concurrent task execution
+3. **Database Agents**: Mandatory use (database-expert, sql-pro, database-optimization)
+4. **Ralph Loop Plugin**: Required for batch conversions (10+ objects)
+5. **Branch Strategy**: `001-tsql-to-pgsql` is parent for all User Story branches
+
+**Quick Checklist** (per User Story):
+- [ ] Create worktree: `git worktree add ~/.claude-worktrees/US{X}-{name} -b us{X}-{name} 001-tsql-to-pgsql`
+- [ ] Activate database-expert agent (PRIMARY for all SQL work)
+- [ ] Enable Ralph Loop for batch tasks (analysis, refactoring, testing)
+- [ ] Run `[P]` marked tasks in parallel (multiple sessions/agents)
+- [ ] Update `tracking/progress-tracker.md` after each task group
+
+**Non-Compliance = Rejected Work**: Worktree isolation and database agent usage are NON-NEGOTIABLE.
+
+---
+
 ## Project Scope - 769 Database Objects
 
 | Object Type | Count | Status | Notes |

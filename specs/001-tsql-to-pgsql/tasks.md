@@ -117,6 +117,61 @@ This is a database migration project with the following structure:
 
 **Independent Test**: Deploy migrated views to test environment, execute application queries against them, compare result sets with SQL Server outputs using scripts/validation/data-integrity-check.sql
 
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US1-critical-views -b us1-critical-views 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US1-critical-views
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US1-critical-views`
+- [ ] **Branch Name**: `us1-critical-views` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL analysis/validation tasks
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for ALL refactoring tasks
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for performance validation (T052, T118)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for ANY errors/test failures
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T034-T038: Batch analyze 22 views (5 parallel agents)
+- T040-T045: Batch refactor 22 views (pattern-based conversion)
+- T047-T050: Batch create unit tests for 22 views
+
+**Example Usage**:
+```bash
+/ralph-loop "Analyze 22 views from User Story 1 (per dependency-analysis-lote3-views.md). Order: P3 (simple) → P2 → P1 → P0 (translated materialized view LAST). Iterate: Read AWS SCT → Apply constitution → Schema-qualify → Syntax validate. Checkpoint: After every 5 views, commit with quality scores. Gate: Before P0 view, validate ALL 21 dependencies resolved. Output <promise>ANALYSIS COMPLETE</promise> when all 22 views analyzed + quality scores ≥7.0/10.0 + no P0/P1 issues." --completion-promise "ANALYSIS COMPLETE" --max-iterations 50
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T031, T032: Dependency analysis (2 parallel sessions)
+- T034-T038: View analysis (5+ parallel agents via Ralph Loop)
+- T042-T045: View refactoring (4+ parallel agents via Ralph Loop)
+- T047-T050: Unit test creation (4+ parallel agents)
+
+**Sequential dependencies**:
+- T033 depends on T031-T032 (must run AFTER)
+- T039 depends on T034-T038 (consolidation AFTER analysis)
+- T046 depends on T040-T045 (validation AFTER refactoring)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all objects (T054)
+- **Performance**: Within ±20% of SQL Server baseline (T052)
+- **Constitution**: Zero P0 violations, <3 P1 violations per object
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
+
 ### Dependency Analysis for User Story 1
 
 - [ ] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
@@ -181,6 +236,64 @@ This is a database migration project with the following structure:
 **Goal**: Migrate all 25 functions (15 table-valued, 10 scalar) from T-SQL to PL/pgSQL preserving input/output signatures and logic
 
 **Independent Test**: Call each migrated function with known input parameters and compare output result sets with SQL Server using scripts/validation/data-integrity-check.sql
+
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US2-table-valued-functions -b us2-table-valued-functions 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US2-table-valued-functions
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US2-table-valued-functions`
+- [ ] **Branch Name**: `us2-table-valued-functions` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US1 Dependency**: Verify US1 views deployed (functions may depend on views)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL analysis/validation tasks
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for ALL T-SQL → PL/pgSQL conversions
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for performance validation (T089, T118)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for function signature/logic errors
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T066-T070: Batch analyze 25 functions (McGet* family + others)
+- T072-T076: Batch refactor table-valued functions (15 functions)
+- T077-T081: Batch refactor scalar functions (10 functions)
+- T082-T086: Batch create unit tests for 25 functions
+
+**Example Usage**:
+```bash
+/ralph-loop "Refactor 15 table-valued functions from T-SQL to PL/pgSQL (per dependency-analysis-lote2-functions.md). Priority: McGet* family first (mcgetupstream, mcgetdownstream, mcgetupstreambylist, mcgetdownstreambylist), then remaining 11 functions. Preserve: input/output signatures, RETURNS TABLE, logic equivalence. Apply: PostgreSQL constitution, schema-qualify all refs, explicit casting. Output <promise>TVF REFACTOR COMPLETE</promise> when all 15 functions refactored + syntax validated + quality scores ≥7.0/10.0." --completion-promise "TVF REFACTOR COMPLETE" --max-iterations 60
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T063, T064: Dependency analysis (2 parallel sessions)
+- T066-T070: Function analysis (5+ parallel agents via Ralph Loop)
+- T072-T076, T077-T081: Refactoring (split by function type, parallel agents)
+- T082-T086: Unit test creation (5+ parallel agents)
+
+**Sequential dependencies**:
+- T065 depends on T063-T064 (must run AFTER)
+- T071 depends on T066-T070 (consolidation AFTER analysis)
+- T091 depends on T082-T090 (validation AFTER tests)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all functions (T091)
+- **Performance**: Within ±20% of SQL Server baseline (T089)
+- **Signature Preservation**: 100% match for input/output types
+- **Constitution**: Zero P0 violations, <3 P1 violations per function
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
 
 ### Dependency Analysis for User Story 2
 

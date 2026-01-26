@@ -272,12 +272,14 @@ ALTER TABLE perseus.field_map
 -- GOO_TYPE_COMBINE_COMPONENT Table FKs
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE perseus.goo_type_combine_component
-  ADD CONSTRAINT goo_type_combine_component_fk_1
-  FOREIGN KEY (goo_type_id)
-  REFERENCES perseus.goo_type (id)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
+-- REMOVED: Column goo_type_id does not exist in goo_type_combine_component table
+-- Table has: id, combine_id, component_id (both are references to goo_type_combine_target)
+-- ALTER TABLE perseus.goo_type_combine_component
+--   ADD CONSTRAINT goo_type_combine_component_fk_1
+--   FOREIGN KEY (goo_type_id)
+--   REFERENCES perseus.goo_type (id)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
 
 ALTER TABLE perseus.goo_type_combine_component
   ADD CONSTRAINT goo_type_combine_component_fk_2

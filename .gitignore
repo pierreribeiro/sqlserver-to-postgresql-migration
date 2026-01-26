@@ -46,4 +46,5 @@ infra/database/.secrets/
 infra/database/pgdata/
 
 # Claude
-.Claude/command-log.txt
+#.Claude/command-log.txt
+command-log.txt

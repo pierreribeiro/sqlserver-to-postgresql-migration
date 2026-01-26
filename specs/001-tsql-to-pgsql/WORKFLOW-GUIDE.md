@@ -184,7 +184,17 @@ Tasks marked with `[P]` in tasks.md can run in parallel:
 
 ### **Running Tasks in Parallel**
 
-**Option 1: Multiple Claude Code Sessions** (RECOMMENDED)
+**Option 1: Multiple Agents in Same Session** (via Task tool) (PREFERABLE)
+```markdown
+User: "Launch 3 agents in parallel to analyze T034, T035, T036"
+
+Claude sends single message with 3 Task tool calls:
+- Task 1: database-expert analyzing translated view
+- Task 2: database-expert analyzing upstream view
+- Task 3: database-expert analyzing downstream view
+```
+
+**Option 2: Multiple Claude Code Sessions** 
 ```bash
 # Terminal 1 - Main worktree
 cd ~/.claude-worktrees/US1-critical-views
@@ -200,16 +210,6 @@ claude .
 cd ~/.claude-worktrees/US1-critical-views
 claude .
 # Work on T036 (different file)
-```
-
-**Option 2: Multiple Agents in Same Session** (via Task tool)
-```markdown
-User: "Launch 3 agents in parallel to analyze T034, T035, T036"
-
-Claude sends single message with 3 Task tool calls:
-- Task 1: database-expert analyzing translated view
-- Task 2: database-expert analyzing upstream view
-- Task 3: database-expert analyzing downstream view
 ```
 
 ### **Parallelization Rules**

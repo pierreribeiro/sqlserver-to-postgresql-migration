@@ -45,6 +45,6 @@ build/
 infra/database/.secrets/
 infra/database/pgdata/
 
-# Claude
-#.Claude/command-log.txt
+# Claude Code command log (should not be committed)
+.claude/command-log.txt
 command-log.txt

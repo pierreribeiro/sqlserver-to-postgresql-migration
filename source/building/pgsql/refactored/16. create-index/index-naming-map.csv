@@ -1,0 +1,38 @@
+sqlserver_name,postgres_name,table_name,columns,include_columns,index_type,is_unique
+idx_ACTIVE,idx_Scraper_Active,Scraper,Active,,BTREE,NO
+ix_container_scope_id_left_id_right_id_depth,idx_container_scope_id_left_id_right_id,container,"scope_id, left_id, right_id, depth",,BTREE,NO
+ix_fsr_for_istd_view,idx_fatsmurf_reading_fatsmurf_id,fatsmurf_reading,fatsmurf_id,id,BTREE,NO
+ix_goo_added_on,idx_goo_added_on,goo,added_on,"uid, container_id",BTREE,NO
+ix_goo_container_id,idx_goo_container_id,goo,container_id,,BTREE,NO
+ix_goo_recipe_id,idx_goo_recipe_id,goo,recipe_id,,BTREE,NO
+ix_goo_recipe_part_id,idx_goo_recipe_part_id,goo,recipe_part_id,,BTREE,NO
+uniq_goo_uid,uq_goo_uid,goo,uid,,UNIQUE,YES
+ix_goo_id,idx_goo_history_goo_id,goo_history,goo_id,,BTREE,NO
+ix_history_id_value,idx_history_value_history_id,history_value,history_id,,BTREE,NO
+IX_material_inventory_threshold_material_type_id,idx_material_inventory_threshold_material_type_id,material_inventory_threshold,material_type_id,,BTREE,NO
+ix_material_transition_transition_id,idx_material_transition_transition_id,material_transition,transition_id,,BTREE,NO
+ix_container_type,idx_container_container_type_id,container,container_type_id,"id, mass",BTREE,NO
+ix_person_km_session_id,idx_person_km_session_id,person,km_session_id,,BTREE,NO
+ix_history_id,idx_poll_history_poll_id,poll_history,poll_id,history_id,BTREE,NO
+ix_recipe_goo_type_id,idx_recipe_goo_type_id,recipe,goo_type_id,,BTREE,NO
+ix_recipe_part_goo_type_id,idx_recipe_part_goo_type_id,recipe_part,goo_type_id,,BTREE,NO
+ix_recipe_part_recipe_id,idx_recipe_part_recipe_id,recipe_part,recipe_id,,BTREE,NO
+ix_recipe_part_unit_id,idx_recipe_part_unit_id,recipe_part,unit_id,,BTREE,NO
+ix_robot_log_robot_run_id,idx_robot_log_robot_run_id,robot_log,robot_run_id,,BTREE,NO
+ix_container_id,idx_robot_log_container_sequence_container_id,robot_log_container_sequence,container_id,,BTREE,NO
+ix_robot_log_read_robot_log_id,idx_robot_log_read_robot_log_id,robot_log_read,robot_log_id,,BTREE,NO
+ix_robot_log_transfer_robot_log_id,idx_robot_log_transfer_robot_log_id,robot_log_transfer,robot_log_id,,BTREE,NO
+uniq_container_uid,uq_container_uid,container,uid,,UNIQUE,YES
+uniq_run_name,uq_robot_run_name,robot_run,name,,UNIQUE,YES
+uniq_index,uq_smurf_goo_type_smurf_id_goo_type_id_is_input,smurf_goo_type,"smurf_id, goo_type_id, is_input",,UNIQUE,YES
+ix_submission_added_on,idx_submission_added_on,submission,added_on,,BTREE,NO
+ix_transition_material_material_id,idx_transition_material_material_id,transition_material,material_id,,BTREE,NO
+uix_unit_name,uq_unit_name,unit,name,,UNIQUE,YES
+uniq_starting_step,uq_workflow_section_starting_step_id,workflow_section,starting_step_id,,UNIQUE,YES
+ix_materialized,idx_translated_source_material_destination_material_transition_id,translated,"source_material, destination_material, transition_id",,BTREE,NO
+IX_themis_sample_id,idx_fatsmurf_themis_sample_id,fatsmurf,themis_sample_id,,BTREE,NO
+ix_fatsmurf_container_id,idx_fatsmurf_container_id,fatsmurf,container_id,,BTREE,NO
+ix_fatsmurf_recipe_id,idx_fatsmurf_smurf_id,fatsmurf,smurf_id,,BTREE,NO
+ix_fatsmurf_smurf_id,idx_fatsmurf_smurf_id,fatsmurf,smurf_id,,BTREE,NO
+uniq_fs_uid,uq_fatsmurf_uid,fatsmurf,uid,,UNIQUE,YES
+ix_fatsmurf_id,idx_fatsmurf_history_fatsmurf_id,fatsmurf_history,fatsmurf_id,,BTREE,NO

@@ -1,26 +1,17 @@
--- ============================================================================
--- Object: robot_log_transfer
--- Type: TABLE
--- Priority: P2
--- Description: Robot liquid transfer events
--- ============================================================================
+-- Table: perseus.robot_log_transfer
+-- Source: SQL Server [dbo].[robot_log_transfer]
+-- Columns: 11
 
-DROP TABLE IF EXISTS perseus.robot_log_transfer CASCADE;
-
-CREATE TABLE perseus.robot_log_transfer (
-    id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
+CREATE TABLE IF NOT EXISTS perseus.robot_log_transfer (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
     robot_log_id INTEGER NOT NULL,
-    source_goo_id INTEGER,
-    dest_goo_id INTEGER,
-    transfer_volume_ml DOUBLE PRECISION,
-    transfer_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_robot_log_transfer PRIMARY KEY (id)
+    source_barcode VARCHAR(25) NOT NULL,
+    destination_barcode VARCHAR(25) NOT NULL,
+    transfer_time TIMESTAMP,
+    transfer_volume VARCHAR(25),
+    source_position VARCHAR(150),
+    destination_position VARCHAR(150),
+    material_type_id INTEGER,
+    source_material_id INTEGER,
+    destination_material_id INTEGER
 );
-
-CREATE INDEX idx_robot_log_transfer_robot_log_id ON perseus.robot_log_transfer(robot_log_id);
-CREATE INDEX idx_robot_log_transfer_source_goo_id ON perseus.robot_log_transfer(source_goo_id);
-CREATE INDEX idx_robot_log_transfer_dest_goo_id ON perseus.robot_log_transfer(dest_goo_id);
-
-COMMENT ON TABLE perseus.robot_log_transfer IS
-'Robot liquid transfer events - tracks liquid handling operations.
-Updated: 2026-01-26 | Owner: Perseus DBA Team';

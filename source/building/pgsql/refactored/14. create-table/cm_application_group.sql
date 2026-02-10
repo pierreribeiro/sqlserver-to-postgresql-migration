@@ -1,15 +1,8 @@
--- ============================================================================
--- Object: cm_application_group
--- Type: TABLE (Tier 0 - CM)
--- ============================================================================
+-- Table: perseus.cm_application_group
+-- Source: SQL Server [dbo].[cm_application_group]
+-- Columns: 2
 
-DROP TABLE IF EXISTS perseus.cm_application_group CASCADE;
-
-CREATE TABLE perseus.cm_application_group (
-    application_group_id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
-    label VARCHAR(200) NOT NULL,
-
-    CONSTRAINT pk_cm_application_group PRIMARY KEY (application_group_id)
+CREATE TABLE IF NOT EXISTS perseus.cm_application_group (
+    application_group_id INTEGER GENERATED ALWAYS AS IDENTITY,
+    label VARCHAR(50) NOT NULL
 );
-
-COMMENT ON TABLE perseus.cm_application_group IS 'CM: Application group definitions. Updated: 2026-01-26';

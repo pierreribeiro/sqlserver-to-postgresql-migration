@@ -1,15 +1,8 @@
--- ============================================================================
--- Object: cm_unit_compare
--- Type: TABLE (Tier 0 - CM)
--- ============================================================================
+-- Table: perseus.cm_unit_compare
+-- Source: SQL Server [dbo].[cm_unit_compare]
+-- Columns: 2
 
-DROP TABLE IF EXISTS perseus.cm_unit_compare CASCADE;
-
-CREATE TABLE perseus.cm_unit_compare (
+CREATE TABLE IF NOT EXISTS perseus.cm_unit_compare (
     from_unit_id INTEGER NOT NULL,
-    to_unit_id INTEGER NOT NULL,
-
-    CONSTRAINT pk_cm_unit_compare PRIMARY KEY (from_unit_id, to_unit_id)
+    to_unit_id INTEGER NOT NULL
 );
-
-COMMENT ON TABLE perseus.cm_unit_compare IS 'CM: Unit comparison mappings. Updated: 2026-01-26';

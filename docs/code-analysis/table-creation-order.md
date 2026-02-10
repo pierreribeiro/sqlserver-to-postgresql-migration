@@ -1,424 +1,284 @@
 # Table Creation Order - Perseus Database Migration
 
-## Executive Summary
+## Overview
 
-**Total Tables:** 101
-**Schemas:** 3 (dbo, hermes, demeter)
-**Creation Tiers:** 5 (0-4)
-**Circular Dependencies:** NONE
+This document provides the **flat numbered creation order** for all 92 dbo schema tables based on dependency tier analysis. Tables must be created in this exact order to satisfy foreign key constraints.
 
-This document provides the dependency-safe creation order for all 101 tables in the Perseus database.
+**Analysis Date:** 2026-02-10
+**Total Tables:** 92 (91 main dbo + 1 utility)
+**FDW Tables:** 8 (created separately via CREATE FOREIGN TABLE)
+**Dependency Tiers:** 8 (Tier 0-7)
 
 ---
 
-## Dependency-Safe Creation Sequence
+## Creation Order Strategy
 
-### Phase 0: Schema Creation
+1. **Tier 0 (Base Tables)**: No FK dependencies - create first (37 tables)
+2. **Tier 1-7**: Progressive FK dependencies (55 tables)
+3. **FDW Tables**: Created separately after all dbo tables (8 tables)
+
+Within each tier, tables are listed **alphabetically** for consistency.
+
+---
+
+## Table Creation Order (1-92)
+
+### Tier 0: Base Tables (1-37)
+
+| # | Table Name | Columns | P0 Critical | Notes |
+|---|------------|---------|-------------|-------|
+| 1 | alembic_version | 1 | | Migration tracking |
+| 2 | cm_application | 8 | | Application config |
+| 3 | cm_application_group | 2 | | Application groups |
+| 4 | cm_group | 5 | | User groups |
+| 5 | cm_project | 5 | | Project definitions |
+| 6 | cm_unit | 7 | | Unit config |
+| 7 | cm_unit_compare | 2 | | Unit comparisons |
+| 8 | cm_unit_dimensions | 10 | | Unit dimensions |
+| 9 | cm_user | 7 | | User config |
+| 10 | cm_user_group | 2 | | User-group mapping |
+| 11 | color | 1 | | Color definitions |
+| 12 | container_type | 7 | | Container types |
+| 13 | display_layout | 2 | | Display layouts |
+| 14 | display_type | 2 | | Display types |
+| 15 | field_map_block | 3 | | Field map blocks |
+| 16 | field_map_set | 6 | | Field map sets |
+| 17 | field_map_type | 2 | | Field map types |
+| 18 | goo_attachment_type | 2 | | Attachment types |
+| 19 | goo_process_queue_type | 2 | | Queue types |
+| 20 | **goo_type** | 12 | **P0** | **Material types - CRITICAL** |
+| 21 | history_type | 3 | | History types |
+| 22 | **m_downstream** | 4 | **P0** | **Cached downstream graph** |
+| 23 | m_number | 1 | | M-number sequence |
+| 24 | **m_upstream** | 4 | **P0** | **Cached upstream graph** |
+| 25 | m_upstream_dirty_leaves | 1 | | Dirty tracking |
+| 26 | manufacturer | 4 | | Manufacturers |
+| 27 | migration | 3 | | Migration tracking |
+| 28 | permissions | 2 | | Permission definitions |
+| 29 | person | 8 | | Person records |
+| 30 | prefix_incrementor | 2 | | Prefix sequences |
+| 31 | s_number | 1 | | S-number sequence |
+| 32 | scraper | 19 | | Scraper config |
+| 33 | sequence_type | 2 | | Sequence types |
+| 34 | smurf | 6 | | Smurf definitions |
+| 35 | tmp_messy_links | 5 | | Temporary cleanup |
+| 36 | unit | 6 | | Units of measure |
+| 37 | workflow_step_type | 2 | | Workflow step types |
+
+### Tier 1: First Level Dependencies (38-47)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 38 | coa | 3 | goo_type | Certificate of Analysis |
+| 39 | container | 13 | container_type | Container instances |
+| 40 | container_type_position | 6 | container_type (×2) | Parent/child positions |
+| 41 | external_goo_type | 4 | goo_type, manufacturer | External type mapping |
+| 42 | field_map | 14 | field_map_block, field_map_type, field_map_set | Field mapping |
+| 43 | goo_type_combine_target | 3 | goo_type | Combine targets |
+| 44 | **perseus_user** | 9 | manufacturer (×3) | **P0 - Users, 3 duplicate FKs** |
+| 45 | property | 4 | unit | Property definitions |
+| 46 | robot_log_type | 4 | container_type | Robot log types |
+| 47 | smurf_goo_type | 4 | smurf, goo_type | Smurf-goo mapping |
+
+### Tier 2: Second Level Dependencies (48-61)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 48 | coa_spec | 9 | coa, property | COA specifications |
+| 49 | feed_type | 10 | perseus_user (×2) | Feed types, unnamed FKs |
+| 50 | field_map_display_type | 6 | field_map, display_type, display_layout | Field display |
+| 51 | field_map_display_type_user | 3 | perseus_user | User display prefs |
+| 52 | goo_type_combine_component | 3 | goo_type, goo_type_combine_target | Combine components |
+| 53 | history | 4 | perseus_user, history_type | History records |
+| 54 | material_inventory_threshold | 12 | perseus_user (×2), goo_type | Inventory thresholds |
+| 55 | property_option | 5 | property | Property options |
+| 56 | robot_run | 5 | container | Robot runs |
+| 57 | saved_search | 8 | perseus_user | Saved searches |
+| 58 | smurf_group | 4 | perseus_user | Smurf groups |
+| 59 | smurf_property | 6 | property, smurf | Smurf properties |
+| 60 | submission | 4 | perseus_user | Submissions, unnamed FK |
+| 61 | workflow | 8 | perseus_user, manufacturer | Workflow definitions |
+
+### Tier 3: Third Level Dependencies (62-69)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 62 | container_history | 3 | history, container | Container history |
+| 63 | history_value | 3 | history | History values |
+| 64 | material_inventory_threshold_notify_user | 2 | material_inventory_threshold, perseus_user | Threshold notifications |
+| 65 | recipe | 16 | perseus_user, feed_type, goo_type, workflow | Recipes, unnamed FKs |
+| 66 | robot_log | 14 | robot_log_type, robot_run | Robot logs, unnamed FK |
+| 67 | smurf_group_member | 3 | smurf, smurf_group | Group membership |
+| 68 | workflow_attachment | 7 | perseus_user, workflow | Workflow attachments |
+| 69 | workflow_step | 17 | goo_type, property, smurf, workflow, unit | Workflow steps |
+
+### Tier 4: Fourth Level Dependencies (70-75)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 70 | **fatsmurf** | 18 | smurf, container, manufacturer, workflow_step | **P0 - Experiments** |
+| 71 | recipe_part | 11 | goo_type, recipe (×2), unit, workflow_step | Recipe parts, unnamed FKs |
+| 72 | recipe_project_assignment | 2 | recipe | Recipe assignments, unnamed FK |
+| 73 | robot_log_container_sequence | 5 | sequence_type, container, robot_log | Container sequences |
+| 74 | robot_log_error | 3 | robot_log | Robot errors |
+| 75 | workflow_section | 4 | workflow, workflow_step | Workflow sections |
+
+### Tier 5: Fifth Level Dependencies (76-80)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 76 | fatsmurf_attachment | 8 | perseus_user, fatsmurf | Experiment attachments |
+| 77 | fatsmurf_comment | 5 | perseus_user, fatsmurf | Experiment comments |
+| 78 | fatsmurf_history | 3 | history, fatsmurf | Experiment history |
+| 79 | fatsmurf_reading | 5 | perseus_user, fatsmurf | Experiment readings |
+| 80 | **goo** | 20 | goo_type, perseus_user, manufacturer, container, workflow_step, recipe, recipe_part | **P0 - Materials** |
+
+### Tier 6: Sixth Level Dependencies (81-91)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 81 | goo_attachment | 9 | perseus_user, goo, goo_attachment_type | Material attachments |
+| 82 | goo_comment | 6 | perseus_user, goo | Material comments |
+| 83 | goo_history | 3 | history, goo | Material history |
+| 84 | material_inventory | 14 | container (×2), perseus_user (×2), goo, recipe | Inventory, unnamed FKs |
+| 85 | material_qc | 5 | goo | QC data, unnamed FK |
+| 86 | **material_transition** | 3 | **fatsmurf (uid), goo (uid)** | **P0 - Lineage, UID-based FKs** |
+| 87 | poll | 11 | fatsmurf_reading, smurf_property | Poll data |
+| 88 | robot_log_read | 7 | goo, robot_log, property | Robot read logs |
+| 89 | robot_log_transfer | 11 | goo (×2), robot_log | Robot transfer logs |
+| 90 | submission_entry | 9 | smurf, goo, perseus_user, submission | Submission entries, unnamed FKs |
+| 91 | **transition_material** | 2 | **fatsmurf (uid), goo (uid)** | **P0 - Lineage, UID-based FKs** |
+
+### Tier 7: Seventh Level Dependencies (92)
+
+| # | Table Name | Columns | Dependencies | Notes |
+|---|------------|---------|--------------|-------|
+| 92 | poll_history | 3 | history, poll | Poll history |
+
+---
+
+## Utility Table (Created Separately)
+
+| Table Name | Columns | Notes |
+|------------|---------|-------|
+| perseus_table_and_row_counts | 3 | Utility table for row count tracking, no FK dependencies |
+
+---
+
+## FDW Tables (Created Separately via CREATE FOREIGN TABLE)
+
+These tables are NOT part of the dbo schema creation order. They are created via `CREATE FOREIGN TABLE` statements with `postgres_fdw` extension.
+
+### Hermes Schema (6 tables)
+
+| # | Table Name | Columns | Notes |
+|---|------------|---------|-------|
+| 1 | run | 90 | Fermentation runs |
+| 2 | run_condition | 4 | Run conditions |
+| 3 | run_condition_option | 4 | Condition options |
+| 4 | run_condition_value | 5 | Condition values |
+| 5 | run_master_condition | 10 | Master conditions |
+| 6 | run_master_condition_type | 3 | Condition types |
+
+### Demeter Schema (2 tables)
+
+| # | Table Name | Columns | Notes |
+|---|------------|---------|-------|
+| 1 | barcodes | 3 | Barcode tracking |
+| 2 | seed_vials | 22 | Seed vial inventory |
+
+---
+
+## Critical Path Tables (P0)
+
+These tables are marked as P0 critical for the material lineage tracking system:
+
+| Creation Order | Table Name | Tier | Notes |
+|----------------|------------|------|-------|
+| 20 | goo_type | 0 | Material type definitions |
+| 22 | m_downstream | 0 | Cached downstream graph |
+| 24 | m_upstream | 0 | Cached upstream graph |
+| 44 | perseus_user | 1 | User records (3 duplicate FKs) |
+| 70 | fatsmurf | 4 | Experiments/transitions |
+| 80 | goo | 5 | Materials (core entity) |
+| 86 | material_transition | 6 | Material-to-transition lineage |
+| 91 | transition_material | 6 | Transition-to-material lineage |
+
+---
+
+## Known Issues
+
+### 1. Duplicate Foreign Keys (1 issue)
+- **Table:** perseus_user (creation order #44)
+- **Column:** manufacturer_id
+- **Issue:** 3 duplicate FK constraints to manufacturer.id
+- **Constraint Names:** FK__perseus_u__manuf__5B3C942F, FK__perseus_u__manuf__5E1900DA, FK__perseus_u__manuf__6001494C
+- **Resolution:** Create only ONE FK constraint in PostgreSQL
+
+### 2. Unnamed Foreign Keys (25 constraints)
+Tables with unnamed FK constraints (will receive PostgreSQL auto-generated names):
+- feed_type (2 FKs)
+- material_inventory (6 FKs)
+- material_qc (1 FK)
+- recipe (4 FKs)
+- recipe_part (5 FKs)
+- recipe_project_assignment (1 FK)
+- robot_log (1 FK)
+- submission (1 FK)
+- submission_entry (4 FKs)
+
+### 3. UID-Based Foreign Keys (4 constraints)
+- **Tables:** material_transition, transition_material
+- **FK Columns:** material_id (nvarchar), transition_id (nvarchar)
+- **Referenced Columns:** goo.uid, fatsmurf.uid
+- **Special Behavior:** ON UPDATE CASCADE (only 2 constraints in entire database with this behavior)
+
+---
+
+## Deployment Script Template
 
 ```sql
--- Create schemas first (if not exists)
-0. CREATE SCHEMA IF NOT EXISTS dbo;
-1. CREATE SCHEMA IF NOT EXISTS hermes;
-2. CREATE SCHEMA IF NOT EXISTS demeter;
+-- Perseus Database - Table Creation Order
+-- Execute in this exact order to satisfy FK constraints
+
+-- TIER 0: Base Tables (1-37)
+\i 01-alembic_version.sql
+\i 02-cm_application.sql
+\i 03-cm_application_group.sql
+-- ... continue through tier 0
+
+-- TIER 1: First Level Dependencies (38-47)
+\i 38-coa.sql
+\i 39-container.sql
+-- ... continue through tier 1
+
+-- TIER 2-7: Continue in order (48-92)
+-- ...
+
+-- FDW Tables (create separately)
+\i fdw/hermes_run.sql
+\i fdw/hermes_run_condition.sql
+-- ... continue FDW tables
+
+-- Utility Table
+\i utility/perseus_table_and_row_counts.sql
 ```
 
 ---
 
-### Phase 1: Tier 0 - Base Tables (38 tables)
+## Validation Checklist
 
-**No dependencies - can be created in parallel**
+After table creation, validate:
 
-#### DBO Schema Tier 0 (32 tables)
-
-```
-0.  dbo.alembic_version
-1.  dbo.cm_application
-2.  dbo.cm_application_group
-3.  dbo.cm_group
-4.  dbo.cm_project
-5.  dbo.cm_unit
-6.  dbo.cm_unit_compare
-7.  dbo.cm_unit_dimensions
-8.  dbo.cm_user
-9.  dbo.cm_user_group
-10. dbo.color
-11. dbo.container_type
-12. dbo.display_layout
-13. dbo.display_type
-14. dbo.field_map_block
-15. dbo.field_map_set
-16. dbo.field_map_type
-17. dbo.goo_attachment_type
-18. dbo.goo_process_queue_type
-19. dbo.goo_type                    ** P0 CRITICAL **
-20. dbo.history_type
-21. dbo.m_downstream                ** P0 CRITICAL **
-22. dbo.m_number
-23. dbo.m_upstream                  ** P0 CRITICAL **
-24. dbo.m_upstream_dirty_leaves
-25. dbo.manufacturer
-26. dbo.migration
-27. dbo.Permissions
-28. dbo.PerseusTableAndRowCounts
-29. dbo.person
-30. dbo.prefix_incrementor
-31. dbo.s_number
-32. dbo.Scraper
-33. dbo.sequence_type
-34. dbo.smurf
-35. dbo.tmp_messy_links
-36. dbo.unit
-37. dbo.workflow_step_type
-```
-
-#### Hermes Schema Tier 0 (6 tables)
-
-```
-38. hermes.run
-39. hermes.run_condition
-40. hermes.run_condition_option
-41. hermes.run_condition_value
-42. hermes.run_master_condition
-43. hermes.run_master_condition_type
-```
-
-#### Demeter Schema Tier 0 (2 tables)
-
-```
-44. demeter.barcodes
-45. demeter.seed_vials
-```
-
----
-
-### Phase 2: Tier 1 - First Level Dependencies (10 tables)
-
-**Dependencies: Tier 0 tables only**
-
-```
-46. dbo.coa                         -> goo_type
-47. dbo.container                   -> container_type
-48. dbo.container_type_position     -> container_type (x2)
-49. dbo.external_goo_type           -> goo_type, manufacturer
-50. dbo.goo_type_combine_target     -> goo_type
-51. dbo.history                     -> perseus_user, history_type  [REQUIRES #55]
-52. dbo.property                    -> unit
-53. dbo.robot_log_type              -> container_type
-54. dbo.workflow                    -> perseus_user, manufacturer  [REQUIRES #55]
-55. dbo.perseus_user                -> manufacturer  ** P0 CRITICAL **
-```
-
-**IMPORTANT**: `perseus_user` must be created BEFORE `history` and `workflow` due to FK dependencies.
-
-**Recommended Order:**
-```
-46. dbo.coa
-47. dbo.container
-48. dbo.container_type_position
-49. dbo.external_goo_type
-50. dbo.goo_type_combine_target
-51. dbo.property
-52. dbo.robot_log_type
-53. dbo.perseus_user                ** CREATE FIRST **
-54. dbo.history                     (after perseus_user)
-55. dbo.workflow                    (after perseus_user)
-```
-
----
-
-### Phase 3: Tier 2 - Second Level Dependencies (14 tables)
-
-**Dependencies: Tier 0 and Tier 1 tables**
-
-```
-56. dbo.coa_spec                    -> coa, property
-57. dbo.container_history           -> history, container
-58. dbo.feed_type                   -> perseus_user (x2)
-59. dbo.field_map                   -> field_map_block, field_map_type, field_map_set
-60. dbo.goo_type_combine_component  -> goo_type, goo_type_combine_target
-61. dbo.history_value               -> history
-62. dbo.property_option             -> property
-63. dbo.robot_run                   -> container
-64. dbo.saved_search                -> perseus_user
-65. dbo.smurf_goo_type              -> smurf, goo_type
-66. dbo.smurf_group                 -> perseus_user
-67. dbo.smurf_property              -> property, smurf
-68. dbo.workflow_attachment         -> perseus_user, workflow
-69. dbo.workflow_step               -> goo_type, property, smurf, workflow, unit
-```
-
----
-
-### Phase 4: Tier 3 - Third Level Dependencies (17 tables)
-
-**Dependencies: Tiers 0, 1, and 2**
-
-**Sub-phase 4a - Create recipe first (required by goo):**
-```
-70. dbo.recipe                      -> perseus_user, feed_type, goo_type, workflow
-```
-
-**Sub-phase 4b - Create recipe_part (required by goo):**
-```
-71. dbo.recipe_part                 -> goo_type, recipe (x2), unit, workflow_step
-```
-
-**Sub-phase 4c - Create fatsmurf (required by goo and material_transition):**
-```
-72. dbo.fatsmurf                    -> smurf, container, manufacturer, workflow_step
-                                    ** P0 CRITICAL **
-```
-
-**Sub-phase 4d - Create goo:**
-```
-73. dbo.goo                         -> goo_type, perseus_user, manufacturer,
-                                       container, workflow_step, recipe, recipe_part
-                                    ** P0 CRITICAL **
-```
-
-**Sub-phase 4e - Remaining Tier 3 tables:**
-```
-74. dbo.fatsmurf_reading            -> perseus_user, fatsmurf
-75. dbo.field_map_display_type      -> field_map, display_type, display_layout
-76. dbo.field_map_display_type_user -> perseus_user
-77. dbo.poll                        -> fatsmurf_reading, smurf_property
-78. dbo.recipe_project_assignment   -> recipe
-79. dbo.robot_log                   -> robot_log_type, robot_run
-80. dbo.smurf_group_member          -> smurf, smurf_group
-81. dbo.submission                  -> perseus_user
-82. dbo.workflow_section            -> workflow, workflow_step
-```
-
----
-
-### Phase 5: Tier 4 - Fourth Level Dependencies (21 tables)
-
-**Dependencies: All previous tiers**
-
-**Sub-phase 5a - Direct goo/fatsmurf children:**
-```
-83. dbo.fatsmurf_attachment         -> perseus_user, fatsmurf
-84. dbo.fatsmurf_comment            -> perseus_user, fatsmurf
-85. dbo.fatsmurf_history            -> history, fatsmurf
-86. dbo.goo_attachment              -> perseus_user, goo, goo_attachment_type
-87. dbo.goo_comment                 -> perseus_user, goo
-88. dbo.goo_history                 -> history, goo
-```
-
-**Sub-phase 5b - Material tracking tables:**
-```
-89. dbo.material_inventory          -> container (x2), perseus_user (x2), goo, recipe
-90. dbo.material_inventory_threshold -> perseus_user (x2), goo_type
-91. dbo.material_qc                 -> goo
-```
-
-**Sub-phase 5c - P0 CRITICAL - Material Lineage Tables:**
-```
-92. dbo.material_transition         -> fatsmurf (uid), goo (uid)
-                                    ** P0 CRITICAL - Parent->Transition edges **
-93. dbo.transition_material         -> fatsmurf (uid), goo (uid)
-                                    ** P0 CRITICAL - Transition->Child edges **
-```
-
-**Sub-phase 5d - Robot and submission tables:**
-```
-94. dbo.poll_history                -> history, poll
-95. dbo.robot_log_container_sequence -> sequence_type, container, robot_log
-96. dbo.robot_log_error             -> robot_log
-97. dbo.robot_log_read              -> goo, robot_log, property
-98. dbo.robot_log_transfer          -> goo (x2), robot_log
-99. dbo.submission_entry            -> smurf, goo, perseus_user, submission
-```
-
-**Sub-phase 5e - Notification table:**
-```
-100. dbo.material_inventory_threshold_notify_user -> material_inventory_threshold, perseus_user
-```
-
----
-
-## Complete Ordered List (0-100)
-
-```
-# Phase 0: Schemas
-CREATE SCHEMA dbo;
-CREATE SCHEMA hermes;
-CREATE SCHEMA demeter;
-
-# Phase 1: Tier 0 - Base Tables (0-45)
-0.   dbo.alembic_version
-1.   dbo.cm_application
-2.   dbo.cm_application_group
-3.   dbo.cm_group
-4.   dbo.cm_project
-5.   dbo.cm_unit
-6.   dbo.cm_unit_compare
-7.   dbo.cm_unit_dimensions
-8.   dbo.cm_user
-9.   dbo.cm_user_group
-10.  dbo.color
-11.  dbo.container_type
-12.  dbo.display_layout
-13.  dbo.display_type
-14.  dbo.field_map_block
-15.  dbo.field_map_set
-16.  dbo.field_map_type
-17.  dbo.goo_attachment_type
-18.  dbo.goo_process_queue_type
-19.  dbo.goo_type                       [P0 CRITICAL]
-20.  dbo.history_type
-21.  dbo.m_downstream                   [P0 CRITICAL]
-22.  dbo.m_number
-23.  dbo.m_upstream                     [P0 CRITICAL]
-24.  dbo.m_upstream_dirty_leaves
-25.  dbo.manufacturer
-26.  dbo.migration
-27.  dbo.Permissions
-28.  dbo.PerseusTableAndRowCounts
-29.  dbo.person
-30.  dbo.prefix_incrementor
-31.  dbo.s_number
-32.  dbo.Scraper
-33.  dbo.sequence_type
-34.  dbo.smurf
-35.  dbo.tmp_messy_links
-36.  dbo.unit
-37.  dbo.workflow_step_type
-38.  hermes.run
-39.  hermes.run_condition
-40.  hermes.run_condition_option
-41.  hermes.run_condition_value
-42.  hermes.run_master_condition
-43.  hermes.run_master_condition_type
-44.  demeter.barcodes
-45.  demeter.seed_vials
-
-# Phase 2: Tier 1 (46-55)
-46.  dbo.coa
-47.  dbo.container
-48.  dbo.container_type_position
-49.  dbo.external_goo_type
-50.  dbo.goo_type_combine_target
-51.  dbo.property
-52.  dbo.robot_log_type
-53.  dbo.perseus_user                   [P0 CRITICAL]
-54.  dbo.history
-55.  dbo.workflow
-
-# Phase 3: Tier 2 (56-69)
-56.  dbo.coa_spec
-57.  dbo.container_history
-58.  dbo.feed_type
-59.  dbo.field_map
-60.  dbo.goo_type_combine_component
-61.  dbo.history_value
-62.  dbo.property_option
-63.  dbo.robot_run
-64.  dbo.saved_search
-65.  dbo.smurf_goo_type
-66.  dbo.smurf_group
-67.  dbo.smurf_property
-68.  dbo.workflow_attachment
-69.  dbo.workflow_step
-
-# Phase 4: Tier 3 (70-82)
-70.  dbo.recipe
-71.  dbo.recipe_part
-72.  dbo.fatsmurf                       [P0 CRITICAL]
-73.  dbo.goo                            [P0 CRITICAL]
-74.  dbo.fatsmurf_reading
-75.  dbo.field_map_display_type
-76.  dbo.field_map_display_type_user
-77.  dbo.poll
-78.  dbo.recipe_project_assignment
-79.  dbo.robot_log
-80.  dbo.smurf_group_member
-81.  dbo.submission
-82.  dbo.workflow_section
-
-# Phase 5: Tier 4 (83-100)
-83.  dbo.fatsmurf_attachment
-84.  dbo.fatsmurf_comment
-85.  dbo.fatsmurf_history
-86.  dbo.goo_attachment
-87.  dbo.goo_comment
-88.  dbo.goo_history
-89.  dbo.material_inventory
-90.  dbo.material_inventory_threshold
-91.  dbo.material_qc
-92.  dbo.material_transition            [P0 CRITICAL]
-93.  dbo.transition_material            [P0 CRITICAL]
-94.  dbo.poll_history
-95.  dbo.robot_log_container_sequence
-96.  dbo.robot_log_error
-97.  dbo.robot_log_read
-98.  dbo.robot_log_transfer
-99.  dbo.submission_entry
-100. dbo.material_inventory_threshold_notify_user
-```
-
----
-
-## P0 Critical Tables Summary
-
-| Order | Table | Tier | Purpose |
-|-------|-------|------|---------|
-| 19 | goo_type | 0 | Material type definitions |
-| 21 | m_downstream | 0 | Cached downstream lineage graph |
-| 23 | m_upstream | 0 | Cached upstream lineage graph |
-| 53 | perseus_user | 1 | User accounts (referenced by most tables) |
-| 72 | fatsmurf | 3 | Experiments/transitions |
-| 73 | goo | 3 | Materials (core entity) |
-| 92 | material_transition | 4 | Parent-to-transition edges |
-| 93 | transition_material | 4 | Transition-to-child edges |
-
----
-
-## Validation Checkpoints
-
-### After Phase 1 (Tier 0):
-- [ ] All 46 base tables created successfully
-- [ ] No FK constraints to validate yet
-- [ ] `goo_type`, `m_upstream`, `m_downstream` must exist
-
-### After Phase 2 (Tier 1):
-- [ ] `perseus_user` exists (required by most Tier 2+ tables)
-- [ ] `container`, `workflow`, `history` created
-- [ ] FK constraints to Tier 0 tables validate successfully
-
-### After Phase 3 (Tier 2):
-- [ ] `workflow_step` exists (required by fatsmurf, goo)
-- [ ] `property`, `smurf_property` exist
-
-### After Phase 4 (Tier 3):
-- [ ] `recipe`, `recipe_part` exist (required by goo)
-- [ ] `fatsmurf` exists with `uid` column indexed
-- [ ] `goo` exists with `uid` column indexed
-
-### After Phase 5 (Tier 4):
-- [ ] `material_transition` created with FKs to goo.uid and fatsmurf.uid
-- [ ] `transition_material` created with FKs to goo.uid and fatsmurf.uid
-- [ ] All 124 FK constraints validate successfully
-
----
-
-## PostgreSQL Migration Notes
-
-### Index Requirements Before FK Creation:
-
-```sql
--- Required before creating material_transition and transition_material FKs
-CREATE UNIQUE INDEX idx_goo_uid ON dbo.goo(uid);
-CREATE UNIQUE INDEX idx_fatsmurf_uid ON dbo.fatsmurf(uid);
-```
-
-### Deferred Constraints for Self-Referential Tables:
-
-```sql
--- For recipe_part.part_recipe_id -> recipe.id
-ALTER TABLE dbo.recipe_part
-  ALTER CONSTRAINT fk_recipe_part_part_recipe_id DEFERRABLE INITIALLY DEFERRED;
-```
+- [ ] All 92 dbo tables created successfully
+- [ ] All 8 FDW tables created successfully
+- [ ] 1 utility table created
+- [ ] All 124 FK constraints created (minus 3 duplicates = 121 actual)
+- [ ] All PRIMARY KEY constraints created
+- [ ] All UNIQUE constraints created
+- [ ] All CHECK constraints created
+- [ ] No circular dependency errors
+- [ ] All indexes created (352 total)
 
 ---
 
@@ -426,8 +286,10 @@ ALTER TABLE dbo.recipe_part
 
 | Field | Value |
 |-------|-------|
-| Version | 1.0 |
-| Created | 2026-01-26 |
-| Total Tables | 101 |
-| Creation Phases | 6 (0-5) |
+| Version | 2.0 (Corrected) |
+| Created | 2026-02-10 |
+| Total Tables | 101 (92 dbo + 8 FDW + 1 utility) |
+| DBO Tables in Order | 92 |
+| Dependency Tiers | 8 (0-7) |
+| FK Constraints | 124 (121 after duplicate removal) |
 | P0 Critical Tables | 8 |

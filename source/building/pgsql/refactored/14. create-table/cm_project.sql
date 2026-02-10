@@ -1,18 +1,11 @@
--- ============================================================================
--- Object: cm_project
--- Type: TABLE (Tier 0 - CM)
--- ============================================================================
+-- Table: perseus.cm_project
+-- Source: SQL Server [dbo].[cm_project]
+-- Columns: 5
 
-DROP TABLE IF EXISTS perseus.cm_project CASCADE;
-
-CREATE TABLE perseus.cm_project (
+CREATE TABLE IF NOT EXISTS perseus.cm_project (
     project_id SMALLINT NOT NULL,
-    label VARCHAR(200) NOT NULL,
+    label VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL,
     display_order SMALLINT NOT NULL,
-    group_id INTEGER,
-
-    CONSTRAINT pk_cm_project PRIMARY KEY (project_id)
+    group_id INTEGER
 );
-
-COMMENT ON TABLE perseus.cm_project IS 'CM: Project definitions. Updated: 2026-01-26';

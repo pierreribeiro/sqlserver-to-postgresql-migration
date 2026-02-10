@@ -1,27 +1,14 @@
--- ============================================================================
--- Object: cm_application
--- Type: TABLE (Tier 0 - Configuration Management)
--- Priority: P3
--- Description: Application configuration metadata
--- ============================================================================
+-- Table: perseus.cm_application
+-- Source: SQL Server [dbo].[cm_application]
+-- Columns: 8
 
-DROP TABLE IF EXISTS perseus.cm_application CASCADE;
-
-CREATE TABLE perseus.cm_application (
+CREATE TABLE IF NOT EXISTS perseus.cm_application (
     application_id INTEGER NOT NULL,
-    label VARCHAR(200) NOT NULL,
-    description VARCHAR(500) NOT NULL,
-    is_active BOOLEAN NOT NULL,
+    label VARCHAR(50) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    is_active SMALLINT NOT NULL,
     application_group_id INTEGER,
-    url VARCHAR(500),
+    url VARCHAR(255),
     owner_user_id INTEGER,
-    jira_id VARCHAR(50),
-
-    CONSTRAINT pk_cm_application PRIMARY KEY (application_id)
+    jira_id VARCHAR(50)
 );
-
-CREATE INDEX idx_cm_application_label ON perseus.cm_application(label);
-CREATE INDEX idx_cm_application_active ON perseus.cm_application(is_active);
-
-COMMENT ON TABLE perseus.cm_application IS
-'Configuration Management: Application metadata. Updated: 2026-01-26';

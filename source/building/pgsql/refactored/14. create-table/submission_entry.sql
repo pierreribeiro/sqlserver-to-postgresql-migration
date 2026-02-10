@@ -1,25 +1,15 @@
--- ============================================================================
--- Object: submission_entry
--- Type: TABLE
--- Priority: P2
--- Description: Individual entries in a batch submission
--- ============================================================================
+-- Table: perseus.submission_entry
+-- Source: SQL Server [dbo].[submission_entry]
+-- Columns: 9
 
-DROP TABLE IF EXISTS perseus.submission_entry CASCADE;
-
-CREATE TABLE perseus.submission_entry (
-    id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
+CREATE TABLE IF NOT EXISTS perseus.submission_entry (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    assay_type_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
+    status VARCHAR(19) NOT NULL,
+    priority VARCHAR(6) NOT NULL,
     submission_id INTEGER NOT NULL,
-    smurf_id INTEGER NOT NULL,
-    goo_id INTEGER NOT NULL,
-    submitter_id INTEGER NOT NULL,
-    CONSTRAINT pk_submission_entry PRIMARY KEY (id)
+    prepped_by_id INTEGER,
+    themis_tray_id INTEGER,
+    sample_type VARCHAR(7) NOT NULL
 );
-
-CREATE INDEX idx_submission_entry_submission_id ON perseus.submission_entry(submission_id);
-CREATE INDEX idx_submission_entry_smurf_id ON perseus.submission_entry(smurf_id);
-CREATE INDEX idx_submission_entry_goo_id ON perseus.submission_entry(goo_id);
-
-COMMENT ON TABLE perseus.submission_entry IS
-'Individual entries in a batch submission - links submissions to specific materials and methods.
-Updated: 2026-01-26 | Owner: Perseus DBA Team';

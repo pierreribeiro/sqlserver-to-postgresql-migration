@@ -1,26 +1,18 @@
--- ============================================================================
--- Object: material_inventory_threshold
--- Type: TABLE
--- Priority: P2
--- Description: Reorder thresholds for materials
--- ============================================================================
+-- Table: perseus.material_inventory_threshold
+-- Source: SQL Server [dbo].[material_inventory_threshold]
+-- Columns: 12
 
-DROP TABLE IF EXISTS perseus.material_inventory_threshold CASCADE;
-
-CREATE TABLE perseus.material_inventory_threshold (
-    id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
-    goo_type_id INTEGER NOT NULL,
-    threshold_volume_l DOUBLE PRECISION,
-    threshold_mass_kg DOUBLE PRECISION,
+CREATE TABLE IF NOT EXISTS perseus.material_inventory_threshold (
+    id INTEGER GENERATED ALWAYS AS IDENTITY,
+    material_type_id INTEGER NOT NULL,
+    min_item_count INTEGER,
+    max_item_count INTEGER,
+    min_volume_l DOUBLE PRECISION,
+    max_volume_l DOUBLE PRECISION,
+    min_mass_kg DOUBLE PRECISION,
+    max_mass_kg DOUBLE PRECISION,
     created_by_id INTEGER NOT NULL,
-    created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_on DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_id INTEGER,
-    updated_on TIMESTAMP,
-    CONSTRAINT pk_material_inventory_threshold PRIMARY KEY (id)
+    updated_on DATETIME2(7)
 );
-
-CREATE INDEX idx_material_inventory_threshold_goo_type_id ON perseus.material_inventory_threshold(goo_type_id);
-
-COMMENT ON TABLE perseus.material_inventory_threshold IS
-'Reorder thresholds for materials - defines when to reorder based on inventory levels.
-Updated: 2026-01-26 | Owner: Perseus DBA Team';

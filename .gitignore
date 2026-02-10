@@ -47,4 +47,4 @@ infra/database/pgdata/
 
 # Claude Code command log (should not be committed)
 .claude/command-log.txt
-command-log.txt
+command-log.txt.env

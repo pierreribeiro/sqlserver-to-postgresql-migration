@@ -51,6 +51,7 @@ command-log.txt.env
 
 # Data Migration (scripts/data-migration/)
 scripts/data-migration/.env
+scripts/data-migration/.env.test
 scripts/data-migration/backup/
 scripts/data-migration/.claude/
 scripts/data-migration/*.csv

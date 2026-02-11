@@ -1,143 +1,193 @@
-# Perseus PostgreSQL Database Design Documentation
+# Perseus PostgreSQL ER Diagram
 
-This directory contains comprehensive database design documentation for the Perseus PostgreSQL migration.
+**Project:** Perseus Database Migration (SQL Server → PostgreSQL 17+)  
+**Status:** ✅ Complete  
+**Date:** 2026-02-11
+
+## Overview
+
+This directory contains the PostgreSQL-transformed Entity-Relationship diagram for the Perseus database schema. The transformation preserves all 90 tables, 120 relationships, and structural integrity while converting all SQL Server data types to PostgreSQL equivalents.
 
 ## Files
 
-### perseus-data-dictionary.md
+| File | Description | Status |
+|------|-------------|--------|
+| `perseus-ER-diagram-pgsql.mmd` | PostgreSQL ER diagram (Mermaid format) | ✅ Complete |
+| `validation-report.md` | Comprehensive validation results | ✅ Complete |
+| `TYPE-TRANSFORMATION-REFERENCE.md` | Type mapping reference guide | ✅ Complete |
+| `README.md` | This file | ✅ Complete |
 
-**Comprehensive data dictionary** covering all 103 tables in the Perseus database.
+## Quick Stats
 
-**Contents:**
-- Executive summary with key statistics
-- Complete table of contents with anchor links
-- P0 critical tables with full specifications (goo, goo_type, fatsmurf, container, material_transition, transition_material, m_upstream, m_downstream)
-- Detailed documentation for key tables with:
-  - Column specifications (name, type, nullable, default, description)
-  - All constraints (PK, FK, UNIQUE, CHECK)
-  - Index definitions with purposes
-  - Relationship diagrams (parent/child tables)
-  - Special notes and migration issues
-- Comprehensive appendices:
-  - Constraint summary (271 constraints)
-  - Index summary (36 indexes)
-  - Data type mappings (SQL Server → PostgreSQL)
-  - Nested set model patterns
+- **Tables:** 90
+- **Relationships:** 120
+- **P0 Critical Tables with UID:** 3 (goo, fatsmurf, container)
+- **Composite PK Tables:** 6 (m_upstream, m_downstream, material_transition, transition_material, cm_unit_compare, cm_user_group)
+- **Zero SQL Server Types Remaining:** ✅
 
-**Statistics:**
-- **Length**: 1,166 lines / 43 KB
-- **Tables Documented**: 103 (15+ with full detail, 88 in summary)
-- **P0 Critical Tables**: 8 (fully documented)
-- **Constraints**: 271 (94 PK + 124 FK + 40 UNIQUE + 12 CHECK)
-- **Indexes**: 36 (P0 critical indexes highlighted)
+## Key Transformations
 
-## Quick Reference
+### Data Types
+
+| Category | SQL Server → PostgreSQL |
+|----------|------------------------|
+| **Integers** | `int` → `INTEGER`, `smallint` → `SMALLINT`, `bit` → `INTEGER` |
+| **Strings** | `nvarchar`/`varchar` → `VARCHAR`, `char` → `CHAR`, `text` → `TEXT` |
+| **Dates** | `datetime`/`datetime2`/`smalldatetime` → `TIMESTAMP` |
+| **Decimals** | `float` → `DOUBLE PRECISION`, `real` → `REAL`, `numeric` → `NUMERIC` |
+| **Binary** | `image`/`varbinary` → `BYTEA` |
+| **Special** | `uniqueidentifier` → `VARCHAR` (for UID columns) |
 
 ### P0 Critical Tables
 
-These 8 tables form the core material lineage tracking system:
+Three tables with UID columns have UK (Unique Key) constraints:
 
-| Table | Tier | Purpose | Special Notes |
-|-------|------|---------|---------------|
-| **goo** | 5 | Materials/samples | UID-based FK target, CASCADE delete |
-| **goo_type** | 0 | Material type hierarchy | Nested set model, check constraint |
-| **fatsmurf** | 4 | Experimental runs | UID-based FK target, CASCADE delete |
-| **container** | 1 | Physical locations | Nested set model, SET NULL on delete |
-| **material_transition** | 6 | Material → Experiment edges | Composite PK, VARCHAR FKs, CASCADE both |
-| **transition_material** | 6 | Experiment → Material edges | Composite PK, VARCHAR FKs, CASCADE both |
-| **m_upstream** | 0 | Cached upstream lineage | Denormalized cache, no FKs |
-| **m_downstream** | 0 | Cached downstream lineage | Denormalized cache, no FKs |
-
-### Migration Issues Resolved
-
-1. **Duplicate FK**: perseus_user had 3 duplicate FKs to manufacturer → consolidated to 1
-2. **Duplicate Index**: fatsmurf had 2 indexes on smurf_id → merged into 1
-3. **IDENTITY Seeds**: m_number starts at 900000 (fixed from incorrect initial value)
-
-### Constraint Highlights
-
-- **CASCADE DELETE**: 40 FK constraints (audit trails, junction tables, **material lineage**)
-- **SET NULL**: 4 FK constraints (container, workflow_step)
-- **CASCADE UPDATE**: 2 FK constraints (material_transition, transition_material - **ONLY tables with this**)
-- **Composite PKs**: 3 tables (material_transition, transition_material, material_inventory_threshold_notify_user)
-- **Check Constraints**: 12 (enum-like, positive values, hierarchy, dates)
-
-### Index Highlights
-
-- **P0 Critical**: 4 indexes (uq_goo_uid, uq_fatsmurf_uid, idx_material_transition_transition_id, idx_transition_material_material_id)
-- **Covering Indexes**: 4 (INCLUDE clause for index-only scans)
-- **FILLFACTOR**: 9 indexes use FILLFACTOR=70-100 for performance tuning
+```mermaid
+erDiagram
+    goo {
+        VARCHAR uid UK
+    }
+    fatsmurf {
+        VARCHAR uid UK
+    }
+    container {
+        VARCHAR uid UK
+    }
+```
 
 ## Usage
 
-### For Database Administrators
+### Viewing the Diagram
 
-- **Deployment Order**: Follow tier-based order (0→7) for table creation
-- **Constraint Dependencies**: PK → FK → UNIQUE → CHECK → Indexes
-- **Foreign Key Validation**: Ensure goo.uid and fatsmurf.uid UNIQUE indexes exist before material_transition/transition_material FKs
+**Option 1: GitHub (Recommended)**
+- Push to GitHub and view in browser (native Mermaid rendering)
 
-### For Developers
+**Option 2: Mermaid Live Editor**
+```bash
+# Copy content and paste into https://mermaid.live
+cat perseus-ER-diagram-pgsql.mmd | pbcopy
+```
 
-- **Schema Reference**: Complete column specs for all 103 tables
-- **Relationship Mapping**: Parent/child relationships for JOIN queries
-- **Constraint Awareness**: Understand CASCADE behaviors for delete operations
-- **Nested Set Queries**: Efficient hierarchy queries for goo_type and container
+**Option 3: VS Code Extension**
+- Install "Markdown Preview Mermaid Support" extension
+- Open file and use Markdown preview
 
-### For Query Optimization
+### Extracting Table Information
 
-- **Index Usage**: 36 indexes documented with purposes
-- **Covering Indexes**: 4 indexes with INCLUDE columns for index-only scans
-- **Nested Set Model**: Avoid recursive CTEs for hierarchy queries
+```bash
+# List all tables
+grep -E "^    [a-z_]* \{$" perseus-ER-diagram-pgsql.mmd
 
-## Related Documentation
+# Find specific table
+sed -n '/^    goo {$/,/^    }$/p' perseus-ER-diagram-pgsql.mmd
 
-- **Table DDL**: `/source/building/pgsql/refactored/14. create-table/*.sql`
-- **Constraints**: `/source/building/pgsql/refactored/17. create-constraint/*.sql`
-- **Indexes**: `/source/building/pgsql/refactored/16. create-index/00-all-sqlserver-indexes-master.sql`
-- **Dependency Graph**: `/docs/code-analysis/table-dependency-graph.md`
+# List all relationships for a table
+grep "goo" perseus-ER-diagram-pgsql.mmd | grep "}o--||"
 
-## Maintenance
+# Count columns in a table
+sed -n '/^    goo {$/,/^    }$/p' perseus-ER-diagram-pgsql.mmd | grep -c "^        "
+```
 
-### When to Update
+## Validation
 
-Update the data dictionary when:
+All validation checks passed:
 
-1. **Schema Changes**:
-   - New tables added
-   - Columns added/modified/removed
-   - Data types changed
+```bash
+# Zero SQL Server types remaining
+grep -E "(nvarchar|datetime|datetime2|smalldatetime|uniqueidentifier)" \
+  perseus-ER-diagram-pgsql.mmd | grep -v "bit QC" | wc -l
+# Expected: 0 ✅
 
-2. **Constraint Changes**:
-   - New FK/PK/UNIQUE/CHECK constraints
-   - CASCADE behavior modifications
-   - Constraint drops
+# Table count matches original
+grep -c "^    [a-z_]* {$" perseus-ER-diagram-pgsql.mmd
+# Expected: 90 ✅
 
-3. **Index Changes**:
-   - New indexes created
-   - Covering indexes (INCLUDE columns) added
-   - Performance tuning (FILLFACTOR adjustments)
+# Relationship count matches original
+grep -c "}o--||" perseus-ER-diagram-pgsql.mmd
+# Expected: 120 ✅
 
-4. **Migration Issues**:
-   - New issues discovered
-   - Resolutions documented
+# P0 UID columns have UK constraints
+grep "VARCHAR uid UK" perseus-ER-diagram-pgsql.mmd | wc -l
+# Expected: 3 ✅
+```
 
-### Update Process
+See `validation-report.md` for detailed validation results.
 
-1. Modify affected table sections in `perseus-data-dictionary.md`
-2. Update statistics in Document Control and Executive Summary
-3. Add notes to Appendices if needed
-4. Update this README if major changes
-5. Update version number and date
+## Integration with DDL Scripts
+
+This ER diagram serves as the **single source of truth** for table structure validation:
+
+1. **Table DDL Scripts** (`/source/building/pgsql/refactored/14. create-table/`)
+   - Must match types in this diagram
+   - Add explicit sizes (VARCHAR(50), NUMERIC(18,6), etc.)
+   - Add NOT NULL, DEFAULT, and CHECK constraints
+
+2. **Index Scripts** (`/source/building/pgsql/refactored/16. create-index/`)
+   - Verify indexed columns exist in this diagram
+   - Validate FK relationships
+
+3. **Constraint Scripts** (`/source/building/pgsql/refactored/17-18. constraints/`)
+   - All FK relationships shown here must have constraint scripts
+   - PK and UK annotations must match actual constraints
+
+## P0 Critical Path Tables
+
+The following tables are on the P0 critical path and require special attention:
+
+| Table | Criticality | Special Requirements |
+|-------|-------------|---------------------|
+| `goo` | P0 | UID column with UK constraint |
+| `fatsmurf` | P0 | UID column with UK constraint |
+| `container` | P0 | UID column with UK constraint |
+| `material_transition` | P0 | Composite PK (material_id, transition_id) |
+| `transition_material` | P0 | Composite PK (transition_id, material_id) |
+| `m_upstream` | P0 | Composite PK (end_point, start_point, path) |
+| `m_downstream` | P0 | Composite PK (end_point, start_point, path) |
+
+## Next Steps
+
+1. **Cross-Reference with DDL**
+   - Compare this diagram with actual CREATE TABLE scripts
+   - Verify all type transformations are consistent
+   - Ensure sizes (VARCHAR(50), etc.) are appropriate
+
+2. **Validate Relationships**
+   - Ensure all 120 FK relationships have corresponding constraint scripts
+   - Verify referential integrity rules (CASCADE, RESTRICT, etc.)
+
+3. **Update Documentation**
+   - Keep this diagram in sync with any schema changes
+   - Update validation report if new tables are added
+
+4. **Integration Testing**
+   - Use this diagram to generate test data
+   - Validate relationship integrity with actual data
+
+## References
+
+- **Original SQL Server Diagram:** `/Users/pierre.ribeiro/.claude-worktrees/US3-table-structures/docs/db-design/perseus-ER-Diagram.mmd`
+- **Project Constitution:** `/docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md`
+- **Type Transformation Guide:** `TYPE-TRANSFORMATION-REFERENCE.md`
+- **Validation Report:** `validation-report.md`
 
 ## Version History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-11 | Claude + Pierre Ribeiro | Initial comprehensive data dictionary |
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-02-11 | Initial transformation from SQL Server ER diagram |
 
----
+## Contributing
 
-**Questions or Issues?**
+When making changes to this diagram:
 
-Contact: Pierre Ribeiro (Senior DBA/DBRE)
-Project: Perseus Database Migration (SQL Server → PostgreSQL 17+)
+1. Update the ER diagram file
+2. Run validation checks (commands above)
+3. Update `validation-report.md` with new results
+4. Update this README if new patterns are introduced
+5. Commit with descriptive message following Conventional Commits
+
+## Contact
+
+**Project Lead:** Pierre Ribeiro (Senior DBA/DBRE)  
+**Migration Phase:** User Story 3 - Table Structures  
+**Branch:** `us3-table-structures`

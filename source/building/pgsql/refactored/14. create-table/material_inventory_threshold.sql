@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS perseus.material_inventory_threshold (
     min_mass_kg DOUBLE PRECISION,
     max_mass_kg DOUBLE PRECISION,
     created_by_id INTEGER NOT NULL,
-    created_on DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_id INTEGER,
-    updated_on DATETIME2(7)
+    updated_on TIMESTAMP
 );

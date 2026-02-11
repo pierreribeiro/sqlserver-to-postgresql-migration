@@ -238,7 +238,7 @@ ALTER TABLE perseus.feed_type
 
 ALTER TABLE perseus.feed_type
   ADD CONSTRAINT fk_feed_type_updated_by
-  FOREIGN KEY (updated_by)
+  FOREIGN KEY (updated_by_id)
   REFERENCES perseus.perseus_user (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -283,7 +283,7 @@ ALTER TABLE perseus.field_map
 
 ALTER TABLE perseus.goo_type_combine_component
   ADD CONSTRAINT goo_type_combine_component_fk_2
-  FOREIGN KEY (combine_id)
+  FOREIGN KEY (goo_type_combine_target_id)
   REFERENCES perseus.goo_type_combine_target (id)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
@@ -647,7 +647,7 @@ ALTER TABLE perseus.field_map_display_type
 
 ALTER TABLE perseus.field_map_display_type_user
   ADD CONSTRAINT field_map_display_type_user_fk_2
-  FOREIGN KEY (perseus_user_id)
+  FOREIGN KEY (user_id)
   REFERENCES perseus.perseus_user (id)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
@@ -924,7 +924,7 @@ ALTER TABLE perseus.material_inventory_threshold
 
 ALTER TABLE perseus.material_inventory_threshold
   ADD CONSTRAINT fk_material_inventory_threshold_goo_type
-  FOREIGN KEY (goo_type_id)
+  FOREIGN KEY (material_type_id)
   REFERENCES perseus.goo_type (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -942,7 +942,7 @@ ALTER TABLE perseus.material_inventory_threshold
 
 ALTER TABLE perseus.material_qc
   ADD CONSTRAINT fk_material_qc_goo
-  FOREIGN KEY (goo_id)
+  FOREIGN KEY (material_id)
   REFERENCES perseus.goo (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -1084,14 +1084,14 @@ ALTER TABLE perseus.robot_log_read
 
 ALTER TABLE perseus.robot_log_transfer
   ADD CONSTRAINT fk_robot_log_transfer_dest_goo
-  FOREIGN KEY (dest_goo_id)
+  FOREIGN KEY (destination_material_id)
   REFERENCES perseus.goo (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
 ALTER TABLE perseus.robot_log_transfer
   ADD CONSTRAINT fk_robot_log_transfer_source_goo
-  FOREIGN KEY (source_goo_id)
+  FOREIGN KEY (source_material_id)
   REFERENCES perseus.goo (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -1109,7 +1109,7 @@ ALTER TABLE perseus.robot_log_transfer
 
 ALTER TABLE perseus.submission_entry
   ADD CONSTRAINT fk_submission_entry_smurf
-  FOREIGN KEY (smurf_id)
+  FOREIGN KEY (assay_type_id)
   REFERENCES perseus.smurf (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
@@ -1141,14 +1141,14 @@ ALTER TABLE perseus.submission_entry
 
 ALTER TABLE perseus.material_inventory_threshold_notify_user
   ADD CONSTRAINT fk_mit_notify_user_threshold
-  FOREIGN KEY (material_inventory_threshold_id)
+  FOREIGN KEY (threshold_id)
   REFERENCES perseus.material_inventory_threshold (id)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
 
 ALTER TABLE perseus.material_inventory_threshold_notify_user
   ADD CONSTRAINT fk_mit_notify_user_user
-  FOREIGN KEY (perseus_user_id)
+  FOREIGN KEY (user_id)
   REFERENCES perseus.perseus_user (id)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

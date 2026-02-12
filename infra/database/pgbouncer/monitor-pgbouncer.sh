@@ -11,10 +11,15 @@
 
 set -euo pipefail
 
+# Future Enhancements Backlog Section
+# 1. Create an env.conf file for setting up script for all initial variables
+# 2. Password will be captured from userlist.txt
+# 3. Review the entire scipt looking for bug or flaws in the execution logic, explore edge cases
+
 # Configuration
 PGHOST="localhost"
 PGPORT="6432"
-PGUSER="perseus_admin"
+PGUSER="postgres"
 PGDATABASE="pgbouncer"
 INTERVAL="${1:-0}"
 

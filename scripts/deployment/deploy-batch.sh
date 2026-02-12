@@ -50,6 +50,17 @@
 # Last Updated: 2026-01-25
 # =============================================================================
 
+
+# Future Enhancements Backlog Section
+# 1. Create an env.conf or .json file for setting up script initial variables
+# 2. Password are read from secrets file path at configuration file
+# 3. Execution logs must be written in the global temporary directory informed in configuration file.
+# 4. Directory logs tree pattern: {global_dir}/{branch_name}/{dir_script_souce}/file_name_{timestamp}.log
+# 5. There's a bug at line 311 'trap "rm -f ${temp_output}" RETURN'. In the execution flow, the log file is deleted before the message:
+#    'log_warning "Dependency check found CRITICAL issues (review recommended)"' at line 316
+# 6. Need to check the repetition of the explained bug above
+# 7. Review the entire scipt looking for bug or flaws in the execution logic, explore edge cases
+
 set -euo pipefail
 
 # Script directory and project root
@@ -61,7 +72,8 @@ DB_USER="${DB_USER:-perseus_admin}"
 DB_NAME="${DB_NAME:-perseus_dev}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
-PGPASSWORD_FILE="${PGPASSWORD_FILE:-${PROJECT_ROOT}/infra/database/.secrets/postgres_password.txt}"
+#PGPASSWORD_FILE="${PGPASSWORD_FILE:-${PROJECT_ROOT}/infra/database/.secrets/postgres_password.txt}"
+PGPASSWORD_FILE="/tmp/pgsql_perseus_instance/.secrets/postgres_password.txt"
 DOCKER_CONTAINER="${DOCKER_CONTAINER:-perseus-postgres-dev}"
 
 # Execution mode
@@ -298,7 +310,7 @@ check_dependencies() {
 
     # Run dependency check (looking for CRITICAL issues only)
     local temp_output=$(mktemp)
-    trap "rm -f ${temp_output}" RETURN
+    #trap "rm -f ${temp_output}" RETURN
 
     if run_psql -f "${dep_script}" > "${temp_output}" 2>&1; then
         if grep -q "CRITICAL" "${temp_output}"; then

@@ -26,7 +26,7 @@ PG_USER="perseus_admin"
 PG_DB="postgres"
 
 # Users to extract (add more as needed)
-USERS=("perseus_admin" "pgbouncer")
+USERS=("perseus_admin")
 
 echo -e "${GREEN}PgBouncer Userlist Generator${NC}"
 echo "============================================"

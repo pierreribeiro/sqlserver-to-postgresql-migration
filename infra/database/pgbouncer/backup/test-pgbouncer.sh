@@ -4,6 +4,12 @@
 #
 # Usage: ./test-pgbouncer.sh
 
+# Future Enhancements Backlog Section
+# 1. Create an env.conf file for setting up script for all initial variables
+# 2. Password will be captured from userlist.txt
+# 3. Review the entire scipt looking for bug or flaws in the execution logic, explore edge cases
+# 4. There's a bug at line 66 "docker ps | grep -q "perseus-pgbouncer-dev". There are times when "grep -q" returns no value even when a container is running.
+
 set -euo pipefail
 
 # Color codes

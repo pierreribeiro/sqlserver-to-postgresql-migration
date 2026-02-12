@@ -20,12 +20,6 @@
 #   help      - Show this help message
 #
 
-# Future Enhancements Backlog Section
-# 1. Create an env.conf file for setting up script initial variables
-# 2. Execution logs must be written in the global temporary directory informed in configuration file.
-# 3. Directory logs tree pattern: {global_dir}/{branch_name}/{dir_script_souce}/file_name_{timestamp}.log
-
-
 set -euo pipefail
 
 # Script directory
@@ -43,9 +37,9 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Configuration
 COMPOSE_FILE="${SCRIPT_DIR}/compose.yaml"
-SECRETS_DIR="/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
+SECRETS_DIR="/tmp/pgsql_perseus_instance/.secrets"
 PASSWORD_FILE="${SECRETS_DIR}/postgres_password.txt"
-PGDATA_DIR="/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data"
+PGDATA_DIR="/tmp/pgsql_perseus_instance/pg_data"
 
 # Database connection parameters
 DB_USER="perseus_admin"

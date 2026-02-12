@@ -62,6 +62,15 @@
 # Constitutional Compliance: Articles I-VII (POSIX, error handling, transactions)
 #
 
+# Future Enhancements Backlog Section
+# 1. Create an env.conf or .json file for setting up script initial variables
+# 2. Password are read from secrets file path at configuration file
+# 3. Execution logs must be written in the global temporary directory informed in configuration file.
+# 4. Directory logs tree pattern: {global_dir}/{branch_name}/{dir_script_souce}/file_name_{timestamp}.log
+# 5. Need to check the repetition of the bug showed at file deploy-batch.sh
+# 6. Review the entire scipt looking for bug or flaws in the execution logic, explore edge cases
+
+
 set -euo pipefail
 
 # =============================================================================

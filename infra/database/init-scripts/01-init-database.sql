@@ -2,6 +2,11 @@
 -- This script runs automatically when the container is first created
 -- It sets up extensions, schemas, and basic configuration
 
+-- Future Enhancements Backlog Section
+-- 1. Needed to create a section for extra users creation for example:
+-- a) PgBounce users
+-- b) Perseus app tier users
+
 -- =============================================================================
 -- 1. Enable Required Extensions
 -- =============================================================================
@@ -11,6 +16,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA public;       -- UUID generati
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" SCHEMA public; -- Query performance monitoring
 CREATE EXTENSION IF NOT EXISTS "btree_gist" SCHEMA public;      -- Additional index types
 CREATE EXTENSION IF NOT EXISTS "pg_trgm" SCHEMA public;         -- Trigram matching for text search
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;       -- Case-insensitive citext type in PostgreSQL
 
 -- Note: postgres_fdw, pgAgent, pg_cron will be installed manually as needed
 -- These require superuser privileges and are environment-specific

@@ -47,7 +47,7 @@ services:
 
     # Volume for data persistence
     volumes:
-      - /tmp/pgsql_perseus_instance/pg_data:/var/lib/postgresql/data
+      - /Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
 
     # Docker Secrets for password
@@ -154,7 +154,7 @@ services:
 # Docker Secrets definition
 secrets:
   postgres_password:
-    file: /workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets/postgres_password.txt
+    file: /Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets/postgres_password.txt
 
 # Volume definitions
 volumes:

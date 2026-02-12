@@ -43,9 +43,9 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Configuration
 COMPOSE_FILE="${SCRIPT_DIR}/compose.yaml"
-SECRETS_DIR="/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
+SECRETS_DIR="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
 PASSWORD_FILE="${SECRETS_DIR}/postgres_password.txt"
-PGDATA_DIR="/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data"
+PGDATA_DIR="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data"
 
 # Database connection parameters
 DB_USER="perseus_admin"

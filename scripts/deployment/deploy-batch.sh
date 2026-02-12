@@ -73,7 +73,7 @@ DB_NAME="${DB_NAME:-perseus_dev}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 #PGPASSWORD_FILE="${PGPASSWORD_FILE:-${PROJECT_ROOT}/infra/database/.secrets/postgres_password.txt}"
-PGPASSWORD_FILE="/tmp/pgsql_perseus_instance/.secrets/postgres_password.txt"
+PGPASSWORD_FILE="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
 DOCKER_CONTAINER="${DOCKER_CONTAINER:-perseus-postgres-dev}"
 
 # Execution mode

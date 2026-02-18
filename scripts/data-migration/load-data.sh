@@ -5,11 +5,12 @@
 # Prerequisites: CSV files exported from SQL Server using extraction scripts
 #
 # Usage:
-#   ./load-data.sh [--validate-only] [--tier N]
+#   ./load-data.sh [--validate-only] [--tier N] [--no-truncate]
 #
 # Options:
 #   --validate-only  Only run validation queries, skip data loading
 #   --tier N         Load only specific tier (0-4), default: all tiers
+#   --no-truncate    Skip TRUNCATE before each table load (append mode, not idempotent)
 #
 
 set -euo pipefail
@@ -18,10 +19,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-# Configuration
-DB_CONTAINER="perseus-postgres-dev"
-DB_NAME="perseus_dev"
-DB_USER="perseus_admin"
+# Load configuration from .env file (BUG 1 fix)
+ENV_FILE="${SCRIPT_DIR}/.env"
+if [[ -f "$ENV_FILE" ]]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$ENV_FILE"
+    set +a
+fi
+
+# Configuration (defaults; .env values take precedence over these)
+DB_CONTAINER="${DB_CONTAINER:-perseus-postgres-dev}"
+DB_NAME="${DB_NAME:-perseus_dev}"
+DB_USER="${DB_USER:-perseus_admin}"
 DATA_DIR="${DATA_DIR:-/tmp/perseus-data-export}"
 LOG_FILE="${SCRIPT_DIR}/load-data.log"
 
@@ -52,6 +62,7 @@ log_error() {
 # Parse command line arguments
 VALIDATE_ONLY=false
 SPECIFIC_TIER=""
+NO_TRUNCATE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -60,8 +71,16 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --tier)
+            if [[ $# -lt 2 ]]; then
+                log_error "--tier requires a value (0-4)"
+                exit 1
+            fi
             SPECIFIC_TIER="$2"
             shift 2
+            ;;
+        --no-truncate)
+            NO_TRUNCATE=true
+            shift
             ;;
         *)
             log_error "Unknown option: $1"
@@ -93,27 +112,44 @@ fi
 log_success "Data directory found"
 
 # Function to load a table from CSV
+# Args: $1=tier_number  $2=table_name
 load_table() {
-    local table_name="$1"
-    local csv_file="$DATA_DIR/${table_name}.csv"
+    local tier_number="$1"
+    local table_name="$2"
+    # BUG 2 fix: CSV files are named ##perseus_tier_{N}_{table_name}.csv
+    local csv_file="${DATA_DIR}/##perseus_tier_${tier_number}_${table_name}.csv"
 
-    if [ ! -f "$csv_file" ]; then
-        log_warning "CSV file not found: $csv_file (skipping)"
-        return 1
+    # BUG 5 fix: missing CSV is a warning (not extracted yet), not a failure
+    if [[ ! -f "$csv_file" ]]; then
+        log_warning "CSV not found for '${table_name}' (not yet extracted, skipping)"
+        return 0
+    fi
+
+    # BUG 10 fix: 0-byte files have no data; COPY on empty stdin fails
+    if [[ ! -s "$csv_file" ]]; then
+        log_warning "CSV is empty for '${table_name}' (0 bytes, skipping)"
+        return 0
     fi
 
     log_info "Loading: $table_name"
 
-    # Load data using COPY command
+    # BUG 11 fix: truncate before load so re-runs are idempotent
+    if [[ "${NO_TRUNCATE}" != "true" ]]; then
+        docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" \
+            -c "TRUNCATE perseus.${table_name} CASCADE;" >> "$LOG_FILE" 2>&1 || true
+    fi
+
+    # BUG 6 fix: BCP exports have NO header row — use HEADER false
     if docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" \
-        -c "COPY perseus.${table_name} FROM STDIN WITH (FORMAT CSV, HEADER true, DELIMITER ',');" \
+        -c "COPY perseus.${table_name} FROM STDIN WITH (FORMAT CSV, HEADER false, DELIMITER ',');" \
         < "$csv_file" >> "$LOG_FILE" 2>&1; then
 
         # Get row count
-        local row_count=$(docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -t -c \
+        local row_count
+        row_count=$(docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -t -c \
             "SELECT COUNT(*) FROM perseus.${table_name};" 2>/dev/null | tr -d ' ')
 
-        log_success "  ✓ Loaded: $row_count rows"
+        log_success "  ✓ Loaded: ${row_count} rows"
         return 0
     else
         log_error "  ✗ Failed to load $table_name"
@@ -127,30 +163,31 @@ load_tier() {
     shift
     local tables=("$@")
 
-    log_info "========================================";
+    log_info "========================================"
     log_info "TIER $tier_number: Loading ${#tables[@]} tables"
-    log_info "========================================";
+    log_info "========================================"
 
     local loaded=0
     local failed=0
 
     for table in "${tables[@]}"; do
-        if load_table "$table"; then
-            ((loaded++))
+        # BUG 2 fix: pass tier_number to load_table
+        if load_table "$tier_number" "$table"; then
+            loaded=$((loaded + 1))   # BUG 3 fix: ((x++)) exits when x=0 with set -e
         else
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
 
-    log_info "Tier $tier_number complete: $loaded loaded, $failed failed"
+    log_info "Tier $tier_number complete: $loaded loaded, $failed failed/skipped"
     echo ""
 }
 
 # Define tables by tier (based on dependency order)
 TIER0_TABLES=(
-    "Permissions"
-    "PerseusTableAndRowCounts"
-    "Scraper"
+    "permissions"               # BUG 4 fix: was "Permissions" (PascalCase)
+    "perseus_table_and_row_counts"  # BUG 4 fix: was "PerseusTableAndRowCounts"
+    "scraper"                   # BUG 4 fix: was "Scraper"
     "unit"
     "recipe_category"
     "recipe_type"
@@ -237,6 +274,38 @@ TIER4_TABLES=(
     "robot_log_container_sequence"
 )
 
+# BUG 9 fix: FK trigger management using ALTER TABLE (not SET session_replication_role,
+# which is session-scoped and lost between docker exec calls)
+disable_fk_triggers() {
+    log_info "Disabling FK triggers on all perseus tables..."
+    docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" <<'SQLDISABLE'
+DO $$
+DECLARE r RECORD;
+BEGIN
+    FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'perseus'
+    LOOP
+        EXECUTE format('ALTER TABLE perseus.%I DISABLE TRIGGER ALL', r.tablename);
+    END LOOP;
+END $$;
+SQLDISABLE
+    log_success "FK triggers disabled"
+}
+
+enable_fk_triggers() {
+    log_info "Re-enabling FK triggers on all perseus tables..."
+    docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" <<'SQLENABLE'
+DO $$
+DECLARE r RECORD;
+BEGIN
+    FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'perseus'
+    LOOP
+        EXECUTE format('ALTER TABLE perseus.%I ENABLE TRIGGER ALL', r.tablename);
+    END LOOP;
+END $$;
+SQLENABLE
+    log_success "FK triggers re-enabled"
+}
+
 # Main execution
 if [ "$VALIDATE_ONLY" = true ]; then
     log_info "Validation mode: Checking data integrity only"
@@ -244,6 +313,9 @@ if [ "$VALIDATE_ONLY" = true ]; then
         < "${SCRIPT_DIR}/validate-referential-integrity.sql"
     exit 0
 fi
+
+# BUG 9 fix: disable FK triggers before loading to handle ordering violations
+disable_fk_triggers
 
 # Load data tier by tier
 if [ -z "$SPECIFIC_TIER" ]; then
@@ -268,13 +340,16 @@ else
     esac
 fi
 
+# BUG 9 fix: re-enable FK triggers after all data is loaded
+enable_fk_triggers
+
 # Final validation
 log_info "========================================";
 log_info "DATA LOADING COMPLETE"
 log_info "========================================";
 log_info "Running final validation..."
 
-docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" <<'EOF'
+docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" <<'EOF'
 SELECT
     'Tables Loaded: ' || COUNT(DISTINCT table_name)::TEXT
 FROM information_schema.tables

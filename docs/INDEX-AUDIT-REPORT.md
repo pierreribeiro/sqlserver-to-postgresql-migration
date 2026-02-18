@@ -427,7 +427,7 @@ Many FK indexes were created inline with table DDL. Examples:
 ### Individual Index Files (36 files)
 
 ```
-source/building/pgsql/refactored/16. create-index/
+source/building/pgsql/refactored/16.create-index/
 ├── 00-idx_scraper_active.sql
 ├── 01-idx_container_scope_left_right_depth.sql
 ├── 02-idx_container_type_covering.sql
@@ -469,7 +469,7 @@ source/building/pgsql/refactored/16. create-index/
 ### Consolidated Files (Existing - for reference)
 
 ```
-source/building/pgsql/refactored/16. create-index/
+source/building/pgsql/refactored/16.create-index/
 ├── 01-missing-sqlserver-indexes.sql (15 indexes)
 ├── 02-foreign-key-indexes.sql (27 indexes)
 ├── 03-query-optimization-indexes.sql (31 indexes)

@@ -310,8 +310,8 @@ Many UNIQUE constraints were created as UNIQUE INDEXES in table DDL.
 
 **Documentation**:
 - `docs/FK-CONSTRAINT-FIXES.md` - All FK fixes documented
-- `source/building/pgsql/refactored/17. create-constraint/CONSTRAINT-DEPLOYMENT-ORDER.md` - Deployment guide
-- `source/building/pgsql/refactored/16. create-index/README.md` - Index deployment guide
+- `source/building/pgsql/refactored/17.create-constraint/CONSTRAINT-DEPLOYMENT-ORDER.md` - Deployment guide
+- `source/building/pgsql/refactored/16.create-index/README.md` - Index deployment guide
 
 ---
 

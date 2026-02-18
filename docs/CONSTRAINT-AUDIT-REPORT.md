@@ -99,8 +99,8 @@ WHERE t.table_schema IN ('perseus', 'hermes', 'demeter')
 
 ### 2. FOREIGN KEY Constraints (121 deployed / 124 original)
 
-**Source:** `source/original/sqlserver/13. create-foreign-key-constraint/*.sql` (124 files)
-**Target:** `source/building/pgsql/refactored/17. create-constraint/02-foreign-key-constraints.sql`
+**Source:** `source/original/sqlserver/13.create-foreign-key-constraint/*.sql` (124 files)
+**Target:** `source/building/pgsql/refactored/17.create-constraint/02-foreign-key-constraints.sql`
 **Status:** ✅ 121/124 deployed (98.4%)
 
 #### Gaps Identified & Resolved
@@ -284,8 +284,8 @@ ALTER TABLE perseus.transition_material
 
 ### 3. UNIQUE Constraints (40 total)
 
-**Source:** `source/original/sqlserver/12. create-constraint/*UQ*.sql` (40 files)
-**Target:** `source/building/pgsql/refactored/17. create-constraint/03-unique-constraints.sql`
+**Source:** `source/original/sqlserver/12.create-constraint/*UQ*.sql` (40 files)
+**Target:** `source/building/pgsql/refactored/17.create-constraint/03-unique-constraints.sql`
 **Status:** ✅ 40/40 migrated (100%)
 
 #### UNIQUE Constraint Categories
@@ -649,7 +649,7 @@ ROLLBACK;
 | 94 | workflow_step_type | workflow_step_type_PK | pk_workflow_step_type | ✅ Migrated |
 | 95 | hermes.run | PK__run__3213E83F467E410F | pk_run | ✅ Migrated |
 
-**Full list documented in:** `source/building/pgsql/refactored/17. create-constraint/01-primary-key-constraints.sql` (lines 98-231)
+**Full list documented in:** `source/building/pgsql/refactored/17.create-constraint/01-primary-key-constraints.sql` (lines 98-231)
 
 ### FOREIGN KEY Constraints (121 deployed / 124 original)
 
@@ -678,7 +678,7 @@ ROLLBACK;
 | 39 | workflow_section | workflow_id, name | UQ__workflow__D3897980086CFD1E | uq_workflow_section_workflow_name | ✅ Migrated |
 | 40 | demeter.barcodes | barcode | unique_barcode | uq_barcodes_barcode | ✅ Migrated |
 
-**Full list documented in:** `source/building/pgsql/refactored/17. create-constraint/03-unique-constraints.sql`
+**Full list documented in:** `source/building/pgsql/refactored/17.create-constraint/03-unique-constraints.sql`
 
 ### CHECK Constraints (12 total)
 
@@ -697,7 +697,7 @@ ROLLBACK;
 | 11 | history | create_date <= update_date | (unnamed) | chk_history_dates | ✅ Migrated |
 | 12 | recipe_part | quantity > 0 | (unnamed) | chk_recipe_part_quantity_positive | ✅ Migrated |
 
-**Full list documented in:** `source/building/pgsql/refactored/17. create-constraint/04-check-constraints.sql`
+**Full list documented in:** `source/building/pgsql/refactored/17.create-constraint/04-check-constraints.sql`
 
 ---
 
@@ -772,15 +772,15 @@ ROLLBACK;
 ### Source Files
 
 **SQL Server Original:**
-- `source/original/sqlserver/12. create-constraint/*.sql` (141 files)
-- `source/original/sqlserver/13. create-foreign-key-constraint/*.sql` (124 files)
+- `source/original/sqlserver/12.create-constraint/*.sql` (141 files)
+- `source/original/sqlserver/13.create-foreign-key-constraint/*.sql` (124 files)
 
 **PostgreSQL Refactored:**
-- `source/building/pgsql/refactored/17. create-constraint/01-primary-key-constraints.sql`
-- `source/building/pgsql/refactored/17. create-constraint/02-foreign-key-constraints.sql`
-- `source/building/pgsql/refactored/17. create-constraint/03-unique-constraints.sql`
-- `source/building/pgsql/refactored/17. create-constraint/04-check-constraints.sql`
-- `source/building/pgsql/refactored/17. create-constraint/05-constraint-test-cases.sql`
+- `source/building/pgsql/refactored/17.create-constraint/01-primary-key-constraints.sql`
+- `source/building/pgsql/refactored/17.create-constraint/02-foreign-key-constraints.sql`
+- `source/building/pgsql/refactored/17.create-constraint/03-unique-constraints.sql`
+- `source/building/pgsql/refactored/17.create-constraint/04-check-constraints.sql`
+- `source/building/pgsql/refactored/17.create-constraint/05-constraint-test-cases.sql`
 
 ### Documentation
 

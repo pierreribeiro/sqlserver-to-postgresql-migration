@@ -36,9 +36,9 @@ SET search_path TO perseus, public;
 
 WITH sample_goo AS (
     SELECT
-        goo_id,
+        id,
         MD5(
-            COALESCE(goo_id::TEXT, '') || '|' ||
+            COALESCE(id::TEXT, '') || '|' ||
             COALESCE(uid, '') || '|' ||
             COALESCE(name, '') || '|' ||
             COALESCE(goo_type_id::TEXT, '') || '|' ||
@@ -48,13 +48,13 @@ WITH sample_goo AS (
             COALESCE(created_date::TEXT, '')
         ) AS row_checksum
     FROM perseus.goo
-    ORDER BY goo_id
+    ORDER BY id
     LIMIT 100
 )
 SELECT
     'goo' AS table_name,
     COUNT(*) AS sample_size,
-    MD5(STRING_AGG(row_checksum, '' ORDER BY goo_id)) AS aggregate_checksum
+    MD5(STRING_AGG(row_checksum, '' ORDER BY id)) AS aggregate_checksum
 FROM sample_goo;
 
 \echo ''

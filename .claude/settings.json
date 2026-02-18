@@ -19,9 +19,12 @@
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(psql *)",
+      "Bash(psql:*)",
       "Bash(sqlcmd *)",
       "Bash(python *)",
+      "Bash(python:*)"
       "Bash(python3 *)",
+      "Bash(python3: *)",
       "Bash(npm *)",
       "Bash(node *)",
       "Bash(wc *)",
@@ -57,6 +60,8 @@
       "Bash(uv venv *)",
       "Bash(chmod *)",
       "Bash(docker *)",
+      "Bash(done)",
+      "Bash(docker exec:*)"
       "Mcp(*)",
       "mcp__*",
       "Read(/tmp/claude-sandbox/**)",

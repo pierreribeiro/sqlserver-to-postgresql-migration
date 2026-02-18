@@ -117,6 +117,61 @@ This is a database migration project with the following structure:
 
 **Independent Test**: Deploy migrated views to test environment, execute application queries against them, compare result sets with SQL Server outputs using scripts/validation/data-integrity-check.sql
 
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US1-critical-views -b us1-critical-views 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US1-critical-views
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US1-critical-views`
+- [ ] **Branch Name**: `us1-critical-views` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL analysis/validation tasks
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for ALL refactoring tasks
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for performance validation (T052, T118)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for ANY errors/test failures
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T034-T038: Batch analyze 22 views (5 parallel agents)
+- T040-T045: Batch refactor 22 views (pattern-based conversion)
+- T047-T050: Batch create unit tests for 22 views
+
+**Example Usage**:
+```bash
+/ralph-loop "Analyze 22 views from User Story 1 (per dependency-analysis-lote3-views.md). Order: P3 (simple) → P2 → P1 → P0 (translated materialized view LAST). Iterate: Read AWS SCT → Apply constitution → Schema-qualify → Syntax validate. Checkpoint: After every 5 views, commit with quality scores. Gate: Before P0 view, validate ALL 21 dependencies resolved. Output <promise>ANALYSIS COMPLETE</promise> when all 22 views analyzed + quality scores ≥7.0/10.0 + no P0/P1 issues." --completion-promise "ANALYSIS COMPLETE" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T031, T032: Dependency analysis (2 parallel sessions)
+- T034-T038: View analysis (5+ parallel agents via Ralph Loop)
+- T042-T045: View refactoring (4+ parallel agents via Ralph Loop)
+- T047-T050: Unit test creation (4+ parallel agents)
+
+**Sequential dependencies**:
+- T033 depends on T031-T032 (must run AFTER)
+- T039 depends on T034-T038 (consolidation AFTER analysis)
+- T046 depends on T040-T045 (validation AFTER refactoring)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all objects (T054)
+- **Performance**: Within ±20% of SQL Server baseline (T052)
+- **Constitution**: Zero P0 violations, <3 P1 violations per object
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
+
 ### Dependency Analysis for User Story 1
 
 - [ ] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
@@ -181,6 +236,64 @@ This is a database migration project with the following structure:
 **Goal**: Migrate all 25 functions (15 table-valued, 10 scalar) from T-SQL to PL/pgSQL preserving input/output signatures and logic
 
 **Independent Test**: Call each migrated function with known input parameters and compare output result sets with SQL Server using scripts/validation/data-integrity-check.sql
+
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US2-table-valued-functions -b us2-table-valued-functions 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US2-table-valued-functions
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US2-table-valued-functions`
+- [ ] **Branch Name**: `us2-table-valued-functions` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US1 Dependency**: Verify US1 views deployed (functions may depend on views)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL analysis/validation tasks
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for ALL T-SQL → PL/pgSQL conversions
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for performance validation (T089, T118)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for function signature/logic errors
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T066-T070: Batch analyze 25 functions (McGet* family + others)
+- T072-T076: Batch refactor table-valued functions (15 functions)
+- T077-T081: Batch refactor scalar functions (10 functions)
+- T082-T086: Batch create unit tests for 25 functions
+
+**Example Usage**:
+```bash
+/ralph-loop "Refactor 15 table-valued functions from T-SQL to PL/pgSQL (per dependency-analysis-lote2-functions.md). Priority: McGet* family first (mcgetupstream, mcgetdownstream, mcgetupstreambylist, mcgetdownstreambylist), then remaining 11 functions. Preserve: input/output signatures, RETURNS TABLE, logic equivalence. Apply: PostgreSQL constitution, schema-qualify all refs, explicit casting. Output <promise>TVF REFACTOR COMPLETE</promise> when all 15 functions refactored + syntax validated + quality scores ≥7.0/10.0." --completion-promise "TVF REFACTOR COMPLETE" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T063, T064: Dependency analysis (2 parallel sessions)
+- T066-T070: Function analysis (5+ parallel agents via Ralph Loop)
+- T072-T076, T077-T081: Refactoring (split by function type, parallel agents)
+- T082-T086: Unit test creation (5+ parallel agents)
+
+**Sequential dependencies**:
+- T065 depends on T063-T064 (must run AFTER)
+- T071 depends on T066-T070 (consolidation AFTER analysis)
+- T091 depends on T082-T090 (validation AFTER tests)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all functions (T091)
+- **Performance**: Within ±20% of SQL Server baseline (T089)
+- **Signature Preservation**: 100% match for input/output types
+- **Constitution**: Zero P0 violations, <3 P1 violations per function
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
 
 ### Dependency Analysis for User Story 2
 
@@ -249,6 +362,68 @@ This is a database migration project with the following structure:
 **Goal**: Migrate all 91 table schemas, 352 indexes, and 271 constraints from SQL Server to PostgreSQL preserving data structures and referential integrity
 
 **Independent Test**: Create tables in PostgreSQL, validate all constraints, test index performance, verify data type compatibility using scripts/validation/data-integrity-check.sql and scripts/validation/dependency-check.sql
+
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US3-table-structures -b us3-table-structures 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US3-table-structures
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US3-table-structures`
+- [ ] **Branch Name**: `us3-table-structures` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US1/US2 Dependencies**: Verify views/functions deployed (tables may be referenced)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL schema/constraint analysis
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for complex constraints/triggers
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for index strategy (352 indexes!)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for FK/constraint errors
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T101-T105: Batch analyze 91 tables (schema + data types)
+- T106-T111: Batch analyze 352 indexes (performance impact)
+- T112-T116: Batch analyze 271 constraints (FK cascades)
+- T117-T121: Batch refactor tables (dependency-ordered)
+- T137-T141: Batch create DDL tests for 91 tables
+
+**Example Usage**:
+```bash
+/ralph-loop "Refactor 91 table schemas from SQL Server to PostgreSQL (dependency-ordered per dependency graph). Priority: Base tables FIRST (no FKs), then dependent tables. Convert: IDENTITY → GENERATED ALWAYS AS IDENTITY, data types per constitution, schema-qualify all references. Preserve: FK relationships, check constraints, unique constraints. Output <promise>TABLES REFACTORED</promise> when all 91 tables created + dependency validation passed + quality scores ≥7.0/10.0." --completion-promise "TABLES REFACTORED" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T098, T099: Dependency analysis (2 parallel sessions)
+- T101-T105: Table schema analysis (5+ parallel agents via Ralph Loop)
+- T106-T111: Index analysis (6+ parallel agents, split by table groups)
+- T112-T116: Constraint analysis (5+ parallel agents)
+- T117-T121: Table refactoring (dependency-ordered batches, parallel within batch)
+
+**Sequential dependencies**:
+- T100 depends on T098-T099 (dependency graph MUST be created first)
+- T117-T121 depend on T100 (refactoring follows dependency order)
+- T122 depends on T117-T121 (FK validation AFTER all tables exist)
+- T136 depends on T122-T135 (syntax validation AFTER refactoring)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all objects (T155)
+- **Performance**: Indexes within ±20% of SQL Server baseline (T147)
+- **Referential Integrity**: 100% FK constraint validation (T122)
+- **Data Type Mapping**: Zero lossy conversions (T101-T105)
+- **Constitution**: Zero P0 violations, <3 P1 violations per object
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
 
 ### Dependency Analysis for User Story 3
 
@@ -350,6 +525,66 @@ This is a database migration project with the following structure:
 
 **Independent Test**: Configure FDW connections, execute queries joining local and foreign tables, validate result sets match current linked server queries using scripts/validation/data-integrity-check.sql
 
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US4-fdw-integrations -b us4-fdw-integrations 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US4-fdw-integrations
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US4-fdw-integrations`
+- [ ] **Branch Name**: `us4-fdw-integrations` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US1/US2/US3 Dependencies**: Verify views/functions/tables deployed (FDW queries may reference them)
+- [ ] **Network Access**: Verify connectivity to hermes, sqlapps, deimeter databases
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL FDW configuration/analysis
+- [X] **`sql-pro`** ⭐⭐⭐⭐⭐ (CO-PRIMARY) - Use for FDW query optimization
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for FDW performance tuning (latency <2×)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for connection/auth errors
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T153-T155: Batch analyze 3 FDW connections (hermes, sqlapps, deimeter)
+- T158-T162: Batch configure 17 foreign tables (6+9+2)
+- T168-T172: Batch create FDW tests for 17 foreign tables
+
+**Example Usage**:
+```bash
+/ralph-loop "Configure 3 postgres_fdw connections (hermes, sqlapps, deimeter) with 17 foreign tables total. For each: create SERVER, USER MAPPING, import FOREIGN SCHEMA, test connectivity, optimize fetch_size (start 1000). Apply: retry logic (3× exponential backoff), connection pooling (size 10, lifetime 30min), error handling. Output <promise>FDW CONFIGURED</promise> when all 3 connections active + 17 foreign tables accessible + latency <2× linked server baseline." --completion-promise "FDW CONFIGURED" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T150, T151: FDW requirements analysis (2 parallel sessions)
+- T153-T155: FDW connection analysis (3 parallel agents, 1 per database)
+- T158-T162: Foreign table configuration (3 parallel agents, 1 per server)
+- T168-T172: FDW test creation (3 parallel agents, 1 per connection)
+
+**Sequential dependencies**:
+- T152 depends on T150-T151 (dependency mapping AFTER requirements)
+- T157 depends on T153-T156 (performance expectations AFTER analysis)
+- T163 depends on T158-T162 (retry wrapper AFTER all tables configured)
+- T167 depends on T158-T166 (syntax validation AFTER configuration)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all FDW configurations (T180)
+- **Performance**: FDW latency <2× SQL Server linked server baseline (T157, T176)
+- **Reliability**: 3× retry with exponential backoff (1s, 2s, 4s) - T163
+- **Connection Pooling**: Size 10, lifetime 30min, idle timeout 5min - T164
+- **Security**: No hardcoded credentials, use postgres USER MAPPING
+- **Syntax**: 100% pass rate on `scripts/validation/syntax-check.sh`
+
+---
+
 ### Dependency Analysis for User Story 4
 
 - [ ] T150 [P] [US4] Review FDW requirements in docs/PROJECT-SPECIFICATION.md
@@ -420,6 +655,67 @@ This is a database migration project with the following structure:
 
 **Independent Test**: Configure SymmetricDS, insert/update/delete data in source tables, verify changes replicate to sqlwarehouse2 within acceptable latency (<5 minutes p95)
 
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US5-data-replication -b us5-data-replication 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US5-data-replication
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US5-data-replication`
+- [ ] **Branch Name**: `us5-data-replication` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US3 Dependency**: Verify tables deployed (replication requires source tables)
+- [ ] **Network Access**: Verify connectivity to sqlwarehouse2
+- [ ] **SymmetricDS**: Verify SymmetricDS installation/access
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL replication config/analysis
+- [X] **`database-admin`** ⭐⭐⭐ - Use for SymmetricDS setup/monitoring
+- [X] **`database-optimization`** ⭐⭐⭐⭐ - Use for replication performance tuning
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for replication lag/failure debugging
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T190-T194: Batch analyze replication requirements for multiple tables
+- T195-T199: Batch configure SymmetricDS channels/triggers
+- T205-T209: Batch create replication tests for all channels
+
+**Example Usage**:
+```bash
+/ralph-loop "Configure SymmetricDS replication channels for PostgreSQL → sqlwarehouse2. Setup: node groups (perseus_source, warehouse_target), routers (default), triggers (INSERT/UPDATE/DELETE on replicated tables), channels (batch_size 1000, period 60s). Monitor: replication lag <5min p95, alerts at 2min (info), 5min (warning), 10min (critical). Output <promise>REPLICATION CONFIGURED</promise> when all channels active + initial sync complete + lag monitoring operational." --completion-promise "REPLICATION CONFIGURED" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T187, T188: Replication requirements analysis (2 parallel sessions)
+- T190-T194: Table replication analysis (5+ parallel agents)
+- T195-T199: SymmetricDS channel config (batches, parallel within batch)
+- T205-T209: Replication test creation (5+ parallel agents)
+
+**Sequential dependencies**:
+- T189 depends on T187-T188 (topology AFTER requirements)
+- T200 depends on T195-T199 (initial sync AFTER channel config)
+- T204 depends on T200-T203 (validation AFTER initial sync)
+- T210 depends on T205-T209 (lag testing AFTER all tests created)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all replication configurations (T218)
+- **Performance**: p95 latency <5 minutes (T210)
+- **Reliability**: Alerting at 2min (info), 5min (warning), 10min (critical) - T202
+- **Data Integrity**: 100% row count match after initial sync (T200)
+- **Monitoring**: Real-time lag tracking + automated alerts - T201-T203
+- **Recovery**: Documented failover/resync procedures - T216
+
+---
+
 ### Dependency Analysis for User Story 5
 
 - [ ] T187 [P] [US5] Review replication requirements in docs/PROJECT-SPECIFICATION.md
@@ -483,6 +779,66 @@ This is a database migration project with the following structure:
 **Goal**: Migrate 7 SQL Server Agent jobs to PostgreSQL scheduling mechanisms (pgAgent or cron) preserving execution schedules and error handling
 
 **Independent Test**: Configure equivalent jobs in PostgreSQL, execute manually first, then validate scheduled execution produces expected results (logs created, reconciliation completes)
+
+---
+
+### 🔧 **Execution Requirements** (MANDATORY - Read Before Starting)
+
+⚠️ **CRITICAL**: See **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`** for complete workflow instructions
+
+#### **Worktree Setup**
+```bash
+# Create worktree from parent branch
+git worktree add ~/.claude-worktrees/US6-sql-agent-jobs -b us6-sql-agent-jobs 001-tsql-to-pgsql
+cd ~/.claude-worktrees/US6-sql-agent-jobs
+```
+
+#### **Pre-Flight Checklist**
+- [ ] **Worktree Created**: `~/.claude-worktrees/US6-sql-agent-jobs`
+- [ ] **Branch Name**: `us6-sql-agent-jobs` (from `001-tsql-to-pgsql`)
+- [ ] **Parent Branch Updated**: `git pull origin 001-tsql-to-pgsql` (no conflicts)
+- [ ] **US1/US2/US3 Dependencies**: Verify objects deployed (jobs call procedures/functions)
+- [ ] **Scheduling Tool**: Decide between pgAgent vs pg_cron (T220)
+
+#### **Mandatory Agents** (Use Proactively - See CLAUDE.md)
+- [X] **`database-expert`** ⭐⭐⭐⭐⭐ (PRIMARY) - Use for ALL job migration/analysis
+- [X] **`database-admin`** ⭐⭐⭐ - Use for pgAgent/pg_cron setup
+- [X] **`shell-scripting-pro`** ⭐⭐⭐⭐ - Use for cron scripts (if pg_cron chosen)
+- [X] **`systematic-debugging`** ⭐⭐⭐⭐ - Use for job failure debugging
+
+#### **Ralph Loop Plugin** (MANDATORY for Batch Tasks)
+**Activate for**:
+- T221-T225: Batch analyze 7 SQL Agent jobs (schedules, steps, dependencies)
+- T226-T230: Batch migrate 7 jobs to pgAgent/pg_cron
+- T236-T240: Batch create job tests for all 7 jobs
+
+**Example Usage**:
+```bash
+/ralph-loop "Migrate 7 SQL Server Agent jobs to pg_cron. For each job: extract schedule (cron format), convert T-SQL steps to PL/pgSQL CALL statements, add error handling (EXCEPTION blocks + logging), configure retry logic (3× on failure). Jobs: reconciliation (daily 2am), cleanup (weekly), monitoring (hourly). Output <promise>JOBS MIGRATED</promise> when all 7 jobs scheduled + manual execution successful + logs verified." --completion-promise "JOBS MIGRATED" --max-iterations 10
+```
+
+#### **Parallelization Strategy**
+**Tasks marked `[P]` can run concurrently**:
+- T218, T219: Job requirements analysis (2 parallel sessions)
+- T221-T225: Job analysis (5+ parallel agents, 1-2 jobs each)
+- T226-T230: Job migration (batches, parallel within batch if independent)
+- T236-T240: Job test creation (5+ parallel agents)
+
+**Sequential dependencies**:
+- T220 depends on T218-T219 (tool selection AFTER requirements)
+- T231 depends on T220, T226-T230 (scheduling AFTER jobs migrated)
+- T235 depends on T226-T234 (syntax validation AFTER migration)
+- T241 depends on T236-T240 (integration testing AFTER all tests created)
+
+#### **Quality Gates**
+- **Minimum Score**: ≥7.0/10.0 for all job migrations (T247)
+- **Schedule Accuracy**: 100% match with SQL Server schedules (cron equivalent)
+- **Error Handling**: Comprehensive logging + retry logic (3× with backoff)
+- **Monitoring**: Job execution logs + failure alerts - T233-T234
+- **Recovery**: Documented manual override/restart procedures - T245
+- **Syntax**: 100% pass rate on manual execution tests (T241)
+
+---
 
 ### Dependency Analysis for User Story 6
 

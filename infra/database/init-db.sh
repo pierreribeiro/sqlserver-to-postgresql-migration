@@ -20,6 +20,12 @@
 #   help      - Show this help message
 #
 
+# Future Enhancements Backlog Section
+# 1. Create an env.conf file for setting up script initial variables
+# 2. Execution logs must be written in the global temporary directory informed in configuration file.
+# 3. Directory logs tree pattern: {global_dir}/{branch_name}/{dir_script_souce}/file_name_{timestamp}.log
+
+
 set -euo pipefail
 
 # Script directory
@@ -27,10 +33,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Configuration
+# Note: Mannually commented by Pierre at 11-02-2026
+# Enhancement: Consider moving these configurations to a separate config file (e.g., config.env and secrets in .secrets dir) for better maintainability and security. 
+# This would allow us to keep sensitive information like passwords out of the script and make it easier to update configurations without modifying the script code. 
+#COMPOSE_FILE="${SCRIPT_DIR}/compose.yaml"
+#SECRETS_DIR="${SCRIPT_DIR}/.secrets"
+#PASSWORD_FILE="${SECRETS_DIR}/postgres_password.txt"
+#PGDATA_DIR="${SCRIPT_DIR}/pgdata"
+
+# Configuration
 COMPOSE_FILE="${SCRIPT_DIR}/compose.yaml"
-SECRETS_DIR="${SCRIPT_DIR}/.secrets"
+SECRETS_DIR="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
 PASSWORD_FILE="${SECRETS_DIR}/postgres_password.txt"
-PGDATA_DIR="${SCRIPT_DIR}/pgdata"
+PGDATA_DIR="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data"
 
 # Database connection parameters
 DB_USER="perseus_admin"

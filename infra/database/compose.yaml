@@ -1,5 +1,23 @@
 # Perseus Database Migration - PostgreSQL 17 Development Environment
-# Docker Compose configuration for local PostgreSQL instance
+# Docker Compose configuration for local PostgreSQL 
+
+# Future Enhancements Backlog Section
+# 1. Review the logic at compose.yaml to avoid errors at pgbounce deployment due userlist.txt file absence. Suggested flow:
+# a) First deploy and start pgsql instance
+# b) Prior setup pgbouncer, run generate-userlist.sh to create userlist.txt
+# c) Execute pgbouncer setup steps
+# 2. Will be used edoburu/pgbouncer image. Project repo at https://github.com/edoburu/docker-pgbouncer
+# 3. Discover all users and settings used by the image and make the necessary adjustments to the scripts to:
+# a) Create necessary users used by the image.
+# b) Discontinue unnecessary users.
+# c) Review and adjust permissions for volumes and mount points. 
+# 4. The compose.yaml file should use variables to receive values, coming from a .conf file, for:
+# a) Directory paths
+# b) Files
+# c) Secrets
+# 5. The "command" instruction must be prepared to receive the execution of multiple programs or scripts, with or without parameter passing. Provide an example to illustrate this instruction. This example should be in the form of a comment.
+
+
 
 services:
   postgres:
@@ -29,7 +47,7 @@ services:
 
     # Volume for data persistence
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - /Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/pg_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
 
     # Docker Secrets for password
@@ -136,7 +154,7 @@ services:
 # Docker Secrets definition
 secrets:
   postgres_password:
-    file: ./.secrets/postgres_password.txt
+    file: /Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets/postgres_password.txt
 
 # Volume definitions
 volumes:

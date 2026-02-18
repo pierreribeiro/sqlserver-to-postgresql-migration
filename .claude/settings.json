@@ -1,0 +1,287 @@
+{
+  "additionalDirectories": [
+      "/tmp",
+      "/Users/pierre.ribeiro/workspace",
+      "/Users/pierre.ribeiro/.claude-worktrees"
+    ],
+  "permissions": {
+    "allow": [
+      "Read(<project>/**/*)",
+      "Write(<project>/**/*)",
+      "Delete(<project>/**)",
+      "Edit(<project>/**/*)",
+      "MultiEdit(<project>/**/*)",
+      "Glob(<project>/**/*)",
+      "Grep(<project>/**/*)",
+      "LS(<project>/**/*)",      
+      "Bash(<project>/**)",
+      "Bash(<project>/**/*)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(psql *)",
+      "Bash(psql:*)",
+      "Bash(sqlcmd *)",
+      "Bash(python *)",
+      "Bash(python:*)",
+      "Bash(python3 *)",
+      "Bash(python3: *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(wc *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(cd *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(awk *)",
+      "Bash(sed *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(which *)",
+      "Bash(type *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "Bash(date)",
+      "Bash(hostname)",
+      "Bash(whoami)",
+      "Bash(uname *)",
+      "Bash(xargs:*)",
+      "Bash(uv pip *)",
+      "Bash(uv add *)",
+      "Bash(uv init *)",
+      "Bash(uv lock *)",
+      "Bash(uv python *)",
+      "Bash(uv remove *)",
+      "Bash(uv tool *)",
+      "Bash(uv venv *)",
+      "Bash(chmod *)",
+      "Bash(docker *)",
+      "Bash(done)",
+      "Bash(docker exec:*)",
+      "Mcp(*)",
+      "mcp__*",
+      "Read(/tmp/claude-sandbox/**)",
+      "Write(/tmp/claude-sandbox/**)",
+      "Skill(*)",
+      "Task(*)",
+      "TodoRead",
+      "TodoWrite",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": [
+      "Read(~/.ssh/*)",
+      "Read(~/.gnupg/*)",
+      "Read(~/.gpg/*)",
+      "Read(~/.aws/*)",
+      "Read(~/.azure/*)",
+      "Read(~/.gcloud/*)",
+      "Read(~/.config/gcloud/*)",
+      "Read(~/.kube/*)",
+      "Read(~/.docker/*)",
+      "Read(~/.netrc)",
+      "Read(~/.npmrc)",
+      "Read(~/.pypirc)",
+      "Read(~/.gem/credentials)",
+      "Read(~/.cargo/credentials)",
+      "Read(~/.gitconfig)",
+      "Read(~/.git-credentials)",
+      "Read(~/.password-store/*)",
+      "Read(~/.vault-token)",
+      "Read(~/.terraform.d/*)",
+      "Read(~/.config/gh/*)",
+      "Read(~/.config/hub/*)",
+      "Read(~/Library/Keychains/*)",
+      "Read(~/Library/Application Support/Google/Chrome/*)",
+      "Read(~/Library/Application Support/Firefox/*)",
+      "Read(~/Library/Application Support/1Password/*)",
+      "Read(~/.mozilla/*)",
+      "Read(~/.chrome/*)",
+      "Read(/var/*)",
+      "Read(/etc/passwd)",
+      "Read(/etc/shadow)",
+      "Read(/etc/sudoers)",
+      "Write(~/.ssh/*)",
+      "Write(~/.gnupg/*)",
+      "Write(~/.aws/*)",
+      "Write(~/.kube/*)",
+      "Write(~/.netrc)",
+      "Write(~/.npmrc)",
+      "Write(~/.gitconfig)",
+      "Write(~/.git-credentials)",
+      "Write(/var/*)",
+      "Write(/etc/*)",
+      "Edit(~/.ssh/*)",
+      "Edit(~/.gnupg/*)",
+      "Edit(~/.aws/*)",
+      "Edit(~/.kube/*)",
+      "Edit(~/.netrc)",
+      "Edit(~/.npmrc)",
+      "Edit(~/.gitconfig)",
+      "Edit(/etc/*)",
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(doas *)",
+      "Bash(dd *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(mkfs *)",
+      "Bash(fdisk *)",
+      "Bash(parted *)",
+      "Bash(shutdown *)",
+      "Bash(reboot *)",
+      "Bash(halt *)",
+      "Bash(poweroff *)",
+      "Bash(init *)",
+      "Bash(systemctl *)",
+      "Bash(launchctl *)",
+      "Bash(osascript *)",
+      "Bash(killall *)",
+      "Bash(pkill *)",
+      "Bash(brew *)",
+      "Bash(apt *)",
+      "Bash(apt-get *)",
+      "Bash(yum *)",
+      "Bash(dnf *)",
+      "Bash(pacman *)",
+      "Bash(npm install -g *)",
+      "Bash(npm i -g *)",
+      "Bash(pip install --user *)",
+      "Bash(gem install *)",
+      "Bash(cargo install *)",
+      "Bash(go install *)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)",
+      "Bash(nc *)",
+      "Bash(netcat *)",
+      "Bash(nmap *)",
+      "Bash(tcpdump *)",
+      "Bash(iptables *)",
+      "Bash(pfctl *)",
+      "Bash(diskutil *)",
+      "Bash(mount *)",
+      "Bash(umount *)",
+      "Bash(chown *)",
+      "Bash(chmod 777 *)",
+      "Bash(chmod -R 777 *)",
+      "Bash(kill -9 1)",
+      "Bash(kill -9 0)",
+      "Bash(*; sudo *)",
+      "Bash(*&& sudo *)",
+      "Bash(*| sudo *)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "claude-context",    
+    "memory",
+    "sequentialthinking"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\e[?2004l' > /dev/tty && echo \"[$(date '+%Y-%m-%d %H:%M:%S')] SessionStart: Bracketed paste mode DISABLED (project: sqlserver-to-postgresql-migration)\" >> .claude/hook-debug.log"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\e[?2004h' > /dev/tty && echo \"[$(date '+%Y-%m-%d %H:%M:%S')] SessionEnd: Bracketed paste mode RE-ENABLED (project: sqlserver-to-postgresql-migration)\" >> .claude/hook-debug.log"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified: $CLAUDE_TOOL_FILE_PATH\" >> .claude/changes.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File created: $CLAUDE_TOOL_FILE_PATH\" >> .claude/changes.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.tsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.json || \"$CLAUDE_TOOL_FILE_PATH\" == *.css || \"$CLAUDE_TOOL_FILE_PATH\" == *.html ]]; then npx prettier --write \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then black \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.go ]]; then gofmt -w \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.rs ]]; then rustfmt \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.php ]]; then php-cs-fixer fix \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.tsx ]]; then npx eslint \"$CLAUDE_TOOL_FILE_PATH\" --fix 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then pylint \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.rb ]]; then rubocop \"$CLAUDE_TOOL_FILE_PATH\" --auto-correct 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then black \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date)] Tool: $CLAUDE_TOOL_NAME | File: $CLAUDE_TOOL_FILE_PATH\" >> .claude/command-log.txt"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "/bin/bash /Users/pierre.ribeiro/.claude/statusmultline-command.sh"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "claude-mem@thedotmack": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "serena@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "claude-team@martian-engineering": true,
+    "context7-plugin@context7-marketplace": true
+  },
+  "autoUpdatesChannel": "stable",
+  "minimumVersion": "2.1.5"
+}

@@ -45,5 +45,17 @@ build/
 infra/database/.secrets/
 infra/database/pgdata/
 
-# Claude
-./Claude/command-log.txt
+# Claude Code command log (should not be committed)
+.claude/command-log.txt
+command-log.txt.env
+
+# Data Migration (scripts/data-migration/)
+scripts/data-migration/.env
+scripts/data-migration/.env.test
+scripts/data-migration/backup/
+scripts/data-migration/.claude/
+scripts/data-migration/*.csv
+scripts/data-migration/*-verification.txt
+
+# Legacy tracking (archived documentation)
+tracking/legacy/

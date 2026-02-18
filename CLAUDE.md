@@ -11,7 +11,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. Manual review and correction fixes critical issues (~30% effort)
 3. Comprehensive validation (syntax, performance, data integrity) before deployment
 
-**Current Status:** 15/15 stored procedures complete ✅ | Ready for views/functions/tables phase
+**Current Status:** 15/15 stored procedures complete ✅ | Tables ✅ | Ready for views/functions
+
+---
+
+## ⚠️ MANDATORY: User Story Workflow (READ FIRST)
+
+**CRITICAL**: Before starting ANY User Story work, you MUST read and follow:
+
+📖 **`specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md`**
+
+This guide defines **REQUIRED** practices for:
+1. **Worktree Strategy**: Each User Story works in isolated git worktree (`~/.claude-worktrees/`)
+2. **Parallel Execution**: Maximize throughput with concurrent task execution
+3. **Database Agents**: Mandatory use (database-expert, sql-pro, database-optimization)
+4. **Ralph Loop Plugin**: Required for batch conversions (10+ objects)
+5. **Branch Strategy**: `001-tsql-to-pgsql` is parent for all User Story branches
+
+**Quick Checklist** (per User Story):
+- [ ] Create worktree: `git worktree add ~/.claude-worktrees/US{X}-{name} -b us{X}-{name} 001-tsql-to-pgsql`
+- [ ] Activate database-expert agent (PRIMARY for all SQL work)
+- [ ] Enable Ralph Loop for batch tasks (analysis, refactoring, testing)
+- [ ] Run `[P]` marked tasks in parallel (multiple sessions/agents)
+- [ ] Update `tracking/progress-tracker.md` after each task group
+
+**Non-Compliance = Rejected Work**: Worktree isolation and database agent usage are NON-NEGOTIABLE.
+
+---
 
 ## Project Scope - 769 Database Objects
 
@@ -20,9 +46,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **Stored Procedures** | 15 | ✅ COMPLETE | Average quality: 8.67/10, Performance: +63-97% |
 | **Functions** | 25 | Pending | 15 table-valued, 10 scalar |
 | **Views** | 22 | Pending | 1 materialized, 21 recursive CTEs |
-| **Tables** | 91 | Pending | Core schema objects |
-| **Indexes** | 352 | Pending | Primary keys, foreign keys, query optimization |
-| **Constraints** | 271 | Pending | Primary keys, foreign keys, unique, check |
+| **Tables** | 94 | ✅ COMPLETE | 94 tables deployed to DEV |
+| **Indexes** | 213 | ⚠️ IN PROGRESS | 175/213 deployed (column mismatches pending) |
+| **Constraints** | 270 | ⚠️ IN PROGRESS | 230/270 deployed (column mismatches pending) |
 | **UDT (GooList)** | 1 | Pending | Convert to TEMPORARY TABLE pattern |
 | **FDW Connections** | 3 | Pending | hermes, sqlapps, deimeter (17 foreign tables) |
 | **SQL Agent Jobs** | 7 | Pending | Migrate to pg_cron/pgAgent |
@@ -38,10 +64,10 @@ source/
 │   └── pgsql-aws-sct-converted/  # 1,385 files - AWS SCT baseline (~70% complete)
 └── building/pgsql/refactored/  # Production-ready (0-21 dependency-ordered)
     ├── 0. drop-trigger/ ... 13. create-domain/
-    ├── 14. create-table/       # Tables pending
+    ├── 14. create-table/       # ✅ 94 tables COMPLETE
     ├── 15. create-view/        # Views pending (22 views)
-    ├── 16. create-index/       # Indexes pending (352 indexes)
-    ├── 17-18. constraints/     # Constraints pending (271)
+    ├── 16. create-index/       # ⚠️ 175/213 deployed (column mismatches)
+    ├── 17-18. constraints/     # ⚠️ 230/270 deployed
     ├── 19. create-function/    # Functions pending (25 functions)
     ├── 20. create-procedure/   # ✅ 15 procedures COMPLETE
     └── 21. create-trigger/     # Triggers pending
@@ -258,6 +284,33 @@ usp_UpdateContainerType    → update_container_type (drop usp_)
 4. WHILE loops → CTEs/window functions | 5. WHEN OTHERS only → Specific exceptions | 6. AWS SCT blind trust
 7. Missing BEGIN/COMMIT | 8. Unqualified names | 9. Case-sensitive → LOWER()/ILIKE
 
+## US3 Deployment Lessons Learned
+
+### Reserved Words
+- PostgreSQL reserved word `offset` must be quoted as `"offset"` in column definitions
+- AWS SCT does NOT handle reserved word quoting — manual audit required
+- **Action:** Audit all column names against `pg_get_keywords()` before deployment
+
+### Column Name Drift
+- ~40 index/constraint files reference columns that don't exist in table DDL
+- Root cause: AWS SCT naming transformations inconsistent with manual refactoring
+- **Action:** Always validate index/constraint files against deployed schema before deployment
+
+### TIMESTAMP → TIMESTAMPTZ
+- All local table TIMESTAMP columns converted to TIMESTAMPTZ for timezone awareness
+- FOREIGN TABLE columns must NOT be converted (remote server controls types)
+- **Pattern:** 21 files, 40 occurrences fixed in US3
+
+### Deployment Patterns
+- Avoid compound commands (`&&`) in `docker exec` context — causes false "permission denied"
+- Use simple, single-statement commands piped to `docker exec psql`
+- Constraint scripts are NOT idempotent — re-runs produce "already exists" errors (harmless)
+
+### Haiku vs Sonnet Agent Performance
+- Haiku: 100% success rate on research/analysis tasks (7/7 agents, 0 errors)
+- Sonnet: Handles deployment complexity; all blocking errors resolved in real-time
+- **Pattern:** Use Haiku for audits/analysis, Sonnet for deployment/fixes
+
 ## Documentation References
 
 **Read FIRST before changes:**
@@ -295,5 +348,5 @@ git commit -m "perf: optimize index on goo.parent_goo_id"
 **Apply these patterns to views, functions, tables for similar gains.**
 
 ---
-**Project Lead:** Pierre Ribeiro (Senior DBA/DBRE) | **Last Updated:** 2026-01-22
-**Status:** Procedures complete (15/15) | Ready for views/functions/tables phase | **Version:** 2.0 (expanded scope to 769 objects)
+**Project Lead:** Pierre Ribeiro (Senior DBA/DBRE) | **Last Updated:** 2026-02-13
+**Status:** Procedures ✅ (15/15) | Tables ✅ (94/94) | Indexes/Constraints ⚠️ | **Version:** 2.1

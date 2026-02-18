@@ -4,6 +4,12 @@
 #
 # Usage: ./deploy-pgbouncer.sh
 
+# Future Enhancements Backlog Section
+# 1. Create an env.conf file for setting up script for all initial variables
+# 2. Password will be captured from userlist.txt
+# 3. PgBouncer admin database will be the same used by edoburu/pgbouncer image
+# 3. Review the entire scipt looking for bug or flaws in the execution logic, explore edge cases
+
 set -euo pipefail
 
 # Color codes

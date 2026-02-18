@@ -22,7 +22,7 @@
       "Bash(psql:*)",
       "Bash(sqlcmd *)",
       "Bash(python *)",
-      "Bash(python:*)"
+      "Bash(python:*)",
       "Bash(python3 *)",
       "Bash(python3: *)",
       "Bash(npm *)",
@@ -61,7 +61,7 @@
       "Bash(chmod *)",
       "Bash(docker *)",
       "Bash(done)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
       "Mcp(*)",
       "mcp__*",
       "Read(/tmp/claude-sandbox/**)",

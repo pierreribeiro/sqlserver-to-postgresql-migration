@@ -236,21 +236,90 @@ Gate: Before P0 translated view, validate ALL 21 view dependencies
 Exit: All 22 views pass validation + performance benchmarks within ±20%
 ```
 
+## CLI Tools (Terminal Priority)
+
+**RULE: Terminal commands via `Bash` tool ALWAYS take priority over MCP tools.** Use MCP tools only when no CLI equivalent exists or the CLI has failed.
+
+| Tool | Purpose |
+|------|---------|
+| `git` | Version control — commits, branches, worktrees, diffs, log |
+| `gh` | GitHub CLI — issues, PRs, releases, repo operations (preferred over MCP GitHub) |
+| `uv` | Python package/env management — install deps, run scripts (`uv run`, `uv pip`) |
+| `rg` (ripgrep) | Fast content search across files — use instead of `grep` for codebase searches |
+| `jq` | JSON processing — parse/filter CLI tool output and API responses |
+| `psql` | PostgreSQL client — syntax validation, deployment, query testing against `perseus_dev` |
+| `npx` | Run Node.js tools without installing globally (e.g. `npx prettier`, `npx tsc`) |
+| `npm` | Node.js package management — install/run project Node dependencies |
+| `fnm` | Fast Node Version Manager — switch Node.js versions per project |
+
+---
+
 ## Available MCP Tools
 
-**GitHub Integration:**
-- `issue_read` / `issue_write` - Track P0-P3 issues
-- `pull_request_read` - Review migration PRs
-- `search_code` - Find patterns across original/converted code
+**⚠️ Priority Rule:** Use `gh` CLI first for all GitHub operations. Fall back to MCP GitHub tools **only if `gh` fails** or the operation is unavailable in the CLI.
 
-**Semantic Coding (Serena):**
-- `find_symbol` - Navigate by function/procedure names
-- `replace_symbol_body` - Refactor entire functions
+### MCP_DOCKER — GitHub Integration (fallback only)
+- `issue_read` / `issue_write` — Read/create/update GitHub issues (use `gh issue` first)
+- `pull_request_read` / `pull_request_review_write` — Review PRs (use `gh pr` first)
+- `list_issues` / `search_issues` / `search_pull_requests` — Query GitHub (use `gh` first)
+- `create_branch` / `list_branches` / `list_commits` — Repo operations
+- `search_code` / `search_repositories` / `search_users` — GitHub search
+- `get_me` — Current authenticated user info
 
-**Codebase Context:**
-- `index_codebase` / `search_code` - Semantic search
+### MCP_DOCKER — Project Management
+- `create_task` / `update_task` / `get_task` / `search_tasks` — Task tracking
+- `create_feature` / `update_feature` / `get_feature` — Feature management
+- `create_project` / `update_project` / `get_project` — Project boards
+- `get_sections` / `bulk_create_sections` / `bulk_update_tasks` — Board sections
 
-Use `ToolSearch` to discover full MCP catalog.
+### MCP_DOCKER — Browser Automation
+- `browser_navigate` / `browser_snapshot` / `browser_click` / `browser_type` — Automate Chrome
+- `browser_take_screenshot` / `browser_fill_form` / `browser_evaluate` — Page interaction
+- Use for: validating deployed UIs, testing web-facing components
+
+### plugin:serena — Semantic Code Navigation & Editing
+- `find_symbol` — Locate functions/procedures/classes by name across the codebase
+- `find_referencing_symbols` — Find all callers/usages of a symbol
+- `get_symbols_overview` — List all symbols in a file (avoid reading entire files)
+- `replace_symbol_body` — Replace a complete function/procedure definition
+- `insert_before_symbol` / `insert_after_symbol` — Insert code relative to a symbol
+- `search_for_pattern` — Regex search across codebase (use `rg` first)
+- `list_dir` / `find_file` / `read_file` — File operations (use native tools first)
+- Use for: surgical SQL refactoring, navigating stored procedures/functions by name
+
+### plugin:context7 — Library Documentation Lookup
+- `resolve-library-id` — Resolve a library name to its context7 ID
+- `query-docs` — Fetch up-to-date docs/examples for any library or framework
+- Use for: PostgreSQL 17 syntax, pg_cron, postgres_fdw, SymmetricDS API references
+
+### plugin:claude-context — Codebase Semantic Index
+- `index_codebase` — Build semantic index of the full repository
+- `search_code` — Semantic search across indexed codebase
+- `get_indexing_status` / `clear_index` — Manage the index
+- Use for: broad "find all places that do X" queries across 769 objects
+
+### plugin:claude-mem — Persistent Memory Search
+- `search` — Search across saved memories/observations from past sessions
+- `get_observations` — Retrieve specific observation records
+- `timeline` — Browse observations chronologically
+- Use for: retrieving past decisions, debugging patterns, session context
+
+### plugin:claude-team — Multi-Agent Worker Management
+- `spawn_workers` — Launch parallel Claude Code worker agents
+- `message_workers` / `examine_worker` — Communicate with and inspect workers
+- `list_workers` / `adopt_worker` / `close_workers` — Manage worker lifecycle
+- `list_worktrees` / `poll_worker_changes` / `wait_idle_workers` — Coordination
+- Use for: large parallel batch tasks beyond what `Task` tool handles
+
+### plugin:claude-in-chrome — Chrome Browser Automation
+- `navigate` / `read_page` / `find` / `form_input` / `javascript_tool` — Page control
+- `get_page_text` / `read_console_messages` / `read_network_requests` — Inspection
+- `screenshot` / `gif_creator` — Visual capture
+- Use for: browser-based validation, UI testing in Chrome directly
+
+### mcp:sequentialthinking — Structured Reasoning
+- `sequentialthinking` — Step-by-step reasoning for complex multi-part problems
+- Use for: architectural decisions, debugging complex dependency chains
 
 ## Database Agents (Use PROACTIVELY)
 

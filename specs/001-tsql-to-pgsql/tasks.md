@@ -182,11 +182,11 @@ cd ~/.claude-worktrees/US1-critical-views
 
 **Purpose**: Analyze AWS SCT output and document issues for all 22 views
 
-- [ ] T034 [P] [US1] Analyze `translated` indexed view → materialized view in source/building/pgsql/refactored/views/translated-analysis.md
-- [ ] T035 [P] [US1] Analyze `upstream` recursive CTE view in source/building/pgsql/refactored/views/upstream-analysis.md
-- [ ] T036 [P] [US1] Analyze `downstream` recursive CTE view in source/building/pgsql/refactored/views/downstream-analysis.md
-- [ ] T037 [P] [US1] Analyze `goo_relationship` standard view in source/building/pgsql/refactored/views/goo_relationship-analysis.md
-- [ ] T038 [P] [US1] Analyze remaining 18 views in parallel (create analysis.md for each)
+- [x] T034 [P] [US1] Analyze `translated` indexed view → materialized view in source/building/pgsql/refactored/15.create-view/analysis/translated-analysis.md ✅ 2026-02-19
+- [x] T035 [P] [US1] Analyze `upstream` recursive CTE view in source/building/pgsql/refactored/15.create-view/analysis/upstream-analysis.md ✅ 2026-02-19
+- [x] T036 [P] [US1] Analyze `downstream` recursive CTE view in source/building/pgsql/refactored/15.create-view/analysis/downstream-analysis.md ✅ 2026-02-19
+- [x] T037 [P] [US1] Analyze `goo_relationship` + `hermes_run` views in source/building/pgsql/refactored/15.create-view/analysis/ ✅ 2026-02-19
+- [x] T038 [P] [US1] Analyze remaining 18 views in parallel (22 analysis.md files total) ✅ 2026-02-19
 - [ ] T039 [US1] Consolidate view analysis findings and quality scores in tracking/progress-tracker.md
 
 ### Phase 2: Refactoring for User Story 1 Views

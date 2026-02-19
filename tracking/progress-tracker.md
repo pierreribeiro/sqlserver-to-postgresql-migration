@@ -480,7 +480,7 @@ Total:                               85/317 (26.8%)
 
 ## 🎯 NEXT STEPS
 
-### US3 Complete — Ready for US4 (User Story 1: Views)
+### US3 Complete — Ready for US1 (User Story 1: Views)
 
 **User Story 1: Views (22 views)** — Recommended next
 - P0 critical: `translated` materialized view

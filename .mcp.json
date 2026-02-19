@@ -8,17 +8,6 @@
         "MILVUS_ADDRESS": "https://in03-e0dbefda7006293.serverless.gcp-us-west1.cloud.zilliz.com",
         "MILVUS_TOKEN": "${MILVUS_API_TOKEN}"
       }
-    },    
-    "memory": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-v",
-        "/local-directory:/local-directory",
-        "mcp/memory"
-      ]
     },
     "sequentialthinking": {
       "command": "docker",

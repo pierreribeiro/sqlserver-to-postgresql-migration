@@ -43,17 +43,18 @@ This guide defines **REQUIRED** practices for:
 
 | Object Type | Count | Status | Notes |
 |-------------|-------|--------|-------|
-| **Stored Procedures** | 15 | ✅ COMPLETE | Average quality: 8.67/10, Performance: +63-97% |
-| **Functions** | 25 | Pending | 15 table-valued, 10 scalar |
-| **Views** | 22 | Pending | 1 materialized, 21 recursive CTEs |
+| **Stored Procedures** | 15 | ✅ COMPLETE | Avg quality: 8.67/10, Performance: +63-97% |
 | **Tables** | 94 | ✅ COMPLETE | 94 tables deployed to DEV |
 | **Indexes** | 213 | ⚠️ IN PROGRESS | 175/213 deployed (column mismatches pending) |
 | **Constraints** | 270 | ⚠️ IN PROGRESS | 230/270 deployed (column mismatches pending) |
+| **Views** | 22 | 🔄 US1 IN PROGRESS | 1 P0 materialized, 3 recursive CTEs, 18 standard; T031-T033 ✅ |
+| **Functions** | 25 | Pending | 15 table-valued, 10 scalar — US2 (after US1) |
 | **UDT (GooList)** | 1 | Pending | Convert to TEMPORARY TABLE pattern |
 | **FDW Connections** | 3 | Pending | hermes, sqlapps, deimeter (17 foreign tables) |
 | **SQL Agent Jobs** | 7 | Pending | Migrate to pg_cron/pgAgent |
 
-**P0 Critical Path:** `translated` view (materialized), `mcgetupstream`/`mcgetdownstream`/`mcgetupstreambylist`/`mcgetdownstreambylist` functions, `goo`/`material_transition`/`transition_material` tables
+**P0 Critical Path:** `translated` view (materialized), `mcgetupstream`/`mcgetdownstream`/`mcgetupstreambylist`/`mcgetdownstreambylist` functions
+**P0 Tables:** `goo`/`material_transition`/`transition_material` — ✅ deployed to DEV
 
 ## Directory Structure
 
@@ -65,19 +66,31 @@ source/
 └── building/pgsql/refactored/  # Production-ready (0-21 dependency-ordered)
     ├── 0.drop-trigger/ ... 13.create-domain/
     ├── 14.create-table/        # ✅ 94 tables COMPLETE
-    ├── 15.create-view/         # Views pending (22 views)
+    ├── 15.create-view/         # 🔄 US1 IN PROGRESS (MIGRATION-SEQUENCE.md ✅)
     ├── 16.create-index/        # ⚠️ 175/213 deployed (column mismatches)
     ├── 17.create-constraint/   # ⚠️ 230/270 deployed
     ├── 19.create-function/     # Functions pending (25 functions)
     ├── 20.create-procedure/    # ✅ 15 procedures COMPLETE
     └── 21.create-trigger/      # Triggers pending
 
-docs/code-analysis/             # dependency-analysis-*.md (4 lote + consolidated)
+docs/
+├── backups/                    # CLAUDE.md and README.md versioned backups
+├── code-analysis/
+│   ├── dependency/             # dependency-analysis-*.md (4 lote + consolidated)
+│   ├── procedures/             # Per-procedure analysis documents
+│   └── tables/                 # Per-table analysis documents
+├── db-design/
+│   ├── pgsql/                  # perseus-data-dictionary.md, ER diagrams, type reference
+│   └── sqlserver/              # TABLE-CATALOG.md, original ER diagrams
+├── data-assessments/           # Row counts, constraint CSVs
+├── plans/                      # action-plan-*.md (pre-staging, pre-prod)
+└── *.md                        # Constitution, spec, deployment reports, audit reports
+
 scripts/                        # automation/ (🚧), validation/ (✅), deployment/ (🚧)
-tests/unit/                     # ✅ 15 test_*.sql files for procedures
+tests/unit/                     # ✅ 15 test_*.sql files for procedures + views/ (US1)
 tracking/                       # progress-tracker.md, activity-log-*.md
 templates/                      # procedure, function, view, test templates
-specs/001-tsql-to-pgsql/       # spec.md, data-model.md, plan.md, tasks.md (317 tasks)
+specs/001-tsql-to-pgsql/        # spec.md, data-model.md, plan.md, tasks.md, WORKFLOW-GUIDE.md
 ```
 
 ## Quick Commands
@@ -383,12 +396,27 @@ usp_UpdateContainerType    → update_container_type (drop usp_)
 ## Documentation References
 
 **Read FIRST before changes:**
-- `.specify/memory/constitution.md` - 7 binding core principles
-- `docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md` - Articles I-XVII
+- `docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md` - Articles I-XVII (binding standards)
 - `docs/PROJECT-SPECIFICATION.md` - Requirements and constraints
-- `docs/code-analysis/dependency-analysis-consolidated.md` - P0 critical path + all 769 objects
-- `specs/001-tsql-to-pgsql/` - spec.md, data-model.md, plan.md, tasks.md
+- `docs/code-analysis/dependency/dependency-analysis-consolidated.md` - P0 critical path + all 769 objects
+- `specs/001-tsql-to-pgsql/spec.md` - Full project specification
+- `specs/001-tsql-to-pgsql/tasks.md` - 317 tasks across all User Stories
+- `specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md` - Mandatory execution workflow
 - `templates/` - Object templates (procedure, function, view, test)
+
+**DB Design & Schema:**
+- `docs/db-design/pgsql/perseus-data-dictionary.md` - PostgreSQL schema reference
+- `docs/db-design/pgsql/TYPE-TRANSFORMATION-REFERENCE.md` - Type mapping reference
+- `docs/db-design/sqlserver/TABLE-CATALOG.md` - Original SQL Server table catalog
+- `docs/db-design/INDEX.md` - Design docs index + TRANSFORMATION-SUMMARY.md
+
+**Per-Object Analysis:**
+- `docs/code-analysis/dependency/dependency-analysis-lote3-views.md` - 22 views (US1)
+- `docs/code-analysis/dependency/dependency-analysis-lote2-functions.md` - 25 functions (US2)
+- `docs/code-analysis/procedures/` - Per-procedure analysis (15 files)
+
+**Backups:**
+- `docs/backups/` - Versioned backups of CLAUDE.md, README.md and other key docs
 
 ## Tracking & Reporting
 

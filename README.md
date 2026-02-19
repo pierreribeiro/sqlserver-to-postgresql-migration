@@ -1,12 +1,14 @@
 # SQL Server → PostgreSQL Migration Project
 ## Perseus Database Complete Migration
 
-[![Project Status](https://img.shields.io/badge/status-procedures--complete-green)](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration)
+[![Project Status](https://img.shields.io/badge/status-US1%20views%20in%20progress-blue)](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+-blue)](https://www.postgresql.org/)
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2014-red)](https://www.microsoft.com/sql-server)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Objects](https://img.shields.io/badge/objects-769-orange)](docs/code-analysis/dependency-analysis-consolidated.md)
-[![Procedures Complete](https://img.shields.io/badge/procedures-15%2F15-success)](source/building/pgsql/refactored/20.%20create-procedure/)
+[![Objects](https://img.shields.io/badge/objects-769-orange)](docs/code-analysis/dependency/dependency-analysis-consolidated.md)
+[![Procedures](https://img.shields.io/badge/procedures-15%2F15-success)](source/building/pgsql/refactored/20.create-procedure/)
+[![Tables](https://img.shields.io/badge/tables-94%2F94-success)](source/building/pgsql/refactored/14.create-table/)
+[![Progress](https://img.shields.io/badge/progress-14%25-yellow)](tracking/progress-tracker.md)
 
 > **Mission:** Systematically migrate and validate ALL 769 Perseus database objects from SQL Server to PostgreSQL 17+ with zero production incidents and zero data loss.
 
@@ -33,14 +35,14 @@
 This project manages the **complete database migration** of **769 database objects** from SQL Server (T-SQL) to PostgreSQL 17+ (PL/pgSQL) for the Perseus system. The migration leverages AWS Schema Conversion Tool (SCT) as a baseline (~70% complete), with mandatory manual review and correction to ensure production quality.
 
 **Migrated Objects:**
-- ✅ **15 Stored Procedures** (COMPLETE - Sprint 3)
-- 🔄 **25 Functions** (15 table-valued, 10 scalar)
-- 🔄 **22 Views** (1 materialized, 21 recursive CTEs)
-- 🔄 **91 Tables** (core schema objects)
-- 🔄 **352 Indexes** (primary keys, foreign keys, query optimization)
-- 🔄 **271 Constraints** (PK, FK, unique, check)
+- ✅ **15 Stored Procedures** (COMPLETE — avg 8.67/10, +63-97% performance)
+- ✅ **94 Tables** (COMPLETE — deployed to DEV)
+- ⚠️ **213 Indexes** (175/213 deployed — column mismatches pending)
+- ⚠️ **270 Constraints** (230/270 deployed — column mismatches pending)
+- 🔄 **22 Views** (US1 in progress — dependency analysis complete, T031-T033 ✅)
+- 🔄 **25 Functions** (15 table-valued, 10 scalar — US2, after US1)
 - 🔄 **1 UDT** (GooList → TEMPORARY TABLE pattern)
-- 🔄 **3 FDW Connections** (hermes, sqlapps, deimeter - 17 foreign tables)
+- 🔄 **3 FDW Connections** (hermes, sqlapps, deimeter — 17 foreign tables)
 - 🔄 **7 SQL Agent Jobs** (migrate to pg_cron/pgAgent)
 
 ### Objectives
@@ -64,22 +66,22 @@ This project manages the **complete database migration** of **769 database objec
 
 ## 📊 Current Status
 
-### Overall Progress - **Phase 1 Complete** 🎉
+### Overall Progress
 
-| Object Type | Total | Complete | Pending | Status |
-|-------------|-------|----------|---------|--------|
-| **Stored Procedures** | 15 | 15 ✅ | 0 | **COMPLETE** |
-| **Functions** | 25 | 0 | 25 | Ready to start |
-| **Views** | 22 | 0 | 22 | Ready to start |
-| **Tables** | 91 | 0 | 91 | Ready to start |
-| **Indexes** | 352 | 0 | 352 | Ready to start |
-| **Constraints** | 271 | 0 | 271 | Ready to start |
-| **UDT (GooList)** | 1 | 0 | 1 | Ready to start |
-| **FDW Connections** | 3 | 0 | 3 | Ready to start |
-| **SQL Agent Jobs** | 7 | 0 | 7 | Ready to start |
-| **TOTAL** | **769** | **15** | **754** | **2% Complete** |
+| Object Type | Total | Complete | In Progress | Pending | Status |
+|-------------|-------|----------|-------------|---------|--------|
+| **Stored Procedures** | 15 | 15 ✅ | — | 0 | **COMPLETE** |
+| **Tables** | 94 | 94 ✅ | — | 0 | **COMPLETE** |
+| **Indexes** | 213 | 175 ✅ | — | 38 | ⚠️ Column mismatches pending |
+| **Constraints** | 270 | 230 ✅ | — | 40 | ⚠️ Column mismatches pending |
+| **Views** | 22 | 0 | 🔄 US1 | 22 | US1 started — T031-T033 done |
+| **Functions** | 25 | 0 | — | 25 | US2 (after US1) |
+| **UDT (GooList)** | 1 | 0 | — | 1 | Pending |
+| **FDW Connections** | 3 | 0 | — | 3 | Pending |
+| **SQL Agent Jobs** | 7 | 0 | — | 7 | Pending |
+| **TOTAL** | **769** | **109** | — | **660** | **~14% Complete** |
 
-**Last Updated:** 2026-01-22
+**Last Updated:** 2026-02-19
 
 ### Stored Procedures Achievement (Sprint 3)
 
@@ -97,14 +99,20 @@ This project manages the **complete database migration** of **769 database objec
 - ✅ ReconcileMUpstream (Quality: 8.2/10)
 - ✅ GetMaterialByRunProperties, LinkUnlinkedMaterials, MoveContainer, and 8 others
 
-**All 15 procedures** are production-ready in [source/building/pgsql/refactored/20. create-procedure/](source/building/pgsql/refactored/20.%20create-procedure/)
+**All 15 procedures** are production-ready in [source/building/pgsql/refactored/20.create-procedure/](source/building/pgsql/refactored/20.create-procedure/)
 
-### Critical Path (P0 Objects - 9 total)
+### Critical Path (P0 Objects)
 
-**MUST complete before other migrations:**
-1. **Materialized View:** `translated` (indexed view conversion)
-2. **Functions (4):** `mcgetupstream`, `mcgetdownstream`, `mcgetupstreambylist`, `mcgetdownstreambylist`
-3. **Tables (3):** `goo`, `material_transition`, `transition_material`
+| Object | Type | Status | Notes |
+|--------|------|--------|-------|
+| `translated` | Materialized View | 🔄 US1 | Indexed view → `CREATE MATERIALIZED VIEW` + pg_cron refresh |
+| `mcgetupstream` | Function | Pending | Depends on `translated` view |
+| `mcgetdownstream` | Function | Pending | Depends on `translated` view |
+| `mcgetupstreambylist` | Function | Pending | Depends on `translated` view |
+| `mcgetdownstreambylist` | Function | Pending | Depends on `translated` view |
+| `goo` | Table | ✅ DEV | Deployed to DEV |
+| `material_transition` | Table | ✅ DEV | Deployed to DEV |
+| `transition_material` | Table | ✅ DEV | Deployed to DEV |
 
 ---
 
@@ -112,43 +120,46 @@ This project manages the **complete database migration** of **769 database objec
 
 ```
 sqlserver-to-postgresql-migration/
-├── README.md                    # This file
-├── CLAUDE.md                    # AI assistant guidance (v2.0)
+├── README.md                     # This file
+├── CLAUDE.md                     # AI assistant guidance (v2.1)
 ├── source/
 │   ├── original/
-│   │   ├── sqlserver/           # 822 files - Original T-SQL (0-21 dependency-ordered)
-│   │   └── pgsql-aws-sct-converted/  # 1,385 files - AWS SCT baseline (~70% complete)
-│   └── building/
-│       └── pgsql/
-│           └── refactored/      # Production-ready PostgreSQL (0-21 dependency-ordered)
-│               ├── 14. create-table/     # Tables pending
-│               ├── 15. create-view/      # Views pending (22)
-│               ├── 16. create-index/     # Indexes pending (352)
-│               ├── 17-18. constraints/   # Constraints pending (271)
-│               ├── 19. create-function/  # Functions pending (25)
-│               ├── 20. create-procedure/ # ✅ 15 procedures COMPLETE
-│               └── 21. create-trigger/   # Triggers pending
+│   │   ├── sqlserver/            # 822 files — Original T-SQL (0-21 dependency-ordered)
+│   │   └── pgsql-aws-sct-converted/  # 1,385 files — AWS SCT baseline (~70% complete)
+│   └── building/pgsql/refactored/   # Production-ready PostgreSQL (0-21 dependency-ordered)
+│       ├── 14.create-table/      # ✅ 94 tables COMPLETE
+│       ├── 15.create-view/       # 🔄 US1 in progress (MIGRATION-SEQUENCE.md ✅)
+│       ├── 16.create-index/      # ⚠️ 175/213 deployed
+│       ├── 17.create-constraint/ # ⚠️ 230/270 deployed
+│       ├── 19.create-function/   # Pending (25 functions — US2)
+│       ├── 20.create-procedure/  # ✅ 15 procedures COMPLETE
+│       └── 21.create-trigger/    # Pending
 ├── docs/
-│   ├── POSTGRESQL-PROGRAMMING-CONSTITUTION.md  # Articles I-XVII (binding standards)
-│   ├── Core-Principles-T-SQL-to-PostgreSQL-Refactoring.md  # 7 core principles
-│   ├── PROJECT-SPECIFICATION.md     # Detailed requirements
-│   └── code-analysis/
-│       ├── procedures/              # 18 per-procedure analysis documents
-│       └── dependency-analysis-*.md # 4 lote + consolidated (68 objects)
+│   ├── backups/                  # Versioned backups (CLAUDE.md, README.md)
+│   ├── code-analysis/
+│   │   ├── dependency/           # dependency-analysis-*.md (4 lote + consolidated)
+│   │   ├── procedures/           # Per-procedure analysis (15 documents)
+│   │   └── tables/               # Per-table analysis documents
+│   ├── db-design/
+│   │   ├── pgsql/                # Data dictionary, ER diagrams, type reference
+│   │   └── sqlserver/            # TABLE-CATALOG.md, original ER diagrams
+│   ├── data-assessments/         # Row counts, constraint CSVs
+│   ├── plans/                    # Action plans (pre-staging, pre-prod)
+│   ├── POSTGRESQL-PROGRAMMING-CONSTITUTION.md  # Articles I-XVII (binding)
+│   └── PROJECT-SPECIFICATION.md  # Requirements and constraints
 ├── scripts/
-│   ├── automation/                  # 🚧 Python scripts (planned - see README)
-│   ├── validation/                  # ✅ check-setup.sh, requirements.txt
-│   └── deployment/                  # 🚧 Deployment automation (planned - see README)
+│   ├── automation/               # 🚧 Python automation (planned)
+│   ├── validation/               # ✅ check-setup.sh, dependency-check.sql
+│   └── deployment/               # 🚧 Deployment automation (planned)
 ├── tests/
-│   ├── unit/                        # ✅ 15 test_*.sql files for procedures
-│   ├── integration/                 # Cross-object workflow validation
-│   └── performance/                 # Performance benchmarks
+│   ├── unit/                     # ✅ 15 procedure tests + views/ (US1 pending)
+│   ├── integration/              # Cross-object workflow validation
+│   └── performance/              # Performance benchmarks
 ├── tracking/
-│   ├── progress-tracker.md          # Daily sprint status
-│   ├── activity-log-YYYY-MM.md      # Session-level logs
-│   └── TRACKING-PROCESS.md          # Tracking methodology
-├── templates/                       # Object templates (procedure, function, view, test)
-└── specs/001-tsql-to-pgsql/        # spec.md, data-model.md, plan.md, tasks.md (317 tasks)
+│   ├── progress-tracker.md       # Sprint status (update daily)
+│   └── activity-log-YYYY-MM.md   # Session-level logs
+├── templates/                    # Object templates (procedure, function, view, test)
+└── specs/001-tsql-to-pgsql/     # spec.md, tasks.md (317 tasks), WORKFLOW-GUIDE.md
 ```
 
 ---
@@ -279,31 +290,37 @@ Packages: sqlparse, click, pandas, rich, jinja2, pyyaml, beautifulsoup4, lxml, t
 
 ### Core Standards & Principles
 
-- **[CLAUDE.md](CLAUDE.md)** - AI assistant guidance v2.0 (299 lines, comprehensive)
-- **[Constitution](docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md)** - Articles I-XVII (binding law)
+- **[CLAUDE.md](CLAUDE.md)** - AI assistant guidance v2.1 (CLI tools, MCP servers, workflow)
+- **[Constitution](docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md)** - Articles I-XVII (binding)
 - **[7 Core Principles](docs/Core-Principles-T-SQL-to-PostgreSQL-Refactoring.md)** - Quick reference
 - **[Project Specification](docs/PROJECT-SPECIFICATION.md)** - Requirements and constraints
+- **[Workflow Guide](specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md)** - Mandatory US execution workflow
 
 ### Analysis & Dependencies
 
-- **[Consolidated Analysis](docs/code-analysis/dependency-analysis-consolidated.md)** - All 769 objects, P0 critical path
-- **[Lote 1 - Procedures](docs/code-analysis/dependency-analysis-lote1-stored-procedures.md)** - 21 procedures
-- **[Lote 2 - Functions](docs/code-analysis/dependency-analysis-lote2-functions.md)** - 25 functions
-- **[Lote 3 - Views](docs/code-analysis/dependency-analysis-lote3-views.md)** - 22 views
-- **[Lote 4 - Types](docs/code-analysis/dependency-analysis-lote4-types.md)** - 1 type (GooList)
-- **[Per-Procedure Analysis](docs/code-analysis/procedures/)** - 18 detailed analysis documents
+- **[Consolidated Analysis](docs/code-analysis/dependency/dependency-analysis-consolidated.md)** - All 769 objects, P0 critical path
+- **[Lote 3 - Views](docs/code-analysis/dependency/dependency-analysis-lote3-views.md)** - 22 views (US1 active)
+- **[Lote 2 - Functions](docs/code-analysis/dependency/dependency-analysis-lote2-functions.md)** - 25 functions (US2)
+- **[Lote 1 - Procedures](docs/code-analysis/dependency/dependency-analysis-lote1-stored-procedures.md)** - 15 procedures (complete)
+- **[Lote 4 - Types](docs/code-analysis/dependency/dependency-analysis-lote4-types.md)** - 1 type (GooList)
 
-### Templates & Guides
+### DB Design
 
-- **[PostgreSQL Procedure Template](templates/postgresql-procedure-template.sql)** - Production-ready template
-- **[Test Templates](templates/)** - Unit test and integration test templates
-- **[Tracking Process](tracking/TRACKING-PROCESS.md)** - Activity tracking methodology
+- **[PostgreSQL Data Dictionary](docs/db-design/pgsql/perseus-data-dictionary.md)** - Schema reference
+- **[Type Transformation Reference](docs/db-design/pgsql/TYPE-TRANSFORMATION-REFERENCE.md)** - SQL Server → PostgreSQL type mapping
+- **[SQL Server Table Catalog](docs/db-design/sqlserver/TABLE-CATALOG.md)** - Original 94-table catalog
+- **[DB Design Index](docs/db-design/INDEX.md)** - All design documents
 
-### Progress Tracking
+### View Migration (US1 Active)
 
-- **[Progress Tracker](tracking/progress-tracker.md)** - Current sprint status (update daily)
-- **[Activity Log](tracking/activity-log-2026-01.md)** - Session-level activity logs
-- **[Sprint Archives](tracking/)** - Historical sprint data
+- **[Migration Sequence](source/building/pgsql/refactored/15.create-view/MIGRATION-SEQUENCE.md)** - Dependency-ordered 3-wave plan (T033 ✅)
+
+### Templates & Progress
+
+- **[Templates](templates/)** - Procedure, function, view, test templates
+- **[Progress Tracker](tracking/progress-tracker.md)** - Sprint status (update daily)
+- **[Activity Logs](tracking/)** - Session-level logs and sprint archives
+- **[Backups](docs/backups/)** - Versioned backups of key documentation
 
 ---
 
@@ -335,30 +352,23 @@ git commit -m "perf: optimize index on goo.parent_goo_id"
 
 ## 🎯 Next Steps
 
-### Immediate (Next Phase)
+### Active Work
 
-1. ✅ **Phase 1 Complete:** 15/15 stored procedures migrated
-2. 🔴 **Phase 2 Priority:** P0 Critical Path (9 objects)
-   - VIEW `translated` (materialized view with trigger refresh)
-   - TYPE `GooList` (TEMPORARY TABLE pattern decision)
-   - FUNCTIONS McGet* family (4 functions)
-   - TABLES foundation (3 tables: goo, material_transition, transition_material)
-3. 🔴 **Phase 3:** P1 High Priority Objects (18 objects)
-   - Legacy Get* function family (7 functions)
-   - Supporting views (3 views: upstream, downstream, goo_relationship)
-   - P1 procedures dependencies
-4. 🔴 **Phase 4:** Infrastructure (tables, indexes, constraints)
-5. 🔴 **Phase 5:** FDW connections and SQL Agent jobs
+- 🔄 **US1 (Views):** Branch `us1-critical-views` — T031-T033 ✅, Phase 1 Analysis (T034-T038) next
+- ⚠️ **Indexes/Constraints:** 38 indexes + 40 constraints pending (column mismatch fixes)
 
-### Phase 2 Goals (Weeks 5-8)
+### Up Next
 
-- Complete P0 critical path (9 objects)
-- Validate `translated` materialized view refresh strategy
-- Implement GooList TEMPORARY TABLE pattern
-- Migrate McGet* function family
-- Enable foundation tables for all dependencies
-- Maintain quality targets (≥8.0/10 average)
-- Apply pattern reuse for 5-6× velocity
+1. **US1 — Phase 1 Analysis (T034-T038):** Analyze all 22 views via Ralph Loop (parallel batch)
+2. **US1 — Phase 2 Refactoring (T040-T046):** `translated` materialized view + 21 standard views
+3. **US1 — Phase 3 Validation + Phase 4 Deployment (T047-T062)**
+4. **US2 — Functions (25):** McGet* family (P0), Get* legacy family (P1) — starts after US1
+5. **Index/Constraint fixes:** Resolve remaining column mismatches
+
+### Quality Targets
+
+- Minimum: ≥7.0/10 per object, no dimension below 6.0/10
+- Production target: ≥8.0/10 average (achieved 8.67/10 for procedures)
 
 ---
 
@@ -381,11 +391,11 @@ git commit -m "perf: optimize index on goo.parent_goo_id"
 
 ---
 
-**Project Version:** 2.0.0
-**Last Updated:** 2026-01-22
-**Current Status:** ✅ Phase 1 Complete (15/15 Procedures) | 🔄 Phase 2 Ready (P0 Critical Path)
-**Overall Progress:** 2% (15/769 objects complete)
-**Next Milestone:** P0 Critical Path (9 objects: 1 view, 1 type, 4 functions, 3 tables)
+**Project Version:** 2.1.0
+**Last Updated:** 2026-02-19
+**Current Status:** ✅ Procedures (15/15) | ✅ Tables (94/94) | 🔄 US1 Views in progress | ⚠️ Indexes/Constraints partial
+**Overall Progress:** ~14% (109/769 objects fully complete)
+**Next Milestone:** US1 Phase 1 Analysis — T034-T038 (22 views batch analysis via Ralph Loop)
 
 ---
 

@@ -174,9 +174,9 @@ cd ~/.claude-worktrees/US1-critical-views
 
 ### Dependency Analysis for User Story 1
 
-- [ ] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
-- [ ] T032 [P] [US1] Identify base tables required by views (ensure tables exist or will be created in parallel)
-- [ ] T033 [US1] Create dependency-ordered view migration sequence
+- [x] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
+- [x] T032 [P] [US1] Identify base tables required by views (ensure tables exist or will be created in parallel)
+- [x] T033 [US1] Create dependency-ordered view migration sequence
 
 ### Phase 1: Analysis for User Story 1 Views
 

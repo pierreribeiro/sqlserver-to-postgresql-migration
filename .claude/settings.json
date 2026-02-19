@@ -28,6 +28,8 @@
       "Bash(npm *)",
       "Bash(node *)",
       "Bash(wc *)",
+      "Bash(wc:*)",
+      "Bash(bash -n:*)",
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(cat *)",

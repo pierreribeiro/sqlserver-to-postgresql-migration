@@ -63,14 +63,14 @@ source/
 │   ├── sqlserver/              # 822 files - Original T-SQL (0-21 dependency-ordered)
 │   └── pgsql-aws-sct-converted/  # 1,385 files - AWS SCT baseline (~70% complete)
 └── building/pgsql/refactored/  # Production-ready (0-21 dependency-ordered)
-    ├── 0. drop-trigger/ ... 13. create-domain/
-    ├── 14. create-table/       # ✅ 94 tables COMPLETE
-    ├── 15. create-view/        # Views pending (22 views)
-    ├── 16. create-index/       # ⚠️ 175/213 deployed (column mismatches)
-    ├── 17-18. constraints/     # ⚠️ 230/270 deployed
-    ├── 19. create-function/    # Functions pending (25 functions)
-    ├── 20. create-procedure/   # ✅ 15 procedures COMPLETE
-    └── 21. create-trigger/     # Triggers pending
+    ├── 0.drop-trigger/ ... 13.create-domain/
+    ├── 14.create-table/        # ✅ 94 tables COMPLETE
+    ├── 15.create-view/         # Views pending (22 views)
+    ├── 16.create-index/        # ⚠️ 175/213 deployed (column mismatches)
+    ├── 17.create-constraint/   # ⚠️ 230/270 deployed
+    ├── 19.create-function/     # Functions pending (25 functions)
+    ├── 20.create-procedure/    # ✅ 15 procedures COMPLETE
+    └── 21.create-trigger/      # Triggers pending
 
 docs/code-analysis/             # dependency-analysis-*.md (4 lote + consolidated)
 scripts/                        # automation/ (🚧), validation/ (✅), deployment/ (🚧)

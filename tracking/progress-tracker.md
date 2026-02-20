@@ -1,11 +1,11 @@
-# Progress Tracker - Phase 3 (User Story 3: Table Structures)
+# Progress Tracker - Phase 4 (User Story 1: Critical Views)
 ## Orchestration & Coordination Document
 
 **Project:** SQL Server → PostgreSQL Migration - Perseus Database
-**Current Phase:** Phase 3 - User Story 3: Table Structures Migration
-**Duration:** 2026-01-25 to 2026-02-18
-**Status:** ✅ **US3 COMPLETE** - Full Deployment to DEV Operational + Post-Deploy Quality Fix
-**Last Updated:** 2026-02-18 19:30 GMT-3
+**Current Phase:** Phase 4 - User Story 1: Critical Views Migration
+**Duration:** 2026-02-19 → ongoing
+**Status:** 🔄 **US1 IN PROGRESS** - Phase 1 Analysis Complete (T034-T038 ✅) | T039 Pending
+**Last Updated:** 2026-02-19 20:30 GMT-3
 
 ---
 
@@ -16,15 +16,70 @@
 | **Phase 1 Tasks** | 12 | 12 | ✅ 100% COMPLETE |
 | **Phase 2 Tasks** | 18 | 18 | ✅ 100% COMPLETE |
 | **Phase 3: US3 Tasks** | 55 | 55 | ✅ 100% COMPLETE |
-| **Post-Deploy Quality Fix** | — | load-data.sh 14 bugs fixed | ✅ 2026-02-18 |
-| **Total Progress** | 317 tasks | 85 | 🔄 26.8% |
-| **Blockers Active** | 0 | 0 | ✅ NONE |
+| **Phase 4: US1 Tasks** | 40 | 5 | 🔄 12.5% (T031-T038 ✅) |
+| **Total Progress** | 317 tasks | 90 | 🔄 28.4% |
+| **Blockers Active** | 0 | 3 | ⚠️ 3 views blocked (Issue #360) |
 | **Database Environment** | Ready | Online | ✅ OPERATIONAL |
 | **Quality Score (Avg)** | ≥7.0 | 9.3 | ✅ EXCELLENT |
 
 ---
 
-## 🎯 CURRENT PHASE: USER STORY 3 - TABLE STRUCTURES
+## 🎯 CURRENT PHASE: USER STORY 1 — CRITICAL VIEWS (US1)
+
+### Phase 4: US1 — Phase 1 Analysis (✅ T031-T038 COMPLETE)
+
+**Goal:** Analyze all 22 views, produce per-view analysis files, identify migration blockers.
+
+**Duration:** 2026-02-19 (single session)
+
+**Progress:** T031-T038 complete (8 tasks) | T039 pending (consolidation)
+
+#### ✅ T031-T033: Dependency Analysis & Migration Sequence
+- **T031:** Reviewed `dependency-analysis-lote3-views.md` — all 22 views catalogued
+- **T032:** Verified all 24 local base tables deployed to DEV ✅
+- **T033:** Created `source/building/pgsql/refactored/15.create-view/MIGRATION-SEQUENCE.md`
+  - 3 waves defined, FDW blockers identified, P0-P3 priorities assigned
+
+#### ✅ T034-T038: Phase 1 Analysis — All 22 Views
+- **Output:** 22 analysis files → `source/building/pgsql/refactored/15.create-view/analysis/`
+- **Method:** 5 parallel sql-pro agents
+- **Commit:** `1962cbe feat(US1): complete T034-T038`
+
+**Key findings:**
+
+| Finding | Severity | Views Affected |
+|---------|----------|---------------|
+| `translated` must be MATERIALIZED VIEW (not regular view) — AWS SCT P0 error | P0 | `translated` |
+| `REFRESH CONCURRENTLY` requires unique index on materialized view | P0 | `translated` |
+| AWS SCT schema `perseus_dbo` → must be `perseus` | P1 | ALL 22 views |
+| SCT injected `::CITEXT` on UID comparisons — changes case sensitivity | P1 | `goo_relationship`, `hermes_run` |
+| `vw_processable_logs` SCT date arithmetic wrong (`clock_timestamp()` hack) | P1 | `vw_processable_logs` |
+| `vw_fermentation_upstream` needs `CYCLE` clause | P1 | `vw_fermentation_upstream` |
+| Column drift — `goo.merged_into`, `goo.source_process_id`, `fatsmurf.goo_id`, `goo.tree_*` | P1 | `goo_relationship`, `vw_jeremy_runs` |
+| Deprecation candidates — person-named views | P3 | `vw_tom_perseus_sample_prep_materials`, `vw_jeremy_runs` |
+
+#### ⚠️ Active Blockers — Escalated to SQL Server Team
+
+**GitHub Issue:** [#360 — US1 Views Analysis: 4 SQL Server Team Decisions Required](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration/issues/360)
+
+**Document:** `docs/SQL-SERVER-TEAM-DECISIONS-REQUIRED.md`
+
+| Blocker | Topic | Views Blocked | Awaiting |
+|---------|-------|--------------|---------|
+| Missing columns: `merged_into`, `source_process_id`, `goo_id`, `tree_*` | #360 Topic 1 | `goo_relationship` (Br.1+2), `vw_jeremy_runs` | SQL Server team confirms columns exist/don't exist |
+| Deprecation decision | #360 Topic 2 | `vw_tom_perseus_sample_prep_materials`, `vw_jeremy_runs` | Pierre/stakeholder confirmation |
+| hermes FDW schema + connection | #360 Topic 3 | `goo_relationship` (Br.3), `hermes_run`, `vw_jeremy_runs` | hermes DBA provides DDL + credentials |
+| UID case sensitivity (CI_AS vs case-sensitive PG) | #360 Topic 4 | All views joining on `uid` | SQL Server team confirms casing convention |
+
+**19 of 22 views unblocked** — can proceed to Phase 2 refactoring.
+
+#### ⬜ T039: Consolidation (NEXT)
+- Consolidate quality scores and analysis findings into this tracker
+- Mark T034-T038 tasks complete in `specs/001-tsql-to-pgsql/tasks.md` ✅ (done)
+
+---
+
+## 🎯 PREVIOUS PHASE: USER STORY 3 - TABLE STRUCTURES
 
 ### Phase 3: US3 - Table Structures Migration (✅ 100% COMPLETE)
 

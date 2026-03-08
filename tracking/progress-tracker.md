@@ -16,8 +16,8 @@
 | **Phase 1 Tasks** | 12 | 12 | ✅ 100% COMPLETE |
 | **Phase 2 Tasks** | 18 | 18 | ✅ 100% COMPLETE |
 | **Phase 3: US3 Tasks** | 55 | 55 | ✅ 100% COMPLETE |
-| **Phase 4: US1 Tasks** | 40 | 9 | 🔄 22.5% (T031-T039 ✅) |
-| **Total Progress** | 317 tasks | 94 | 🔄 29.7% |
+| **Phase 4: US1 Tasks** | 40 | 9→22 | 🔄 T040-T046 IN PROGRESS (Phase 2 Refactoring) |
+| **Total Progress** | 317 tasks | 94→107 | 🔄 33.8% |
 | **Blockers Active** | 0 | 1 | ⚠️ column drift (Issue #360 Topics 1+2) — FDW mockup deployed ✅ |
 | **Database Environment** | Ready | Online | ✅ OPERATIONAL |
 | **Quality Score (Avg)** | ≥7.0 | 9.3 | ✅ EXCELLENT |

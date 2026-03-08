@@ -73,9 +73,45 @@
 
 **19 of 22 views unblocked** — can proceed to Phase 2 refactoring.
 
-#### ⬜ T039: Consolidation (NEXT)
-- Consolidate quality scores and analysis findings into this tracker
-- Mark T034-T038 tasks complete in `specs/001-tsql-to-pgsql/tasks.md` ✅ (done)
+#### ✅ T039: Consolidation — Quality Scores & Analysis Summary (COMPLETE 2026-02-19)
+
+**Quality Scores — All 22 Views**
+
+| View | Priority | Wave | Quality | Effort | Risk | Blocker |
+|------|----------|------|---------|--------|------|---------|
+| `translated` | P0 | 0 | **9.4/10** | 2.0h | Medium | None — deploy first |
+| `upstream` | P1 | 1 | **8.6/10** | 1.5h | Medium | Depends on `translated` |
+| `downstream` | P1 | 1 | **8.6/10** | 1.5h | Medium | Depends on `translated` |
+| `goo_relationship` | P1 | 0 | **8.2/10** | 2.5h | High | ⚠️ [#360](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration/issues/360) Topics 1+3 |
+| `hermes_run` | P1 | 0 | **8.4/10** | 2.0h | High | ⚠️ [#360](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration/issues/360) Topic 3 |
+| `vw_process_upstream` | P2 | 0 | **9.2/10** | 0.5h | Low | None |
+| `vw_material_transition_material_up` | P2 | 0 | **9.4/10** | 0.25h | Low | None |
+| `vw_lot` | P2 | 0 | **9.1/10** | 0.5h | Low | None |
+| `vw_processable_logs` | P2 | 0 | **8.5/10** | 1.0h | Medium | None |
+| `material_transition_material` | P2 | 1 | **9.5/10** | 0.25h | Low | Depends on `translated` |
+| `vw_fermentation_upstream` | P2 | 1 | **8.8/10** | 1.5h | Medium | Depends on `vw_process_upstream` |
+| `vw_lot_edge` | P2 | 1 | **9.2/10** | 0.5h | Low | Depends on `vw_lot` |
+| `vw_lot_path` | P2 | 1 | **9.2/10** | 0.25h | Low | Depends on `vw_lot` |
+| `vw_recipe_prep` | P2 | 1 | **9.4/10** | 0.25h | Low | Depends on `vw_lot` |
+| `vw_recipe_prep_part` | P2 | 2 | **8.8/10** | 0.75h | Medium | Depends on `vw_lot`+`vw_lot_edge` |
+| `combined_sp_field_map` | P3 | 0 | **8.7/10** | 1.0h | Low | None |
+| `combined_sp_field_map_display_type` | P3 | 0 | **8.6/10** | 1.0h | Low | None |
+| `combined_field_map_block` | P3 | 0 | **9.2/10** | 0.25h | Low | None |
+| `combined_field_map` | P3 | 1 | **9.3/10** | 0.25h | Low | Depends on `combined_sp_field_map` |
+| `combined_field_map_display_type` | P3 | 1 | **9.3/10** | 0.25h | Low | Depends on `combined_sp_field_map_display_type` |
+| `vw_tom_perseus_sample_prep_materials` | P3 | 1 | **8.7/10** | 0.25h | Low | ⚠️ [#360](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration/issues/360) Topic 2 |
+| `vw_jeremy_runs` | P3 | 1 | **6.7/10** | 3-4h | High | ⚠️ [#360](https://github.com/pierreribeiro/sqlserver-to-postgresql-migration/issues/360) Topics 1+2+3 |
+
+**Aggregate Metrics:**
+
+| Metric | Value |
+|--------|-------|
+| Average quality score (all 22) | **8.94/10** ✅ (threshold: ≥7.0) |
+| Refactoring effort — 19 unblocked views | ~12.5h |
+| Refactoring effort — all 22 (if fully unblocked) | ~18.5h |
+| Views below 8.0/10 | 1 (`vw_jeremy_runs` — blocked + deprecation candidate) |
+| Views at 9.0+/10 | 14/22 (64%) |
+| Low risk | 14 views | Medium risk | 5 views | High risk | 3 views (all blocked) |
 
 ---
 

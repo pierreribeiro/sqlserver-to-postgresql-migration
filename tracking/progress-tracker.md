@@ -4,8 +4,8 @@
 **Project:** SQL Server → PostgreSQL Migration - Perseus Database
 **Current Phase:** Phase 4 - User Story 1: Critical Views Migration
 **Duration:** 2026-02-19 → ongoing
-**Status:** 🔄 **US1 IN PROGRESS** - Phase 1 Analysis Complete (T034-T038 ✅) | T039 Pending
-**Last Updated:** 2026-02-19 20:30 GMT-3
+**Status:** 🔄 **US1 IN PROGRESS** - Phase 1 Analysis Complete (T031-T039 ✅) | hermes FDW mockup ✅ | Phase 2 Refactoring ready
+**Last Updated:** 2026-03-08 GMT-3
 
 ---
 
@@ -16,9 +16,9 @@
 | **Phase 1 Tasks** | 12 | 12 | ✅ 100% COMPLETE |
 | **Phase 2 Tasks** | 18 | 18 | ✅ 100% COMPLETE |
 | **Phase 3: US3 Tasks** | 55 | 55 | ✅ 100% COMPLETE |
-| **Phase 4: US1 Tasks** | 40 | 5 | 🔄 12.5% (T031-T038 ✅) |
-| **Total Progress** | 317 tasks | 90 | 🔄 28.4% |
-| **Blockers Active** | 0 | 3 | ⚠️ 3 views blocked (Issue #360) |
+| **Phase 4: US1 Tasks** | 40 | 9 | 🔄 22.5% (T031-T039 ✅) |
+| **Total Progress** | 317 tasks | 94 | 🔄 29.7% |
+| **Blockers Active** | 0 | 1 | ⚠️ column drift (Issue #360 Topics 1+2) — FDW mockup deployed ✅ |
 | **Database Environment** | Ready | Online | ✅ OPERATIONAL |
 | **Quality Score (Avg)** | ≥7.0 | 9.3 | ✅ EXCELLENT |
 
@@ -26,13 +26,13 @@
 
 ## 🎯 CURRENT PHASE: USER STORY 1 — CRITICAL VIEWS (US1)
 
-### Phase 4: US1 — Phase 1 Analysis (✅ T031-T038 COMPLETE)
+### Phase 4: US1 — Phase 1 Analysis (✅ T031-T039 COMPLETE)
 
 **Goal:** Analyze all 22 views, produce per-view analysis files, identify migration blockers.
 
-**Duration:** 2026-02-19 (single session)
+**Duration:** 2026-02-19 (analysis) + 2026-03-08 (hermes FDW mockup)
 
-**Progress:** T031-T038 complete (8 tasks) | T039 pending (consolidation)
+**Progress:** T031-T039 complete (9 tasks) | hermes FDW mockup deployed ✅
 
 #### ✅ T031-T033: Dependency Analysis & Migration Sequence
 - **T031:** Reviewed `dependency-analysis-lote3-views.md` — all 22 views catalogued
@@ -71,7 +71,36 @@
 | hermes FDW schema + connection | #360 Topic 3 | `goo_relationship` (Br.3), `hermes_run`, `vw_jeremy_runs` | hermes DBA provides DDL + credentials |
 | UID case sensitivity (CI_AS vs case-sensitive PG) | #360 Topic 4 | All views joining on `uid` | SQL Server team confirms casing convention |
 
-**19 of 22 views unblocked** — can proceed to Phase 2 refactoring.
+#### ✅ hermes FDW Mockup — Deployed 2026-03-08
+
+Para desbloquear as views FDW-dependentes sem aguardar o hermes real (Issue #360 Topic 3), foi criado um database mock local:
+
+| Componente | Detalhe | Status |
+|-----------|---------|--------|
+| Database `hermes` | Mesmo Docker (`localhost:5432/hermes`) | ✅ |
+| `public.run` | 13 colunas — todos os campos referenciados pelas views | ✅ |
+| `public.run_condition_value` | 4 colunas | ✅ |
+| `postgres_fdw` extension | v1.1, instalada em `perseus_dev` | ✅ |
+| `hermes_server` | FDW server apontando para `localhost/hermes` | ✅ |
+| User mapping | `perseus_admin` → `hermes_server` | ✅ |
+| Foreign tables | `hermes.run`, `hermes.run_condition_value` em `perseus_dev` | ✅ |
+| Conectividade | `SELECT COUNT(*) FROM hermes.run` → 0 ✅ | ✅ |
+
+**Documentação:** `docs/HERMES-FDW-MOCKUP.md` (arquitetura, DDL reconstrução, dados mock, transição para produção)
+
+**Impacto no desbloqueio:**
+
+| View | Blocker anterior | Status agora |
+|------|-----------------|-------------|
+| `goo_relationship` (Branch 3) | FDW não configurado | ✅ **Desbloqueada para refactoring** |
+| `hermes_run` | FDW não configurado | ✅ **Desbloqueada para refactoring** |
+| `vw_jeremy_runs` | FDW + coluna drift + deprecação | ⚠️ Parcial — FDW ok, ainda aguarda #360 Topics 1+2 |
+
+**Blocker residual (2 views, aguardando #360):**
+- `goo_relationship` Branches 1+2: `goo.merged_into`, `goo.source_process_id`, `fatsmurf.goo_id` ausentes
+- `vw_jeremy_runs`: `goo.tree_scope_key/left/right` ausentes + decisão de deprecação
+
+**22/22 views desbloqueadas para DDL validation** | **21/22 para refactoring completo** (exceto `vw_jeremy_runs`)
 
 #### ✅ T039: Consolidation — Quality Scores & Analysis Summary (COMPLETE 2026-02-19)
 

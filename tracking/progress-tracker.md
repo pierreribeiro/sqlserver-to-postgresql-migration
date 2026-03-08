@@ -4,7 +4,7 @@
 **Project:** SQL Server → PostgreSQL Migration - Perseus Database
 **Current Phase:** Phase 4 - User Story 1: Critical Views Migration
 **Duration:** 2026-02-19 → ongoing
-**Status:** 🔄 **US1 IN PROGRESS** - Phase 1 Analysis Complete (T031-T039 ✅) | hermes FDW mockup ✅ | Phase 2 Refactoring ready
+**Status:** 🔄 **US1 IN PROGRESS** - Phase 2 Refactoring Complete (T040-T046 ✅) | 20/22 views deployed to DEV | 2 blocked (#360 Topics 1+2)
 **Last Updated:** 2026-03-08 GMT-3
 
 ---
@@ -16,15 +16,71 @@
 | **Phase 1 Tasks** | 12 | 12 | ✅ 100% COMPLETE |
 | **Phase 2 Tasks** | 18 | 18 | ✅ 100% COMPLETE |
 | **Phase 3: US3 Tasks** | 55 | 55 | ✅ 100% COMPLETE |
-| **Phase 4: US1 Tasks** | 40 | 9→22 | 🔄 T040-T046 IN PROGRESS (Phase 2 Refactoring) |
-| **Total Progress** | 317 tasks | 94→107 | 🔄 33.8% |
-| **Blockers Active** | 0 | 1 | ⚠️ column drift (Issue #360 Topics 1+2) — FDW mockup deployed ✅ |
+| **Phase 4: US1 Tasks** | 40 | 16 | 🔄 40% (T031-T046 ✅, Phase 3 tests next) |
+| **Total Progress** | 317 tasks | 101 | 🔄 31.9% |
+| **Blockers Active** | 0 | 1 | ⚠️ #360 Topics 1+2 (goo columns) — Topics 3+4 resolved ✅ |
 | **Database Environment** | Ready | Online | ✅ OPERATIONAL |
-| **Quality Score (Avg)** | ≥7.0 | 9.3 | ✅ EXCELLENT |
+| **Quality Score (Avg)** | ≥7.0 | 8.94 | ✅ EXCELLENT |
 
 ---
 
 ## 🎯 CURRENT PHASE: USER STORY 1 — CRITICAL VIEWS (US1)
+
+### Phase 4: US1 — Phase 2 Refactoring (✅ T040-T046 COMPLETE — 2026-03-08)
+
+**Goal:** Extract production-ready DDL from analysis files; deploy all 22 views to DEV; syntax validation.
+
+**Commit:** `2d77900 feat(US1): complete T040-T046 Phase 2 view refactoring — 22 SQL files`
+
+#### ✅ T040+T041: translated (P0 — MATERIALIZED VIEW + indexes + triggers)
+- `translated.sql` — MATERIALIZED VIEW, 3 indexes (UNIQUE + 2 supporting), trigger function + 2 AFTER triggers
+- **3,589 rows** populated on deploy — DEV has real data, CONCURRENT refresh operational
+- Quality: **9.4/10**
+
+#### ✅ T042: Wave 0 — 9 views (8 deployed, 1 blocked)
+
+| View | Status | Notes |
+|------|--------|-------|
+| `vw_process_upstream.sql` | ✅ deployed | WITH SCHEMABINDING removed |
+| `vw_material_transition_material_up.sql` | ✅ deployed | 9.4/10 |
+| `vw_lot.sql` | ✅ deployed | 23-column, 9.1/10 |
+| `vw_processable_logs.sql` | ✅ deployed | SCT date arithmetic fixed, 8.5/10 |
+| `combined_sp_field_map.sql` | ✅ deployed | 3-branch UNION, 8.7/10 |
+| `combined_sp_field_map_display_type.sql` | ✅ deployed | 5-branch UNION, 8.6/10 |
+| `combined_field_map_block.sql` | ✅ deployed | 4-branch UNION, 9.2/10 |
+| `hermes_run.sql` | ✅ deployed | CITEXT casts removed, FDW via hermes mockup |
+| `goo_relationship.sql` | ⚠️ **BLOCKED** | `goo.merged_into` absent — #360 Topic 1 |
+
+#### ✅ T043: Wave 1 — 10 views (all deployed)
+
+| View | Status | Notes |
+|------|--------|-------|
+| `upstream.sql` | ✅ deployed | WITH RECURSIVE + CYCLE (child) |
+| `downstream.sql` | ✅ deployed | WITH RECURSIVE + CYCLE (start_point, child) |
+| `material_transition_material.sql` | ✅ deployed | 9.5/10 |
+| `vw_fermentation_upstream.sql` | ✅ deployed | CYCLE clause + TEXT path |
+| `vw_lot_edge.sql` | ✅ deployed | 9.2/10 |
+| `vw_lot_path.sql` | ✅ deployed | alias inversion documented |
+| `vw_recipe_prep.sql` | ✅ deployed | volume_l (lowercase) |
+| `combined_field_map.sql` | ✅ deployed | SELECT * → explicit columns |
+| `combined_field_map_display_type.sql` | ✅ deployed | manditory misspelling preserved |
+| `vw_tom_perseus_sample_prep_materials.sql` | ✅ deployed | DEPRECATION CANDIDATE header |
+
+#### ✅ T044: vw_tom — deployed with deprecation header (pending #360 Topic 2 decision)
+#### ✅ T045: vw_jeremy_runs — BLOCKED stub written, GRANT commented out, deployment deferred
+#### ✅ T046: Wave 2 + Syntax Validation
+- `vw_recipe_prep_part.sql` — deployed, 8.8/10
+- **20/22 views deployed to `perseus_dev`**; 2 blocked (same root cause: #360 Topic 1)
+- Created `perseus_app` + `perseus_readonly` roles in DEV (prerequisite)
+
+**DEV State Post-Phase 2:**
+```
+\dm perseus.*  → translated (materialized, 3,589 rows)
+\dv perseus.*  → 19 regular views
+Blocked (2):   → goo_relationship, vw_jeremy_runs
+```
+
+---
 
 ### Phase 4: US1 — Phase 1 Analysis (✅ T031-T039 COMPLETE)
 
@@ -563,7 +619,7 @@ Risk is low for current dataset but must be validated before production loads.
 Phase 1: Setup                    ✅ 12/12 (100%)
 Phase 2: Foundational             ✅ 18/18 (100%)
 Phase 3: User Story 3 (Tables)    ✅ 55/55 (100%)
-Phase 4: User Story 1 (Views)     ⏳  0/32 (  0%)
+Phase 4: User Story 1 (Views)     🔄 16/40 ( 40%) — T031-T046 ✅ (Phase 3 tests next)
 Phase 5: User Story 2 (Functions) ⏳  0/35 (  0%)
 Phase 6: User Story 4 (FDW)       ⏳  0/37 (  0%)
 Phase 7: User Story 5 (Replication) ⏳ 0/29 (  0%)
@@ -573,7 +629,7 @@ Phase 10: Materialized Views      ⏳  0/9  (  0%)
 Phase 11: Production Cutover      ⏳  0/34 (  0%)
 Phase 12: Polish                  ⏳  0/10 (  0%)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total:                               85/317 (26.8%)
+Total:                              101/317 (31.9%)
 ```
 
 ### Database Objects Migration Status
@@ -587,7 +643,7 @@ Total:                               85/317 (26.8%)
 | Constraints | 271 | ✅ Complete | 230/270 deployed (~40 col mismatches non-blocking) |
 | Stored Procedures | 15 | ✅ Complete | 15/15 (100% - Sprint 3) |
 | Functions | 25 | ⏳ Pending | 0/25 (0%) |
-| Views | 22 | ⏳ Pending | 0/22 (0%) |
+| Views | 22 | 🔄 US1 Phase 2 ✅ | 20/22 deployed to DEV (2 blocked #360) |
 | UDT (GooList) | 1 | ⏳ Pending | 0/1 (0%) |
 | FDW Connections | 3 | ⏳ Pending | 0/3 (0%) |
 | SQL Agent Jobs | 7 | ⏳ Pending | 0/7 (0%) |

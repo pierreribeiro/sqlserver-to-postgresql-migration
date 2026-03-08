@@ -200,14 +200,14 @@ Phase 10 (Materialized View Refresh):
 
 ## Output Files (to be created)
 
-Analysis docs → `source/building/pgsql/refactored/15. create-view/`
+Analysis docs → `source/building/pgsql/refactored/15.create-view/`
 - `translated-analysis.md` (T034)
 - `upstream-analysis.md` (T035)
 - `downstream-analysis.md` (T036)
 - `goo_relationship-analysis.md` (T037)
 - `<name>-analysis.md` × 18 (T038, parallel)
 
-SQL files → `source/building/pgsql/refactored/15. create-view/`
+SQL files → `source/building/pgsql/refactored/15.create-view/`
 - `translated.sql` (T040 — materialized view)
 - `translated-refresh-schedule.sql` (T266)
 - `<name>.sql` × 21 remaining views (T041-T045)

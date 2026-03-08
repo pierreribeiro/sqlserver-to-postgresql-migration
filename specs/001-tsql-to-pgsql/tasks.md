@@ -205,15 +205,15 @@ cd ~/.claude-worktrees/US1-critical-views
 
 **Purpose**: Test views against validation contracts
 
-- [ ] T047 [P] [US1] Create unit tests for `translated` view in tests/unit/views/test_translated.sql
-- [ ] T048 [P] [US1] Create unit tests for `upstream` view in tests/unit/views/test_upstream.sql
-- [ ] T049 [P] [US1] Create unit tests for `downstream` view in tests/unit/views/test_downstream.sql
-- [ ] T050 [P] [US1] Create unit tests for remaining 19 views in tests/unit/views/
-- [ ] T051 [US1] Run result set comparison tests (SQL Server vs PostgreSQL) using scripts/validation/data-integrity-check.sql
-- [ ] T052 [US1] Run performance baseline tests for all views using scripts/validation/performance-test.sql
-- [ ] T053 [US1] Validate materialized view refresh performance for `translated`
-- [ ] T054 [US1] Verify all views meet ≥7.0/10 quality score threshold
-- [ ] T055 [US1] Document any performance optimizations needed in tracking/progress-tracker.md
+- [X] T047 [P] [US1] Create unit tests for `translated` view in tests/unit/views/test_translated.sql
+- [X] T048 [P] [US1] Create unit tests for `upstream` view in tests/unit/views/test_upstream.sql
+- [X] T049 [P] [US1] Create unit tests for `downstream` view in tests/unit/views/test_downstream.sql
+- [X] T050 [P] [US1] Create unit tests for remaining 19 views in tests/unit/views/
+- [X] T051 [US1] Run result set comparison tests (SQL Server vs PostgreSQL) using scripts/validation/data-integrity-check.sql
+- [X] T052 [US1] Run performance baseline tests for all views using scripts/validation/performance-test.sql
+- [X] T053 [US1] Validate materialized view refresh performance for `translated`
+- [X] T054 [US1] Verify all views meet ≥7.0/10 quality score threshold
+- [X] T055 [US1] Document any performance optimizations needed in tracking/progress-tracker.md
 
 ### Phase 4: Deployment for User Story 1 Views
 

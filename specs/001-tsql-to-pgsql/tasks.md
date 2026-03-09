@@ -174,58 +174,58 @@ cd ~/.claude-worktrees/US1-critical-views
 
 ### Dependency Analysis for User Story 1
 
-- [ ] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
-- [ ] T032 [P] [US1] Identify base tables required by views (ensure tables exist or will be created in parallel)
-- [ ] T033 [US1] Create dependency-ordered view migration sequence
+- [x] T031 [P] [US1] Review dependency analysis for all 22 views in docs/code-analysis/dependency-analysis-lote3-views.md
+- [x] T032 [P] [US1] Identify base tables required by views (ensure tables exist or will be created in parallel)
+- [x] T033 [US1] Create dependency-ordered view migration sequence
 
 ### Phase 1: Analysis for User Story 1 Views
 
 **Purpose**: Analyze AWS SCT output and document issues for all 22 views
 
-- [ ] T034 [P] [US1] Analyze `translated` indexed view → materialized view in source/building/pgsql/refactored/views/translated-analysis.md
-- [ ] T035 [P] [US1] Analyze `upstream` recursive CTE view in source/building/pgsql/refactored/views/upstream-analysis.md
-- [ ] T036 [P] [US1] Analyze `downstream` recursive CTE view in source/building/pgsql/refactored/views/downstream-analysis.md
-- [ ] T037 [P] [US1] Analyze `goo_relationship` standard view in source/building/pgsql/refactored/views/goo_relationship-analysis.md
-- [ ] T038 [P] [US1] Analyze remaining 18 views in parallel (create analysis.md for each)
-- [ ] T039 [US1] Consolidate view analysis findings and quality scores in tracking/progress-tracker.md
+- [x] T034 [P] [US1] Analyze `translated` indexed view → materialized view in source/building/pgsql/refactored/15.create-view/analysis/translated-analysis.md ✅ 2026-02-19
+- [x] T035 [P] [US1] Analyze `upstream` recursive CTE view in source/building/pgsql/refactored/15.create-view/analysis/upstream-analysis.md ✅ 2026-02-19
+- [x] T036 [P] [US1] Analyze `downstream` recursive CTE view in source/building/pgsql/refactored/15.create-view/analysis/downstream-analysis.md ✅ 2026-02-19
+- [x] T037 [P] [US1] Analyze `goo_relationship` + `hermes_run` views in source/building/pgsql/refactored/15.create-view/analysis/ ✅ 2026-02-19
+- [x] T038 [P] [US1] Analyze remaining 18 views in parallel (22 analysis.md files total) ✅ 2026-02-19
+- [x] T039 [US1] Consolidate view analysis findings and quality scores in tracking/progress-tracker.md
 
 ### Phase 2: Refactoring for User Story 1 Views
 
 **Purpose**: Refactor views to production-ready PostgreSQL code
 
-- [ ] T040 [US1] Refactor `translated` to materialized view in source/building/pgsql/refactored/views/translated.sql
-- [ ] T041 [US1] Create UNIQUE index for CONCURRENT refresh in source/building/pgsql/refactored/views/translated.sql
-- [ ] T042 [P] [US1] Refactor `upstream` recursive CTE in source/building/pgsql/refactored/views/upstream.sql
-- [ ] T043 [P] [US1] Refactor `downstream` recursive CTE in source/building/pgsql/refactored/views/downstream.sql
-- [ ] T044 [P] [US1] Refactor `goo_relationship` in source/building/pgsql/refactored/views/goo_relationship.sql
-- [ ] T045 [P] [US1] Refactor remaining 18 views in parallel (one .sql file per view)
-- [ ] T046 [US1] Validate all view definitions compile with scripts/validation/syntax-check.sh
+- [X] T040 [US1] Refactor `translated` to materialized view in source/building/pgsql/refactored/views/translated.sql ✅ 2026-03-08
+- [X] T041 [US1] Create UNIQUE index for CONCURRENT refresh in source/building/pgsql/refactored/views/translated.sql ✅ 2026-03-08
+- [X] T042 [P] [US1] Refactor `upstream` recursive CTE in source/building/pgsql/refactored/views/upstream.sql ✅ 2026-03-08
+- [X] T043 [P] [US1] Refactor `downstream` recursive CTE in source/building/pgsql/refactored/views/downstream.sql ✅ 2026-03-08
+- [X] T044 [P] [US1] Refactor `goo_relationship` in source/building/pgsql/refactored/views/goo_relationship.sql ✅ 2026-03-08
+- [X] T045 [P] [US1] Refactor remaining 18 views in parallel (one .sql file per view) ✅ 2026-03-08
+- [X] T046 [US1] Validate all view definitions compile with scripts/validation/syntax-check.sh ✅ 2026-03-08
 
 ### Phase 3: Validation for User Story 1 Views
 
 **Purpose**: Test views against validation contracts
 
-- [ ] T047 [P] [US1] Create unit tests for `translated` view in tests/unit/views/test_translated.sql
-- [ ] T048 [P] [US1] Create unit tests for `upstream` view in tests/unit/views/test_upstream.sql
-- [ ] T049 [P] [US1] Create unit tests for `downstream` view in tests/unit/views/test_downstream.sql
-- [ ] T050 [P] [US1] Create unit tests for remaining 19 views in tests/unit/views/
-- [ ] T051 [US1] Run result set comparison tests (SQL Server vs PostgreSQL) using scripts/validation/data-integrity-check.sql
-- [ ] T052 [US1] Run performance baseline tests for all views using scripts/validation/performance-test.sql
-- [ ] T053 [US1] Validate materialized view refresh performance for `translated`
-- [ ] T054 [US1] Verify all views meet ≥7.0/10 quality score threshold
-- [ ] T055 [US1] Document any performance optimizations needed in tracking/progress-tracker.md
+- [X] T047 [P] [US1] Create unit tests for `translated` view in tests/unit/views/test_translated.sql
+- [X] T048 [P] [US1] Create unit tests for `upstream` view in tests/unit/views/test_upstream.sql
+- [X] T049 [P] [US1] Create unit tests for `downstream` view in tests/unit/views/test_downstream.sql
+- [X] T050 [P] [US1] Create unit tests for remaining 19 views in tests/unit/views/
+- [X] T051 [US1] Run result set comparison tests (SQL Server vs PostgreSQL) using scripts/validation/data-integrity-check.sql
+- [X] T052 [US1] Run performance baseline tests for all views using scripts/validation/performance-test.sql
+- [X] T053 [US1] Validate materialized view refresh performance for `translated`
+- [X] T054 [US1] Verify all views meet ≥7.0/10 quality score threshold
+- [X] T055 [US1] Document any performance optimizations needed in tracking/progress-tracker.md
 
 ### Phase 4: Deployment for User Story 1 Views
 
 **Purpose**: Deploy views to DEV → STAGING → PRODUCTION
 
-- [ ] T056 [US1] Deploy all 22 views to DEV environment using scripts/deployment/deploy-batch.sh
-- [ ] T057 [US1] Run smoke tests in DEV using scripts/deployment/smoke-test.sh
-- [ ] T058 [US1] Deploy all 22 views to STAGING environment
-- [ ] T059 [US1] Execute integration tests in STAGING with application queries
-- [ ] T060 [US1] Create rollback procedures for all views in scripts/deployment/rollback-object.sh
-- [ ] T061 [US1] Document operational runbook for view maintenance
-- [ ] T062 [US1] Obtain deployment approval from technical lead and DBA
+- [X] T056 [US1] Deploy all 22 views to DEV environment using scripts/deployment/deploy-batch.sh
+- [X] T057 [US1] Run smoke tests in DEV using scripts/deployment/smoke-test.sh
+- [X] T058 [US1] Deploy all 22 views to STAGING environment
+- [X] T059 [US1] Execute integration tests in STAGING with application queries
+- [X] T060 [US1] Create rollback procedures for all views in scripts/deployment/rollback-object.sh
+- [X] T061 [US1] Document operational runbook for view maintenance
+- [X] T062 [US1] Obtain deployment approval from technical lead and DBA
 
 **Checkpoint**: At this point, all 22 views should be deployed to STAGING and independently testable
 

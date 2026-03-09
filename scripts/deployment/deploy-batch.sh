@@ -73,7 +73,7 @@ DB_NAME="${DB_NAME:-perseus_dev}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 #PGPASSWORD_FILE="${PGPASSWORD_FILE:-${PROJECT_ROOT}/infra/database/.secrets/postgres_password.txt}"
-PGPASSWORD_FILE="/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets"
+PGPASSWORD_FILE="${PGPASSWORD_FILE:-/Users/pierre.ribeiro/workspace/sharing/sqlserver-to-postgresql-migration/perseus-database/.secrets/postgres_password.txt}"
 DOCKER_CONTAINER="${DOCKER_CONTAINER:-perseus-postgres-dev}"
 
 # Execution mode
@@ -400,14 +400,14 @@ deploy_file() {
     local filename=$(basename "${file}")
     local object_name=$(basename "${file}" .sql)
 
-    ((TOTAL_FILES++))
+    TOTAL_FILES=$((TOTAL_FILES + 1))
 
     log_section "DEPLOYING: ${filename} (${TOTAL_FILES}/${TOTAL_FILES})"
 
     # Validate file exists
     if [[ ! -f "${file}" ]]; then
         log_error "File not found: ${file}"
-        ((FAILED_FILES++))
+        FAILED_FILES=$((FAILED_FILES + 1))
         FAILED_FILE_LIST+=("${file} - File not found")
         return 1
     fi
@@ -415,7 +415,7 @@ deploy_file() {
     # Syntax validation
     if ! validate_syntax "${file}"; then
         log_error "Deployment aborted: Syntax validation failed"
-        ((FAILED_FILES++))
+        FAILED_FILES=$((FAILED_FILES + 1))
         FAILED_FILE_LIST+=("${file} - Syntax validation failed")
         return 1
     fi
@@ -430,7 +430,7 @@ deploy_file() {
     # Deploy (or dry run)
     if [[ "${DRY_RUN}" == "true" ]]; then
         log_info "DRY RUN: Would deploy ${filename}"
-        ((DEPLOYED_FILES++))
+        DEPLOYED_FILES=$((DEPLOYED_FILES + 1))
         DEPLOYMENT_LOG+=("DRY RUN: ${filename}")
         return 0
     fi
@@ -453,7 +453,7 @@ deploy_file() {
             local end_time=$(date +%s)
             local duration=$((end_time - start_time))
             log_success "Deployed successfully in ${duration}s"
-            ((DEPLOYED_FILES++))
+            DEPLOYED_FILES=$((DEPLOYED_FILES + 1))
             DEPLOYMENT_LOG+=("SUCCESS: ${filename} (${duration}s)")
             return 0
         else
@@ -462,7 +462,7 @@ deploy_file() {
             echo ""
             sed 's/^/    /' "${error_output}"
             echo ""
-            ((FAILED_FILES++))
+            FAILED_FILES=$((FAILED_FILES + 1))
             FAILED_FILE_LIST+=("${file} - Deployment failed")
             DEPLOYMENT_LOG+=("FAILED: ${filename}")
             return 1
@@ -473,7 +473,7 @@ deploy_file() {
             local end_time=$(date +%s)
             local duration=$((end_time - start_time))
             log_success "Deployed successfully in ${duration}s"
-            ((DEPLOYED_FILES++))
+            DEPLOYED_FILES=$((DEPLOYED_FILES + 1))
             DEPLOYMENT_LOG+=("SUCCESS: ${filename} (${duration}s)")
             return 0
         else
@@ -481,7 +481,7 @@ deploy_file() {
             echo ""
             sed 's/^/    /' "${error_output}"
             echo ""
-            ((FAILED_FILES++))
+            FAILED_FILES=$((FAILED_FILES + 1))
             FAILED_FILE_LIST+=("${file} - Deployment failed")
             DEPLOYMENT_LOG+=("FAILED: ${filename}")
             return 1
@@ -759,7 +759,7 @@ main() {
     local current=0
 
     for file in "${deploy_files[@]}"; do
-        ((current++))
+        current=$((current + 1))
         TOTAL_FILES=$total_to_deploy
 
         log_info "Progress: ${current}/${total_to_deploy}"

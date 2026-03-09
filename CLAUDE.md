@@ -43,17 +43,18 @@ This guide defines **REQUIRED** practices for:
 
 | Object Type | Count | Status | Notes |
 |-------------|-------|--------|-------|
-| **Stored Procedures** | 15 | ✅ COMPLETE | Average quality: 8.67/10, Performance: +63-97% |
-| **Functions** | 25 | Pending | 15 table-valued, 10 scalar |
-| **Views** | 22 | Pending | 1 materialized, 21 recursive CTEs |
+| **Stored Procedures** | 15 | ✅ COMPLETE | Avg quality: 8.67/10, Performance: +63-97% |
 | **Tables** | 94 | ✅ COMPLETE | 94 tables deployed to DEV |
 | **Indexes** | 213 | ⚠️ IN PROGRESS | 175/213 deployed (column mismatches pending) |
 | **Constraints** | 270 | ⚠️ IN PROGRESS | 230/270 deployed (column mismatches pending) |
+| **Views** | 22 | 🔄 US1 IN PROGRESS | 1 P0 materialized, 3 recursive CTEs, 18 standard; T031-T033 ✅ |
+| **Functions** | 25 | Pending | 15 table-valued, 10 scalar — US2 (after US1) |
 | **UDT (GooList)** | 1 | Pending | Convert to TEMPORARY TABLE pattern |
 | **FDW Connections** | 3 | Pending | hermes, sqlapps, deimeter (17 foreign tables) |
 | **SQL Agent Jobs** | 7 | Pending | Migrate to pg_cron/pgAgent |
 
-**P0 Critical Path:** `translated` view (materialized), `mcgetupstream`/`mcgetdownstream`/`mcgetupstreambylist`/`mcgetdownstreambylist` functions, `goo`/`material_transition`/`transition_material` tables
+**P0 Critical Path:** `translated` view (materialized), `mcgetupstream`/`mcgetdownstream`/`mcgetupstreambylist`/`mcgetdownstreambylist` functions
+**P0 Tables:** `goo`/`material_transition`/`transition_material` — ✅ deployed to DEV
 
 ## Directory Structure
 
@@ -63,21 +64,33 @@ source/
 │   ├── sqlserver/              # 822 files - Original T-SQL (0-21 dependency-ordered)
 │   └── pgsql-aws-sct-converted/  # 1,385 files - AWS SCT baseline (~70% complete)
 └── building/pgsql/refactored/  # Production-ready (0-21 dependency-ordered)
-    ├── 0. drop-trigger/ ... 13. create-domain/
-    ├── 14. create-table/       # ✅ 94 tables COMPLETE
-    ├── 15. create-view/        # Views pending (22 views)
-    ├── 16. create-index/       # ⚠️ 175/213 deployed (column mismatches)
-    ├── 17-18. constraints/     # ⚠️ 230/270 deployed
-    ├── 19. create-function/    # Functions pending (25 functions)
-    ├── 20. create-procedure/   # ✅ 15 procedures COMPLETE
-    └── 21. create-trigger/     # Triggers pending
+    ├── 0.drop-trigger/ ... 13.create-domain/
+    ├── 14.create-table/        # ✅ 94 tables COMPLETE
+    ├── 15.create-view/         # 🔄 US1 IN PROGRESS (MIGRATION-SEQUENCE.md ✅)
+    ├── 16.create-index/        # ⚠️ 175/213 deployed (column mismatches)
+    ├── 17.create-constraint/   # ⚠️ 230/270 deployed
+    ├── 19.create-function/     # Functions pending (25 functions)
+    ├── 20.create-procedure/    # ✅ 15 procedures COMPLETE
+    └── 21.create-trigger/      # Triggers pending
 
-docs/code-analysis/             # dependency-analysis-*.md (4 lote + consolidated)
+docs/
+├── backups/                    # CLAUDE.md and README.md versioned backups
+├── code-analysis/
+│   ├── dependency/             # dependency-analysis-*.md (4 lote + consolidated)
+│   ├── procedures/             # Per-procedure analysis documents
+│   └── tables/                 # Per-table analysis documents
+├── db-design/
+│   ├── pgsql/                  # perseus-data-dictionary.md, ER diagrams, type reference
+│   └── sqlserver/              # TABLE-CATALOG.md, original ER diagrams
+├── data-assessments/           # Row counts, constraint CSVs
+├── plans/                      # action-plan-*.md (pre-staging, pre-prod)
+└── *.md                        # Constitution, spec, deployment reports, audit reports
+
 scripts/                        # automation/ (🚧), validation/ (✅), deployment/ (🚧)
-tests/unit/                     # ✅ 15 test_*.sql files for procedures
+tests/unit/                     # ✅ 15 test_*.sql files for procedures + views/ (US1)
 tracking/                       # progress-tracker.md, activity-log-*.md
 templates/                      # procedure, function, view, test templates
-specs/001-tsql-to-pgsql/       # spec.md, data-model.md, plan.md, tasks.md (317 tasks)
+specs/001-tsql-to-pgsql/        # spec.md, data-model.md, plan.md, tasks.md, WORKFLOW-GUIDE.md
 ```
 
 ## Quick Commands
@@ -236,21 +249,90 @@ Gate: Before P0 translated view, validate ALL 21 view dependencies
 Exit: All 22 views pass validation + performance benchmarks within ±20%
 ```
 
+## CLI Tools (Terminal Priority)
+
+**RULE: Terminal commands via `Bash` tool ALWAYS take priority over MCP tools.** Use MCP tools only when no CLI equivalent exists or the CLI has failed.
+
+| Tool | Purpose |
+|------|---------|
+| `git` | Version control — commits, branches, worktrees, diffs, log |
+| `gh` | GitHub CLI — issues, PRs, releases, repo operations (preferred over MCP GitHub) |
+| `uv` | Python package/env management — install deps, run scripts (`uv run`, `uv pip`) |
+| `rg` (ripgrep) | Fast content search across files — use instead of `grep` for codebase searches |
+| `jq` | JSON processing — parse/filter CLI tool output and API responses |
+| `psql` | PostgreSQL client — syntax validation, deployment, query testing against `perseus_dev` |
+| `npx` | Run Node.js tools without installing globally (e.g. `npx prettier`, `npx tsc`) |
+| `npm` | Node.js package management — install/run project Node dependencies |
+| `fnm` | Fast Node Version Manager — switch Node.js versions per project |
+
+---
+
 ## Available MCP Tools
 
-**GitHub Integration:**
-- `issue_read` / `issue_write` - Track P0-P3 issues
-- `pull_request_read` - Review migration PRs
-- `search_code` - Find patterns across original/converted code
+**⚠️ Priority Rule:** Use `gh` CLI first for all GitHub operations. Fall back to MCP GitHub tools **only if `gh` fails** or the operation is unavailable in the CLI.
 
-**Semantic Coding (Serena):**
-- `find_symbol` - Navigate by function/procedure names
-- `replace_symbol_body` - Refactor entire functions
+### MCP_DOCKER — GitHub Integration (fallback only)
+- `issue_read` / `issue_write` — Read/create/update GitHub issues (use `gh issue` first)
+- `pull_request_read` / `pull_request_review_write` — Review PRs (use `gh pr` first)
+- `list_issues` / `search_issues` / `search_pull_requests` — Query GitHub (use `gh` first)
+- `create_branch` / `list_branches` / `list_commits` — Repo operations
+- `search_code` / `search_repositories` / `search_users` — GitHub search
+- `get_me` — Current authenticated user info
 
-**Codebase Context:**
-- `index_codebase` / `search_code` - Semantic search
+### MCP_DOCKER — Project Management
+- `create_task` / `update_task` / `get_task` / `search_tasks` — Task tracking
+- `create_feature` / `update_feature` / `get_feature` — Feature management
+- `create_project` / `update_project` / `get_project` — Project boards
+- `get_sections` / `bulk_create_sections` / `bulk_update_tasks` — Board sections
 
-Use `ToolSearch` to discover full MCP catalog.
+### MCP_DOCKER — Browser Automation
+- `browser_navigate` / `browser_snapshot` / `browser_click` / `browser_type` — Automate Chrome
+- `browser_take_screenshot` / `browser_fill_form` / `browser_evaluate` — Page interaction
+- Use for: validating deployed UIs, testing web-facing components
+
+### plugin:serena — Semantic Code Navigation & Editing
+- `find_symbol` — Locate functions/procedures/classes by name across the codebase
+- `find_referencing_symbols` — Find all callers/usages of a symbol
+- `get_symbols_overview` — List all symbols in a file (avoid reading entire files)
+- `replace_symbol_body` — Replace a complete function/procedure definition
+- `insert_before_symbol` / `insert_after_symbol` — Insert code relative to a symbol
+- `search_for_pattern` — Regex search across codebase (use `rg` first)
+- `list_dir` / `find_file` / `read_file` — File operations (use native tools first)
+- Use for: surgical SQL refactoring, navigating stored procedures/functions by name
+
+### plugin:context7 — Library Documentation Lookup
+- `resolve-library-id` — Resolve a library name to its context7 ID
+- `query-docs` — Fetch up-to-date docs/examples for any library or framework
+- Use for: PostgreSQL 17 syntax, pg_cron, postgres_fdw, SymmetricDS API references
+
+### plugin:claude-context — Codebase Semantic Index
+- `index_codebase` — Build semantic index of the full repository
+- `search_code` — Semantic search across indexed codebase
+- `get_indexing_status` / `clear_index` — Manage the index
+- Use for: broad "find all places that do X" queries across 769 objects
+
+### plugin:claude-mem — Persistent Memory Search
+- `search` — Search across saved memories/observations from past sessions
+- `get_observations` — Retrieve specific observation records
+- `timeline` — Browse observations chronologically
+- Use for: retrieving past decisions, debugging patterns, session context
+
+### plugin:claude-team — Multi-Agent Worker Management
+- `spawn_workers` — Launch parallel Claude Code worker agents
+- `message_workers` / `examine_worker` — Communicate with and inspect workers
+- `list_workers` / `adopt_worker` / `close_workers` — Manage worker lifecycle
+- `list_worktrees` / `poll_worker_changes` / `wait_idle_workers` — Coordination
+- Use for: large parallel batch tasks beyond what `Task` tool handles
+
+### plugin:claude-in-chrome — Chrome Browser Automation
+- `navigate` / `read_page` / `find` / `form_input` / `javascript_tool` — Page control
+- `get_page_text` / `read_console_messages` / `read_network_requests` — Inspection
+- `screenshot` / `gif_creator` — Visual capture
+- Use for: browser-based validation, UI testing in Chrome directly
+
+### mcp:sequentialthinking — Structured Reasoning
+- `sequentialthinking` — Step-by-step reasoning for complex multi-part problems
+- Use for: architectural decisions, debugging complex dependency chains
 
 ## Database Agents (Use PROACTIVELY)
 
@@ -314,12 +396,27 @@ usp_UpdateContainerType    → update_container_type (drop usp_)
 ## Documentation References
 
 **Read FIRST before changes:**
-- `.specify/memory/constitution.md` - 7 binding core principles
-- `docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md` - Articles I-XVII
+- `docs/POSTGRESQL-PROGRAMMING-CONSTITUTION.md` - Articles I-XVII (binding standards)
 - `docs/PROJECT-SPECIFICATION.md` - Requirements and constraints
-- `docs/code-analysis/dependency-analysis-consolidated.md` - P0 critical path + all 769 objects
-- `specs/001-tsql-to-pgsql/` - spec.md, data-model.md, plan.md, tasks.md
+- `docs/code-analysis/dependency/dependency-analysis-consolidated.md` - P0 critical path + all 769 objects
+- `specs/001-tsql-to-pgsql/spec.md` - Full project specification
+- `specs/001-tsql-to-pgsql/tasks.md` - 317 tasks across all User Stories
+- `specs/001-tsql-to-pgsql/WORKFLOW-GUIDE.md` - Mandatory execution workflow
 - `templates/` - Object templates (procedure, function, view, test)
+
+**DB Design & Schema:**
+- `docs/db-design/pgsql/perseus-data-dictionary.md` - PostgreSQL schema reference
+- `docs/db-design/pgsql/TYPE-TRANSFORMATION-REFERENCE.md` - Type mapping reference
+- `docs/db-design/sqlserver/TABLE-CATALOG.md` - Original SQL Server table catalog
+- `docs/db-design/INDEX.md` - Design docs index + TRANSFORMATION-SUMMARY.md
+
+**Per-Object Analysis:**
+- `docs/code-analysis/dependency/dependency-analysis-lote3-views.md` - 22 views (US1)
+- `docs/code-analysis/dependency/dependency-analysis-lote2-functions.md` - 25 functions (US2)
+- `docs/code-analysis/procedures/` - Per-procedure analysis (15 files)
+
+**Backups:**
+- `docs/backups/` - Versioned backups of CLAUDE.md, README.md and other key docs
 
 ## Tracking & Reporting
 

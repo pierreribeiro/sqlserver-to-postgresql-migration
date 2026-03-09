@@ -193,13 +193,13 @@ cd ~/.claude-worktrees/US1-critical-views
 
 **Purpose**: Refactor views to production-ready PostgreSQL code
 
-- [ ] T040 [US1] Refactor `translated` to materialized view in source/building/pgsql/refactored/views/translated.sql
-- [ ] T041 [US1] Create UNIQUE index for CONCURRENT refresh in source/building/pgsql/refactored/views/translated.sql
-- [ ] T042 [P] [US1] Refactor `upstream` recursive CTE in source/building/pgsql/refactored/views/upstream.sql
-- [ ] T043 [P] [US1] Refactor `downstream` recursive CTE in source/building/pgsql/refactored/views/downstream.sql
-- [ ] T044 [P] [US1] Refactor `goo_relationship` in source/building/pgsql/refactored/views/goo_relationship.sql
-- [ ] T045 [P] [US1] Refactor remaining 18 views in parallel (one .sql file per view)
-- [ ] T046 [US1] Validate all view definitions compile with scripts/validation/syntax-check.sh
+- [X] T040 [US1] Refactor `translated` to materialized view in source/building/pgsql/refactored/views/translated.sql ✅ 2026-03-08
+- [X] T041 [US1] Create UNIQUE index for CONCURRENT refresh in source/building/pgsql/refactored/views/translated.sql ✅ 2026-03-08
+- [X] T042 [P] [US1] Refactor `upstream` recursive CTE in source/building/pgsql/refactored/views/upstream.sql ✅ 2026-03-08
+- [X] T043 [P] [US1] Refactor `downstream` recursive CTE in source/building/pgsql/refactored/views/downstream.sql ✅ 2026-03-08
+- [X] T044 [P] [US1] Refactor `goo_relationship` in source/building/pgsql/refactored/views/goo_relationship.sql ✅ 2026-03-08
+- [X] T045 [P] [US1] Refactor remaining 18 views in parallel (one .sql file per view) ✅ 2026-03-08
+- [X] T046 [US1] Validate all view definitions compile with scripts/validation/syntax-check.sh ✅ 2026-03-08
 
 ### Phase 3: Validation for User Story 1 Views
 

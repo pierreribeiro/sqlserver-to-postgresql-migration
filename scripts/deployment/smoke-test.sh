@@ -310,20 +310,20 @@ record_test() {
     local test_name="$1"
     local result="$2"  # pass|fail|skip
 
-    ((TOTAL_TESTS++))
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
 
     case "${result}" in
         pass)
-            ((PASSED_TESTS++))
+            PASSED_TESTS=$((PASSED_TESTS + 1))
             log_success "${test_name}"
             ;;
         fail)
-            ((FAILED_TESTS++))
+            FAILED_TESTS=$((FAILED_TESTS + 1))
             FAILED_TEST_NAMES+=("${test_name}")
             log_error "${test_name}"
             ;;
         skip)
-            ((SKIPPED_TESTS++))
+            SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
             log_skip "${test_name}"
             ;;
     esac
@@ -355,7 +355,7 @@ test_postgres_version() {
 
     local version
     if version=$(run_psql "${CONNECTIVITY_TIMEOUT}" -t -c "SHOW server_version;" 2>&1); then
-        local major_version=$(echo "${version}" | grep -oE '^[0-9]+' | head -1)
+        local major_version=$(echo "${version}" | xargs | grep -oE '^[0-9]+' | head -1)
         if [[ "${major_version}" -ge 17 ]]; then
             if [[ "${VERBOSE}" == "true" ]]; then
                 echo "  Version: ${version}"

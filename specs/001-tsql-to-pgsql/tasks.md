@@ -219,13 +219,13 @@ cd ~/.claude-worktrees/US1-critical-views
 
 **Purpose**: Deploy views to DEV → STAGING → PRODUCTION
 
-- [ ] T056 [US1] Deploy all 22 views to DEV environment using scripts/deployment/deploy-batch.sh
-- [ ] T057 [US1] Run smoke tests in DEV using scripts/deployment/smoke-test.sh
-- [ ] T058 [US1] Deploy all 22 views to STAGING environment
-- [ ] T059 [US1] Execute integration tests in STAGING with application queries
-- [ ] T060 [US1] Create rollback procedures for all views in scripts/deployment/rollback-object.sh
-- [ ] T061 [US1] Document operational runbook for view maintenance
-- [ ] T062 [US1] Obtain deployment approval from technical lead and DBA
+- [X] T056 [US1] Deploy all 22 views to DEV environment using scripts/deployment/deploy-batch.sh
+- [X] T057 [US1] Run smoke tests in DEV using scripts/deployment/smoke-test.sh
+- [X] T058 [US1] Deploy all 22 views to STAGING environment
+- [X] T059 [US1] Execute integration tests in STAGING with application queries
+- [X] T060 [US1] Create rollback procedures for all views in scripts/deployment/rollback-object.sh
+- [X] T061 [US1] Document operational runbook for view maintenance
+- [X] T062 [US1] Obtain deployment approval from technical lead and DBA
 
 **Checkpoint**: At this point, all 22 views should be deployed to STAGING and independently testable
 

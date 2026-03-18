@@ -1,0 +1,8 @@
+# US7: CITEXT Column Conversion — Python Dependencies
+python-dotenv>=1.0.0    # .env file loading
+pyyaml>=6.0             # YAML config parsing
+rich>=13.0              # Console output formatting
+
+# Testing
+pytest>=8.0
+pytest-mock>=3.12

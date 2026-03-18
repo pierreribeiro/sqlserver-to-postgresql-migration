@@ -45,8 +45,11 @@ build/
 infra/database/.secrets/
 infra/database/pgdata/
 
-# Claude Code command log (should not be committed)
+# Claude Code (local/machine-specific, should not be committed)
+.claude/settings.local.json
 .claude/command-log.txt
+.claude/changes.log
+.claude/hook-debug.log
 command-log.txt.env
 
 # Data Migration (scripts/data-migration/)

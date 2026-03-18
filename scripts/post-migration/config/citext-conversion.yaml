@@ -1,0 +1,211 @@
+# =============================================================================
+# US7: CITEXT Column Conversion — Target Configuration
+# =============================================================================
+# Source: prompts/columns_citext_candidates.txt (172 ALTER statements)
+# Generated from the approved plan (cozy-wiggling-acorn.md)
+
+version: 1
+schema: perseus
+source_file: prompts/columns_citext_candidates.txt
+
+# ---------------------------------------------------------------------------
+# FK Groups — columns that MUST be converted in the SAME transaction
+# ---------------------------------------------------------------------------
+fk_groups:
+  - name: material_lineage
+    description: "UID columns in FK relationships — MUST convert together"
+    columns:
+      - { table: goo, column: uid }
+      - { table: fatsmurf, column: uid }
+      - { table: material_transition, column: material_id }
+      - { table: material_transition, column: transition_id }
+      - { table: transition_material, column: material_id }
+      - { table: transition_material, column: transition_id }
+
+# ---------------------------------------------------------------------------
+# Cache Tables — converted LAST, after ALL other tables
+# ---------------------------------------------------------------------------
+cache_tables:
+  description: "LAST group — converted after ALL other tables. Direct ALTER (no truncate)."
+  tables:
+    - name: cache_dirty_leaves
+      columns:
+        - { table: m_upstream_dirty_leaves, column: material_uid }
+    - name: cache_downstream
+      columns:
+        - { table: m_downstream, column: start_point }
+        - { table: m_downstream, column: end_point }
+        - { table: m_downstream, column: path }
+    - name: cache_upstream
+      columns:
+        - { table: m_upstream, column: start_point }
+        - { table: m_upstream, column: end_point }
+        - { table: m_upstream, column: path }
+
+# ---------------------------------------------------------------------------
+# Independent Columns — all remaining columns (no FK constraints)
+# Grouped by table for transaction efficiency (one tx per table)
+# ---------------------------------------------------------------------------
+independent_columns:
+  - table: cm_application
+    columns: [description, jira_id, label, url]
+  - table: cm_application_group
+    columns: [label]
+  - table: cm_group
+    columns: [domain_id, name]
+  - table: cm_project
+    columns: [label]
+  - table: cm_unit
+    columns: [description, longname, name]
+  - table: cm_unit_dimensions
+    columns: [name]
+  - table: cm_user
+    columns: [domain_id, email, login, name]
+  - table: coa
+    columns: [name]
+  - table: coa_spec
+    columns: [equal_bound]
+  - table: color
+    columns: [name]
+  - table: container
+    columns: [name, position_name, position_x_coordinate, position_y_coordinate, scope_id, uid]
+  - table: container_type
+    columns: [name]
+  - table: container_type_position
+    columns: [position_name, position_x_coordinate, position_y_coordinate]
+  - table: display_layout
+    columns: [name]
+  - table: display_type
+    columns: [name]
+  - table: external_goo_type
+    columns: [external_label]
+  - table: fatsmurf
+    columns: [description, name]
+  - table: fatsmurf_attachment
+    columns: [attachment_mime_type, attachment_name, description]
+  - table: fatsmurf_comment
+    columns: [comment]
+  - table: fatsmurf_reading
+    columns: [name]
+  - table: feed_type
+    columns: [correction_method, description, name]
+  - table: field_map
+    columns: [database_id, description, lookup, lookup_service, name, onchange, setter]
+  - table: field_map_block
+    columns: [filter, scope]
+  - table: field_map_display_type
+    columns: [display]
+  - table: field_map_set
+    columns: [color, name]
+  - table: field_map_type
+    columns: [name]
+  - table: goo
+    columns: [catalog_label, description, name]
+  - table: goo_attachment
+    columns: [attachment_mime_type, attachment_name, description]
+  - table: goo_attachment_type
+    columns: [name]
+  - table: goo_comment
+    columns: [category, comment]
+  - table: goo_process_queue_type
+    columns: [name]
+  - table: goo_type
+    columns: [abbreviation, casrn, color, iupac, name, scope_id]
+  - table: history_type
+    columns: [format, name]
+  - table: history_value
+    columns: [value]
+  - table: manufacturer
+    columns: [goo_prefix, location, name]
+  - table: material_inventory
+    columns: [comment]
+  - table: material_inventory_type
+    columns: [description, name]
+  - table: material_qc
+    columns: [entity_type_name, qc_process_uid]
+  - table: material_transition
+    columns: []  # uid columns handled in fk_groups
+  - table: migration
+    columns: [description]
+  - table: Permissions
+    columns: [emailAddress, permission]
+  - table: perseus_user
+    columns: [domain_id, login, mail, name]
+  - table: person
+    columns: [domain_id, email, km_session_id, login, name]
+  - table: poll
+    columns: [value]
+  - table: prefix_incrementor
+    columns: [prefix]
+  - table: property
+    columns: [description, name]
+  - table: property_option
+    columns: [label]
+  - table: recipe
+    columns: [description, name, sop, sterilization_method]
+  - table: recipe_part
+    columns: [description]
+  - table: robot_log
+    columns: [file_name, log_text, robot_log_checksum, source]
+  - table: robot_log_error
+    columns: [error_text]
+  - table: robot_log_read
+    columns: [source_barcode, source_position, value]
+  - table: robot_log_transfer
+    columns: [destination_barcode, destination_position, source_barcode, source_position, transfer_volume]
+  - table: robot_log_type
+    columns: [name]
+  - table: robot_run
+    columns: [name]
+  - table: saved_search
+    columns: [name, parameter_string]
+  - table: Scraper
+    columns: [Active, DocumentID, Filename, FilenameSavedAs, FileType, Message, ReceivedFrom, Result, ScraperID, ScraperMessage, ScraperSendTo, ScrapingStatus]
+  - table: sequence_type
+    columns: [name]
+  - table: smurf
+    columns: [description, name]
+  - table: smurf_group
+    columns: [name]
+  - table: smurf_property
+    columns: [calculated]
+  - table: submission
+    columns: [label]
+  - table: submission_entry
+    columns: [priority, sample_type, status]
+  - table: tmp_messy_links
+    columns: [desitnation_name, destination_transition, material_id, source_name, source_transition]
+  - table: transition_material
+    columns: []  # uid columns handled in fk_groups
+  - table: unit
+    columns: [description, name]
+  - table: workflow
+    columns: [category, description, name]
+  - table: workflow_attachment
+    columns: [attachment_mime_type, attachment_name]
+  - table: workflow_section
+    columns: [name]
+  - table: workflow_step
+    columns: [description, label, name]
+  - table: workflow_step_type
+    columns: [name]
+
+# ---------------------------------------------------------------------------
+# Large Tables — execution order (ascending by size, smallest first)
+# Tables with >=500K rows require extended time for ALTER
+# ---------------------------------------------------------------------------
+large_tables_order:
+  - { table: fatsmurf_reading, rows: 3816650, size_mb: 247 }
+  - { table: robot_log_read, rows: 2029431, size_mb: 259 }
+  - { table: robot_log_transfer, rows: 1722005, size_mb: 335 }
+  - { table: transition_material, rows: 5236136, size_mb: 468 }
+  - { table: container, rows: 4250550, size_mb: 724 }
+  - { table: goo, rows: 5942387, size_mb: 880 }
+  - { table: material_transition, rows: 9002808, size_mb: 896 }
+  - { table: fatsmurf, rows: 8034604, size_mb: 1426 }
+  - { table: robot_log, rows: 3757415, size_mb: 1977 }
+  - { table: poll, rows: 16757852, size_mb: 2111 }
+  - { table: history_value, rows: 45970857, size_mb: 2739 }
+  # Cache tables below — LAST in entire process
+  - { table: m_downstream, rows: 33850871, size_mb: 6514 }
+  - { table: m_upstream, rows: 686281876, size_mb: 157554 }

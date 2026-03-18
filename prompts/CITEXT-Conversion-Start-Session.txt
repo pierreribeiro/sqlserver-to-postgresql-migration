@@ -1,0 +1,42 @@
+<context>
+OBJETIVO	=> 	Alterar para CITEXT, colunas de um conjutos de tabelas informadas.
+DESAFIOS	=> 	1) Existem tabelas sendo referenciadas por views (dependência).
+				2) Existem relações de dependência entre tabelas através de FK.
+				3) Verificar nas relações pai/filho se as colunas envolvidas poderão apresentar, após a conversão, incompatibilidade para habilitar a FK. Ex.: Coluna pai CITEXT/coluna filha varchar.
+				4) Existem relações de dependência entre views.
+				5) Ordem de execução das atividades pode bloquear atividades subsequentes.
+				6) Existem tabelas gigantes com mais de 1M  de linhas.
+</context>
+<tasks>
+TASKS		=>	1) Analisar objetos envolvidos e determinar uma árvore de dependências.
+				2) Explorar e analisar edge cases.
+				2) Gerar um documento markdown contendo:
+					a) Detalhamento do que causa a dependência. Colunas, tabelas, FKs, views e etc.
+					b) Diagramas mermaid, para serem renderizados dentro do markdown, apresentando as dependências.
+					c) Apresentar visualmente o processo de deployment e suas etapas (workflow).
+					d) Agrupar tabelas de acordo com o volume de dados (linhas), <500 e >500.
+					e) Salvar todos os documentos na pasta docs/post-migration
+				3) Criar scripts de deployment com os seguintes critérios:
+					a) Segmentar por etapas.
+					b) O código deve prever erros e tratá-los.
+					c) Opte por códigos simples, sempre que possível. Metodologia KISS.
+					d) Devem ser gerados logs detalhados com a seguinte nomenclatura (pattern) <número ordinal da etapa>-<nome da etapa>-timestamp.log, você está livre para melhorar o pattern.
+					e) Scripts devem ser capazer de se conectar remotamente a instância postgres.
+					f) Os scripts devem ser agnósticos de plataforma operacional (S.O)
+					g) Linguagens utilizadas: python e pgsql. Se necessário pode utilizar alguma outra liguagem de apoio.
+					h) Salvar os scripts na pasta scripts/post-migration.
+					i) O nome de cada script deve refletir o seu prósito e sua ordem no processo de deployment.
+					f) Todas as variáveis necessárias devem ser carregadas a partir de um .env de configuração.
+					g) Verificar a possibilidade de paralelizar o trabalho com agentes em background.
+</tasks>
+<workflow>
+PLAN		=> 1) Gere um plano de trabalho dividido em tarefas.
+			=> 2) Salve uma cópia deste plano em docs/plans.
+</workflow>
+<documents>
+USEFULL DOCS=>	1) source/building/pgsql/refactored/17.create-constraint/*
+				2) docs/code-analysis/dependency/fk-relationship-matrix.md
+				3) docs/code-analysis/dependency/dependency-analysis-lote3-views.md				
+				4) docs/db-design/pgsql/perseus-data-dictionary.md
+				5) docs/db-design/pgsql/perseus-ER-diagram-pgsql.mmd
+</documents>

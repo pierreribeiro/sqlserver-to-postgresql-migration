@@ -11,6 +11,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+# Auto-discover .env in CWD or parent dirs so all env vars are available
+load_dotenv()
+
 
 def load_db_config(env_file: str | None = None) -> dict:
     """

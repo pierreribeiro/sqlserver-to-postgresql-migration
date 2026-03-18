@@ -9,7 +9,9 @@ Usage:
 """
 
 import argparse
+import os
 import sys
+from pathlib import Path
 
 from lib.db import execute_sql
 from lib.logger import setup_logger
@@ -116,7 +118,10 @@ def run_drop_dependents(
     Returns report dict with counts of dropped objects.
     """
     manifest = Manifest(manifest_path)
-    manifest.create()
+    if Path(manifest_path).exists():
+        manifest.load()
+    else:
+        manifest.create()
     manifest.start_phase("01-drop-dependents")
 
     report = {
@@ -164,7 +169,7 @@ def main():
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--manifest", default="./manifest.json")
-    parser.add_argument("--log-dir", default="./logs")
+    parser.add_argument("--log-dir", default=os.environ.get("LOG_DIR", "./logs"))
 
     args = parser.parse_args()
 

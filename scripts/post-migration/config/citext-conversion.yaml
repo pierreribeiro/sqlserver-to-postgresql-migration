@@ -127,8 +127,8 @@ independent_columns:
     columns: []  # uid columns handled in fk_groups
   - table: migration
     columns: [description]
-  - table: Permissions
-    columns: [emailAddress, permission]
+  - table: permissions
+    columns: [email_address, permission]
   - table: perseus_user
     columns: [domain_id, login, mail, name]
   - table: person
@@ -159,8 +159,8 @@ independent_columns:
     columns: [name]
   - table: saved_search
     columns: [name, parameter_string]
-  - table: Scraper
-    columns: [Active, DocumentID, Filename, FilenameSavedAs, FileType, Message, ReceivedFrom, Result, ScraperID, ScraperMessage, ScraperSendTo, ScrapingStatus]
+  - table: scraper
+    columns: [active, document_id, filename, filename_saved_as, file_type, message, received_from, result, scraper_id, scraper_message, scraper_send_to, scraping_status]
   - table: sequence_type
     columns: [name]
   - table: smurf
@@ -174,7 +174,7 @@ independent_columns:
   - table: submission_entry
     columns: [priority, sample_type, status]
   - table: tmp_messy_links
-    columns: [desitnation_name, destination_transition, material_id, source_name, source_transition]
+    columns: [destination_name, destination_transition, material_id, source_name, source_transition]
   - table: transition_material
     columns: []  # uid columns handled in fk_groups
   - table: unit

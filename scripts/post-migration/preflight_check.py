@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -172,7 +173,10 @@ def generate_manifest(
 ) -> None:
     """Generate the conversion manifest from config and discovered dependencies."""
     m = Manifest(manifest_path)
-    m.create()
+    if Path(manifest_path).exists():
+        m.load()
+    else:
+        m.create()
 
     # Store all target columns' original types
     columns = get_all_target_columns(config)
@@ -263,7 +267,9 @@ def main():
         "--dry-run", action="store_true", help="Show SQL without executing"
     )
     parser.add_argument("--manifest", default="./manifest.json", help="Manifest path")
-    parser.add_argument("--log-dir", default="./logs", help="Log directory")
+    parser.add_argument(
+        "--log-dir", default=os.environ.get("LOG_DIR", "./logs"), help="Log directory"
+    )
 
     args = parser.parse_args()
 

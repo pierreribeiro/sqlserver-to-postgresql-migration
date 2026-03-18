@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -169,7 +170,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--manifest", default="./manifest.json")
-    parser.add_argument("--log-dir", default="./logs")
+    parser.add_argument("--log-dir", default=os.environ.get("LOG_DIR", "./logs"))
 
     args = parser.parse_args()
 

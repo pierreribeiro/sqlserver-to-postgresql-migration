@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 
 from lib.db import execute_sql
@@ -79,7 +80,7 @@ def main():
     parser.add_argument("--config", default="config/citext-conversion.yaml")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--manifest", default="./manifest.json")
-    parser.add_argument("--log-dir", default="./logs")
+    parser.add_argument("--log-dir", default=os.environ.get("LOG_DIR", "./logs"))
     parser.add_argument("--resume", action="store_true")
 
     args = parser.parse_args()

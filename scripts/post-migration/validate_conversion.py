@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 
 from lib.db import execute_sql
@@ -190,7 +191,7 @@ def main():
     parser = argparse.ArgumentParser(description="Phase 4: Validate CITEXT Conversion")
     parser.add_argument("--config", default="config/citext-conversion.yaml")
     parser.add_argument("--manifest", default="./manifest.json")
-    parser.add_argument("--log-dir", default="./logs")
+    parser.add_argument("--log-dir", default=os.environ.get("LOG_DIR", "./logs"))
 
     args = parser.parse_args()
 

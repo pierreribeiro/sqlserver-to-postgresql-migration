@@ -9,7 +9,9 @@ Usage:
 """
 
 import argparse
+import os
 import sys
+from pathlib import Path
 
 from lib.db import execute_sql
 from lib.dependency import (
@@ -98,7 +100,10 @@ def run_alter_columns(
     FK groups converted in single transaction.
     """
     manifest = Manifest(manifest_path)
-    manifest.create()
+    if Path(manifest_path).exists():
+        manifest.load()
+    else:
+        manifest.create()
     manifest.start_phase("02-alter-columns")
 
     cache_tables = {c["table"] for c in get_cache_columns(config)}
@@ -154,7 +159,7 @@ def main():
     parser.add_argument("--config", default="config/citext-conversion.yaml")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--manifest", default="./manifest.json")
-    parser.add_argument("--log-dir", default="./logs")
+    parser.add_argument("--log-dir", default=os.environ.get("LOG_DIR", "./logs"))
     parser.add_argument("--resume", action="store_true")
 
     args = parser.parse_args()

@@ -1,28 +1,31 @@
 """
-Phase 3: Recreate Dependent Objects — Bottom-Up.
+Phase 3: Recreate Dependent Objects — Bottom-Up (depth-ordered).
 
-Recreate order: Indexes -> FK Constraints -> MV (translated) -> Views (Wave 0 -> Wave 3).
-Reverse of drop_dependents.py.
+Reads DDL from backup table (primary) or manifest (fallback).
+Recreate order: Indexes -> FK Constraints -> Views/MVs (depth ASC, root first).
 
 Usage:
     python 03-recreate-dependents.py [--config PATH] [--manifest PATH]
 """
 
 import argparse
+import logging
 import os
 import re
-import sys
+from pathlib import Path
 
-from lib.db import execute_sql
+from lib.backup import get_snapshot, mark_recreated
+from lib.db import execute_sql, execute_sql_safe
 from lib.logger import setup_logger
 from lib.manifest import Manifest
+
+logger = logging.getLogger("citext.recreate-dependents")
 
 
 def _make_idempotent_index(ddl: str) -> str:
     """Ensure CREATE INDEX uses IF NOT EXISTS for idempotency."""
     if "IF NOT EXISTS" in ddl:
         return ddl
-    # Handle CREATE INDEX and CREATE UNIQUE INDEX
     ddl = re.sub(
         r"CREATE\s+(UNIQUE\s+)?INDEX\s+",
         r"CREATE \1INDEX IF NOT EXISTS ",
@@ -50,22 +53,30 @@ def _make_idempotent_view(ddl: str) -> str:
 def recreate_indexes(
     indexes: list[dict],
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> list[str]:
-    """
-    Recreate indexes from saved DDL.
-
-    Args:
-        indexes: list of {schema, name, ddl} dicts
-        db_config: optional DB config
-
-    Returns:
-        List of executed SQL statements
-    """
+    """Recreate indexes from saved DDL."""
     sqls = []
     for idx in indexes:
         sql = _make_idempotent_index(idx["ddl"])
-        execute_sql(sql, config=db_config)
-        sqls.append(sql)
+        success, _, error = execute_sql_safe(
+            sql,
+            config=db_config,
+            run_id=run_id,
+            phase="03-recreate-dependents",
+            context={
+                "object_type": "index",
+                "object_name": idx.get("object_name", idx.get("index_name", "")),
+                "operation": "CREATE",
+            },
+        )
+        if success:
+            sqls.append(sql)
+        else:
+            logger.error(
+                f"Index recreate failed for "
+                f"{idx.get('object_name', idx.get('index_name', ''))}: {error}"
+            )
     return sqls
 
 
@@ -73,23 +84,38 @@ def recreate_fk_constraints(
     schema: str,
     constraints: list[dict],
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> list[str]:
-    """
-    Recreate FK constraints from saved DDL.
-
-    Args:
-        schema: database schema
-        constraints: list of {table, name, ddl} dicts
-        db_config: optional DB config
-
-    Returns:
-        List of executed SQL statements
-    """
+    """Recreate FK constraints from saved CREATE DDL."""
     sqls = []
     for c in constraints:
         sql = c["ddl"]
-        execute_sql(sql, config=db_config)
-        sqls.append(sql)
+        try:
+            execute_sql(sql, config=db_config)
+            sqls.append(sql)
+        except RuntimeError as e:
+            if "already exists" in str(e).lower():
+                logger.warning(f"Constraint already exists — skipping: {e}")
+            else:
+                logger.error(
+                    f"Constraint recreate failed for "
+                    f"{c.get('object_name', '')}: {e}"
+                )
+                if run_id:
+                    from lib.error_log import log_error
+
+                    log_error(
+                        run_id,
+                        "03-recreate-dependents",
+                        "ERROR",
+                        str(e),
+                        schema_name=schema,
+                        object_type="constraint",
+                        object_name=c.get("object_name", ""),
+                        operation="CREATE",
+                        sql_attempted=sql,
+                        db_config=db_config,
+                    )
     return sqls
 
 
@@ -97,24 +123,32 @@ def recreate_views(
     schema: str,
     waves: dict[int, list[dict]],
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> list[str]:
-    """
-    Recreate views in wave order (Wave 0 first, ascending — bottom-up).
-
-    Args:
-        schema: database schema
-        waves: {wave_number: [{name, ddl}]} — lowest wave first
-        db_config: optional DB config
-
-    Returns:
-        List of executed SQL statements
-    """
+    """Recreate views in wave/depth order (lowest first — bottom-up)."""
     sqls = []
     for wave_num in sorted(waves.keys()):
         for view in waves[wave_num]:
             sql = _make_idempotent_view(view["ddl"])
-            execute_sql(sql, config=db_config)
-            sqls.append(sql)
+            success, _, error = execute_sql_safe(
+                sql,
+                config=db_config,
+                run_id=run_id,
+                phase="03-recreate-dependents",
+                context={
+                    "schema_name": schema,
+                    "object_type": "view",
+                    "object_name": view.get("object_name", view.get("name", "")),
+                    "operation": "CREATE",
+                },
+            )
+            if success:
+                sqls.append(sql)
+            else:
+                logger.error(
+                    f"View recreate failed for "
+                    f"{view.get('object_name', view.get('name', ''))}: {error}"
+                )
     return sqls
 
 
@@ -122,82 +156,198 @@ def recreate_materialized_views(
     schema: str,
     mv_list: list[dict],
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> list[str]:
-    """
-    Recreate materialized views from saved DDL.
-
-    Args:
-        schema: database schema
-        mv_list: list of {name, ddl} dicts
-        db_config: optional DB config
-
-    Returns:
-        List of executed SQL statements
-    """
+    """Recreate materialized views from saved DDL."""
     sqls = []
     for mv in mv_list:
         sql = mv["ddl"]
-        execute_sql(sql, config=db_config)
-        sqls.append(sql)
+        success, _, error = execute_sql_safe(
+            sql,
+            config=db_config,
+            run_id=run_id,
+            phase="03-recreate-dependents",
+            context={
+                "schema_name": schema,
+                "object_type": "materialized_view",
+                "object_name": mv.get("object_name", mv.get("name", "")),
+                "operation": "CREATE",
+            },
+        )
+        if success:
+            sqls.append(sql)
+        else:
+            logger.error(
+                f"MV recreate failed for "
+                f"{mv.get('object_name', mv.get('name', ''))}: {error}"
+            )
     return sqls
 
 
+def _load_dependents_from_backup(
+    run_id: str,
+    db_config: dict | None = None,
+) -> dict:
+    """Load dependents from backup table, organized by type and depth."""
+    phase = "01-drop-dependents"
+    objects = get_snapshot(run_id, phase, db_config)
+
+    dependents = {
+        "indexes": [],
+        "constraints": [],
+        "materialized_views": [],
+        "views": {},  # depth -> [objects]
+    }
+
+    for obj in objects:
+        otype = obj["object_type"]
+        if otype == "index":
+            dependents["indexes"].append(obj)
+        elif otype == "constraint":
+            dependents["constraints"].append(obj)
+        elif otype == "materialized_view":
+            dependents["materialized_views"].append(obj)
+        elif otype == "view":
+            depth = obj.get("depth", 0)
+            dependents["views"].setdefault(depth, []).append(obj)
+
+    return dependents
+
+
+def _load_dependents_from_manifest(manifest: Manifest) -> dict:
+    """Fallback: load dependents from manifest (Phase 1 saved them)."""
+    drop_phase = manifest.data.get("phases", {}).get("01-drop-dependents", {})
+    dropped = drop_phase.get("dropped", [])
+    return {
+        "indexes": [d for d in dropped if d["type"] == "index"],
+        "constraints": [d for d in dropped if d["type"] == "constraint"],
+        "materialized_views": [d for d in dropped if d["type"] == "materialized_view"],
+        "views": {0: [d for d in dropped if d["type"] == "view"]},
+    }
+
+
 def run_recreate_dependents(
-    dependents: dict,
-    manifest_path: str,
+    config: dict | None = None,
+    manifest_path: str = "./manifest.json",
     log_dir: str = "./logs",
     schema: str = "perseus",
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """
     Orchestrate Phase 3: recreate all dependent objects.
 
-    Order: Indexes -> FK Constraints -> MV -> Views (Wave 0 -> Wave N).
+    Primary source: backup table (depth-ordered).
+    Fallback: manifest (if backup table unavailable).
 
-    Args:
-        dependents: dict with keys: indexes, constraints, materialized_views, views
-        manifest_path: path to manifest for checkpointing
-        log_dir: log directory
-        schema: database schema
-        db_config: optional DB config
-
-    Returns:
-        Report dict with counts of recreated objects.
+    Order: Indexes -> FK Constraints -> MVs -> Views (depth ASC).
     """
     manifest = Manifest(manifest_path)
-    manifest.create()
+    if Path(manifest_path).exists():
+        manifest.load()
+    else:
+        manifest.create()
     manifest.start_phase("03-recreate-dependents")
+
+    # Try to load run_id from manifest for backup table lookup
+    backup_run_id = run_id or (
+        manifest.data.get("snapshots", {}).get("01-drop-dependents", {}).get("run_id")
+    )
+
+    dependents = None
+    if backup_run_id:
+        try:
+            dependents = _load_dependents_from_backup(backup_run_id, db_config)
+            has_objects = any(
+                dependents[k]
+                for k in ("indexes", "constraints", "materialized_views", "views")
+            )
+            if has_objects:
+                logger.info(
+                    f"Loaded dependents from backup table (run_id={backup_run_id})"
+                )
+            else:
+                dependents = None
+        except RuntimeError:
+            logger.warning("Backup table unavailable — falling back to manifest")
+            dependents = None
+
+    if dependents is None:
+        dependents = _load_dependents_from_manifest(manifest)
+        logger.info("Loaded dependents from manifest (fallback)")
 
     report = {
         "indexes_created": 0,
         "constraints_created": 0,
         "mv_created": 0,
         "views_created": 0,
+        "errors_count": 0,
     }
 
     # 1. Indexes first
     indexes = dependents.get("indexes", [])
     if indexes:
-        sqls = recreate_indexes(indexes, db_config=db_config)
+        sqls = recreate_indexes(indexes, db_config=db_config, run_id=run_id)
         report["indexes_created"] = len(sqls)
+        report["errors_count"] += len(indexes) - len(sqls)
+        if backup_run_id:
+            for idx in indexes:
+                mark_recreated(
+                    backup_run_id,
+                    schema,
+                    idx.get("object_name", idx.get("name", "")),
+                    db_config,
+                )
 
-    # 2. FK Constraints
+    # 2. FK Constraints (now using CREATE DDL from Bug 9 fix)
     constraints = dependents.get("constraints", [])
     if constraints:
-        sqls = recreate_fk_constraints(schema, constraints, db_config=db_config)
+        sqls = recreate_fk_constraints(
+            schema, constraints, db_config=db_config, run_id=run_id
+        )
         report["constraints_created"] = len(sqls)
+        if backup_run_id:
+            for c in constraints:
+                mark_recreated(
+                    backup_run_id,
+                    schema,
+                    c.get("object_name", c.get("name", "")),
+                    db_config,
+                )
 
-    # 3. Materialized Views
+    # 3. Materialized Views (before regular views since views may depend on MVs)
     mv_list = dependents.get("materialized_views", [])
     if mv_list:
-        sqls = recreate_materialized_views(schema, mv_list, db_config=db_config)
+        sqls = recreate_materialized_views(
+            schema, mv_list, db_config=db_config, run_id=run_id
+        )
         report["mv_created"] = len(sqls)
+        report["errors_count"] += len(mv_list) - len(sqls)
+        if backup_run_id:
+            for mv in mv_list:
+                mark_recreated(
+                    backup_run_id,
+                    schema,
+                    mv.get("object_name", mv.get("name", "")),
+                    db_config,
+                )
 
-    # 4. Views (Wave 0 -> Wave N, bottom-up)
+    # 4. Views (depth ASC — root/base views first, then dependents)
     views = dependents.get("views", {})
     if views:
-        sqls = recreate_views(schema, views, db_config=db_config)
+        total_views = sum(len(v) for v in views.values())
+        sqls = recreate_views(schema, views, db_config=db_config, run_id=run_id)
         report["views_created"] = len(sqls)
+        report["errors_count"] += total_views - len(sqls)
+        if backup_run_id:
+            for depth_views in views.values():
+                for v in depth_views:
+                    mark_recreated(
+                        backup_run_id,
+                        schema,
+                        v.get("object_name", v.get("name", "")),
+                        db_config,
+                    )
 
     manifest.complete_phase("03-recreate-dependents")
 
@@ -213,31 +363,14 @@ def main():
 
     args = parser.parse_args()
 
-    logger = setup_logger("03-recreate-dependents", log_dir=args.log_dir)
-    logger.info("Phase 3: Recreate Dependent Objects — Starting")
-
-    # In production, dependents would be loaded from the manifest
-    # (objects recorded during Phase 1 drop)
-    manifest = Manifest(args.manifest)
-    manifest.load()
-    drop_phase = manifest.data.get("phases", {}).get("01-drop-dependents", {})
-    dropped = drop_phase.get("dropped", [])
-
-    # Reconstruct dependents from manifest
-    dependents = {
-        "indexes": [d for d in dropped if d["type"] == "index"],
-        "constraints": [d for d in dropped if d["type"] == "constraint"],
-        "materialized_views": [d for d in dropped if d["type"] == "materialized_view"],
-        "views": {},  # Would need wave info from config
-    }
+    setup_logger("03-recreate-dependents", log_dir=args.log_dir)
 
     report = run_recreate_dependents(
-        dependents=dependents,
         manifest_path=args.manifest,
         log_dir=args.log_dir,
     )
 
-    logger.ok(f"Phase 3 complete: {report}")
+    logger.info(f"Phase 3 complete: {report}")
 
 
 if __name__ == "__main__":

@@ -118,7 +118,8 @@ def discover_indexes(
         f"JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey) "
         f"WHERE n.nspname = '{schema}' "
         f"AND t.relname = '{table}' "
-        f"AND a.attname = '{column}';"
+        f"AND a.attname = '{column}' "
+        f"AND NOT EXISTS (SELECT 1 FROM pg_constraint pc WHERE pc.conindid = i.oid);"
     )
     result = execute_sql(sql, config=config)
     indexes = []
@@ -140,7 +141,7 @@ def discover_indexes(
 def discover_dependent_views(
     schema: str, table: str, config: dict | None = None
 ) -> list[dict]:
-    """Discover views that depend on a table."""
+    """Discover views that DIRECTLY depend on a table (flat, no recursion)."""
     sql = (
         f"SELECT DISTINCT c.relname, c.relkind "
         f"FROM pg_depend d "
@@ -162,6 +163,54 @@ def discover_dependent_views(
         if len(parts) >= 2:
             kind = "materialized_view" if parts[1].strip() == "m" else "view"
             views.append({"name": parts[0].strip(), "type": kind})
+    return views
+
+
+def discover_all_dependent_views(
+    schema: str, table: str, config: dict | None = None
+) -> list[dict]:
+    """
+    Recursively discover ALL views/MVs depending on a table (direct + transitive).
+
+    Uses a recursive CTE to walk the full dependency tree via pg_depend/pg_rewrite.
+    Returns list of {name, type, depth} dicts ordered by depth (deepest last).
+    """
+    sql = (
+        f"WITH RECURSIVE view_deps AS ("
+        f"  SELECT DISTINCT c.oid, c.relname, c.relkind, 0 AS depth "
+        f"  FROM pg_depend d "
+        f"  JOIN pg_rewrite r ON d.objid = r.oid "
+        f"  JOIN pg_class c ON r.ev_class = c.oid "
+        f"  JOIN pg_class t ON d.refobjid = t.oid "
+        f"  JOIN pg_namespace n ON t.relnamespace = n.oid "
+        f"  WHERE n.nspname = '{schema}' AND t.relname = '{table}' "
+        f"    AND c.relname != t.relname AND c.relkind IN ('v', 'm') "
+        f" UNION "
+        f"  SELECT DISTINCT c2.oid, c2.relname, c2.relkind, vd.depth + 1 "
+        f"  FROM view_deps vd "
+        f"  JOIN pg_depend d2 ON d2.refobjid = vd.oid "
+        f"  JOIN pg_rewrite r2 ON d2.objid = r2.oid "
+        f"  JOIN pg_class c2 ON r2.ev_class = c2.oid "
+        f"  WHERE c2.relname != vd.relname AND c2.relkind IN ('v', 'm') "
+        f") "
+        f"SELECT DISTINCT relname, relkind, MAX(depth) AS depth "
+        f"FROM view_deps GROUP BY relname, relkind ORDER BY depth;"
+    )
+    result = execute_sql(sql, config=config)
+    views = []
+    for line in result.strip().splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("|")
+        if len(parts) >= 3:
+            kind = "materialized_view" if parts[1].strip() == "m" else "view"
+            views.append(
+                {
+                    "name": parts[0].strip(),
+                    "type": kind,
+                    "depth": int(parts[2].strip()),
+                }
+            )
     return views
 
 
@@ -203,6 +252,60 @@ def generate_manifest(
         {"table": c["table"], "column": c["column"]} for c in columns
     ]
     m._save()
+
+
+def validate_columns_exist(
+    config: dict,
+    schema: str = "perseus",
+    db_config: dict | None = None,
+) -> tuple[list[dict], list[dict]]:
+    """
+    Check all YAML columns against information_schema.columns.
+
+    Returns (valid_columns, phantom_columns).
+    Each entry is {table, column}.
+
+    Raises RuntimeError if phantom_count > 50% of total (safety valve D5).
+    """
+    all_columns = get_all_target_columns(config)
+    if not all_columns:
+        return ([], [])
+
+    # Build batch query — single round-trip to DB
+    pairs = ", ".join(f"('{col['table']}', '{col['column']}')" for col in all_columns)
+    sql = (
+        f"SELECT table_name, column_name "
+        f"FROM information_schema.columns "
+        f"WHERE table_schema = '{schema}' "
+        f"AND (table_name, column_name) IN ({pairs});"
+    )
+    result = execute_sql(sql, config=db_config).strip()
+
+    existing = set()
+    for line in result.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("|")
+        if len(parts) >= 2:
+            existing.add((parts[0].strip(), parts[1].strip()))
+
+    valid = []
+    phantoms = []
+    for col in all_columns:
+        if (col["table"], col["column"]) in existing:
+            valid.append(col)
+        else:
+            phantoms.append(col)
+
+    # Safety valve (D5): if phantom_count > 50% → abort
+    if phantoms and len(phantoms) > len(all_columns) * 0.5:
+        raise RuntimeError(
+            f"SAFETY VALVE: {len(phantoms)}/{len(all_columns)} columns "
+            f"({len(phantoms) * 100 // len(all_columns)}%) appear phantom. "
+            f"Likely wrong schema/database. Aborting — YAML NOT rewritten."
+        )
+
+    return (valid, phantoms)
 
 
 def run_preflight(

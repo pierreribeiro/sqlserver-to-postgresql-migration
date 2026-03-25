@@ -103,6 +103,53 @@ def execute_sql(
     return result.stdout
 
 
+def execute_sql_safe(
+    sql: str,
+    *,
+    config: dict | None = None,
+    run_id: str | None = None,
+    phase: str | None = None,
+    context: dict | None = None,
+) -> tuple[bool, str, str | None]:
+    """
+    Execute SQL, never raises. Returns (success, stdout, error_or_None).
+
+    If run_id/phase provided, logs errors to permanent error log table.
+
+    Args:
+        sql: SQL statement to execute
+        config: DB config dict
+        run_id: pipeline run identifier (for error logging)
+        phase: pipeline phase name (for error logging)
+        context: optional dict with schema_name, table_name, column_name,
+                 object_type, object_name, operation (for error logging)
+
+    Returns:
+        Tuple of (success: bool, stdout: str, error_message: str | None)
+    """
+    try:
+        result = execute_sql(sql, config=config)
+        return (True, result, None)
+    except RuntimeError as e:
+        error_msg = str(e)
+        if run_id and phase:
+            from lib.error_log import (
+                log_error,
+            )  # lazy import — breaks circular dependency
+
+            log_error(
+                run_id,
+                phase,
+                "ERROR",
+                error_msg,
+                sql_attempted=sql,
+                error_detail=error_msg,
+                db_config=config,
+                **(context or {}),
+            )
+        return (False, "", error_msg)
+
+
 def execute_sql_file(
     file_path: str,
     config: dict | None = None,

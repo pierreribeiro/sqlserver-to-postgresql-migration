@@ -9,8 +9,10 @@ Usage:
 """
 
 import argparse
+import logging
 import os
 import sys
+from pathlib import Path
 
 from lib.db import execute_sql
 from lib.dependency import get_all_target_columns, load_config
@@ -18,11 +20,14 @@ from lib.logger import setup_logger
 from lib.manifest import Manifest
 from lib.sql_templates import verify_column_type_sql
 
+logger = logging.getLogger("citext.validate-conversion")
+
 
 def validate_column_types(
     schema: str,
     columns: list[dict],
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """
     Validate that all target columns have been converted to citext.
@@ -31,6 +36,7 @@ def validate_column_types(
         schema: database schema
         columns: list of {table, column} dicts
         db_config: optional DB config
+        run_id: optional run_id for error logging
 
     Returns:
         dict with passed (bool), total (int), failures (list)
@@ -38,7 +44,36 @@ def validate_column_types(
     failures = []
     for col in columns:
         sql = verify_column_type_sql(schema, col["table"], col["column"])
-        result = execute_sql(sql, config=db_config).strip()
+        try:
+            result = execute_sql(sql, config=db_config).strip()
+        except RuntimeError as e:
+            logger.error(
+                f"Validation query failed for {col['table']}.{col['column']}: {e}"
+            )
+            if run_id:
+                from lib.error_log import log_error
+
+                log_error(
+                    run_id,
+                    "04-validate-conversion",
+                    "ERROR",
+                    str(e),
+                    schema_name=schema,
+                    table_name=col["table"],
+                    column_name=col["column"],
+                    object_type="column",
+                    operation="VALIDATE",
+                    db_config=db_config,
+                )
+            failures.append(
+                {
+                    "table": col["table"],
+                    "column": col["column"],
+                    "actual_type": "ERROR",
+                }
+            )
+            continue
+
         if result != "citext":
             failures.append(
                 {
@@ -160,6 +195,7 @@ def run_validation(
     log_dir: str = "./logs",
     schema: str = "perseus",
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """
     Orchestrate Phase 4: full validation of CITEXT conversion.
@@ -168,14 +204,17 @@ def run_validation(
         Report dict with validation results per category.
     """
     manifest = Manifest(manifest_path)
-    manifest.create()
+    if Path(manifest_path).exists():
+        manifest.load()
+    else:
+        manifest.create()
     manifest.start_phase("04-validate")
 
     all_columns = get_all_target_columns(config)
 
     # 1. Column type validation
     column_types_result = validate_column_types(
-        schema, all_columns, db_config=db_config
+        schema, all_columns, db_config=db_config, run_id=run_id
     )
 
     manifest.complete_phase("04-validate")
@@ -195,8 +234,8 @@ def main():
 
     args = parser.parse_args()
 
-    logger = setup_logger("04-validate-conversion", log_dir=args.log_dir)
-    logger.info("Phase 4: Validate CITEXT Conversion — Starting")
+    log = setup_logger("04-validate-conversion", log_dir=args.log_dir)
+    log.info("Phase 4: Validate CITEXT Conversion — Starting")
 
     config = load_config(args.config)
     report = run_validation(
@@ -206,9 +245,9 @@ def main():
     )
 
     if report["overall_passed"]:
-        logger.ok("Phase 4 complete: ALL validations PASSED")
+        log.ok("Phase 4 complete: ALL validations PASSED")
     else:
-        logger.warning(f"Phase 4 complete: FAILURES detected — {report}")
+        log.warning(f"Phase 4 complete: FAILURES detected — {report}")
 
 
 if __name__ == "__main__":

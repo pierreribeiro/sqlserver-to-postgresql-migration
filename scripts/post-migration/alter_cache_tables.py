@@ -9,23 +9,57 @@ Usage:
 """
 
 import argparse
+import logging
 import os
 import sys
+from pathlib import Path
 
-from lib.db import execute_sql
+from lib.db import execute_sql, execute_sql_safe
 from lib.dependency import get_cache_columns, load_config
 from lib.logger import setup_logger
 from lib.manifest import Manifest
-from lib.sql_templates import alter_column_sql
+from lib.sql_templates import alter_column_sql, verify_column_type_sql
+
+
+def _is_already_citext(
+    schema: str, table: str, column: str, db_config: dict | None = None
+) -> bool:
+    """Check if a column is already CITEXT via information_schema."""
+    sql = verify_column_type_sql(schema, table, column)
+    try:
+        result = execute_sql(sql, config=db_config).strip()
+        return result == "citext"
+    except RuntimeError:
+        return False
 
 
 def alter_cache_column(
-    schema: str, table: str, column: str, db_config: dict | None = None
-) -> str:
-    """ALTER a single cache table column to CITEXT and return the SQL used."""
+    schema: str,
+    table: str,
+    column: str,
+    db_config: dict | None = None,
+    run_id: str | None = None,
+) -> str | None:
+    """ALTER a single cache table column to CITEXT. Returns SQL or None on error."""
     sql = alter_column_sql(schema, table, column)
-    execute_sql(sql, config=db_config)
-    return sql
+    success, _, error = execute_sql_safe(
+        sql,
+        config=db_config,
+        run_id=run_id,
+        phase="02b-alter-cache-tables",
+        context={
+            "schema_name": schema,
+            "table_name": table,
+            "column_name": column,
+            "object_type": "column",
+            "operation": "ALTER",
+        },
+    )
+    if success:
+        return sql
+    logger = logging.getLogger("citext.alter-cache-tables")
+    logger.error(f"ALTER {schema}.{table}.{column} failed: {error}")
+    return None
 
 
 def run_alter_cache_tables(
@@ -34,6 +68,7 @@ def run_alter_cache_tables(
     log_dir: str = "./logs",
     schema: str = "perseus",
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """
     Orchestrate Phase 2b: ALTER cache table columns.
@@ -42,12 +77,17 @@ def run_alter_cache_tables(
     Uses Direct ALTER (no TRUNCATE).
     """
     manifest = Manifest(manifest_path)
-    manifest.create()
+    if Path(manifest_path).exists():
+        manifest.load()
+    else:
+        manifest.create()
     manifest.start_phase("02b-alter-cache-tables")
 
+    logger = logging.getLogger("citext.alter-cache-tables")
     cache_tables_config = config.get("cache_tables", {}).get("tables", [])
 
     columns_converted = 0
+    errors_count = 0
     tables_processed = []
     executed_sqls = []
 
@@ -56,12 +96,25 @@ def run_alter_cache_tables(
         for col in table_group.get("columns", []):
             table = col["table"]
             column = col["column"]
-            sql = alter_cache_column(schema, table, column, db_config=db_config)
-            manifest.record_column_converted(table, column, "character varying", None)
-            columns_converted += 1
-            executed_sqls.append(sql)
-            if table not in tables_processed:
-                tables_processed.append(table)
+            if _is_already_citext(schema, table, column, db_config=db_config):
+                logger.warning(
+                    f"Cache column {schema}.{table}.{column} already CITEXT — skipping"
+                )
+                manifest.record_column_converted(table, column, "citext", None)
+                continue
+            sql = alter_cache_column(
+                schema, table, column, db_config=db_config, run_id=run_id
+            )
+            if sql:
+                manifest.record_column_converted(
+                    table, column, "character varying", None
+                )
+                columns_converted += 1
+                executed_sqls.append(sql)
+                if table not in tables_processed:
+                    tables_processed.append(table)
+            else:
+                errors_count += 1
 
     manifest.complete_phase("02b-alter-cache-tables")
 
@@ -69,6 +122,7 @@ def run_alter_cache_tables(
         "columns_converted": columns_converted,
         "tables_processed": tables_processed,
         "executed_sqls": executed_sqls,
+        "errors_count": errors_count,
     }
 
 

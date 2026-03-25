@@ -9,11 +9,12 @@ Usage:
 """
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
 
-from lib.db import execute_sql
+from lib.db import execute_sql, execute_sql_safe
 from lib.dependency import (
     get_all_target_columns,
     get_cache_columns,
@@ -56,25 +57,82 @@ def alter_table_columns_with_resume(
     columns: list[str],
     manifest: Manifest,
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> list[str]:
     """ALTER columns with resume support — skip already converted."""
+    logger = logging.getLogger("citext.alter-columns")
     sqls = []
     for col in columns:
         if manifest.is_column_converted(table, col):
             continue
-        sql = alter_single_column(schema, table, col, db_config=db_config)
-        manifest.record_column_converted(table, col, "character varying", None)
-        sqls.append(sql)
+        if verify_column_type(schema, table, col, db_config=db_config):
+            logger.warning(f"Column {schema}.{table}.{col} already CITEXT — skipping")
+            manifest.record_column_converted(table, col, "citext", None)
+            continue
+        sql = alter_column_sql(schema, table, col)
+        success, _, error = execute_sql_safe(
+            sql,
+            config=db_config,
+            run_id=run_id,
+            phase="02-alter-columns",
+            context={
+                "schema_name": schema,
+                "table_name": table,
+                "column_name": col,
+                "object_type": "column",
+                "operation": "ALTER",
+            },
+        )
+        if success:
+            manifest.record_column_converted(table, col, "character varying", None)
+            sqls.append(sql)
+        else:
+            logger.error(f"ALTER {schema}.{table}.{col} failed: {error}")
     return sqls
 
 
 def alter_fk_group(
-    schema: str, columns: list[dict], db_config: dict | None = None
-) -> str:
-    """ALTER FK group columns in a single transaction."""
+    schema: str,
+    columns: list[dict],
+    db_config: dict | None = None,
+    run_id: str | None = None,
+) -> str | None:
+    """ALTER FK group columns in a single transaction. Returns SQL or None on error."""
     sql = fk_group_alter_sql(schema, columns)
-    execute_sql(sql, config=db_config)
-    return sql
+    success, _, error = execute_sql_safe(
+        sql,
+        config=db_config,
+        run_id=run_id,
+        phase="02-alter-columns",
+        context={
+            "schema_name": schema,
+            "object_type": "fk_group",
+            "operation": "ALTER",
+        },
+    )
+    if success:
+        return sql
+    logger = logging.getLogger("citext.alter-columns")
+    col_names = ", ".join(f"{c['table']}.{c['column']}" for c in columns)
+    logger.error(f"FK group ALTER failed ({col_names}): {error}")
+    # Log each column in the group as failed
+    if run_id:
+        from lib.error_log import log_error
+
+        for c in columns:
+            log_error(
+                run_id,
+                "02-alter-columns",
+                "ERROR",
+                f"FK group ALTER failed — column part of failed transaction: {error}",
+                schema_name=schema,
+                table_name=c["table"],
+                column_name=c["column"],
+                object_type="fk_group_column",
+                operation="ALTER",
+                db_config=db_config,
+            )
+    return None
 
 
 def verify_column_type(
@@ -82,8 +140,11 @@ def verify_column_type(
 ) -> bool:
     """Verify a column has been converted to CITEXT."""
     sql = verify_column_type_sql(schema, table, column)
-    result = execute_sql(sql, config=db_config)
-    return result.strip() == "citext"
+    try:
+        result = execute_sql(sql, config=db_config)
+        return result.strip() == "citext"
+    except RuntimeError:
+        return False
 
 
 def run_alter_columns(
@@ -92,6 +153,7 @@ def run_alter_columns(
     log_dir: str = "./logs",
     schema: str = "perseus",
     db_config: dict | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """
     Orchestrate Phase 2a: ALTER regular table columns.
@@ -110,6 +172,7 @@ def run_alter_columns(
     regular_columns = get_regular_columns(config)
 
     columns_converted = 0
+    errors_count = 0
     tables_processed = []
 
     # Group regular columns by table
@@ -124,30 +187,51 @@ def run_alter_columns(
         if not columns:
             continue
         sqls = alter_table_columns_with_resume(
-            schema, table, columns, manifest, db_config=db_config
+            schema, table, columns, manifest, db_config=db_config, run_id=run_id
         )
         columns_converted += len(sqls)
+        errors_count += len(columns) - len(sqls)
         if sqls:
             tables_processed.append(table)
 
     # Process FK groups
+    logger = logging.getLogger("citext.alter-columns")
     for group in config.get("fk_groups", []):
         fk_columns = group.get("columns", [])
-        if fk_columns:
-            alter_fk_group(schema, fk_columns, db_config=db_config)
-            for col in fk_columns:
-                manifest.record_column_converted(
-                    col["table"], col["column"], "character varying", None
+        columns_to_alter = []
+        for col in fk_columns:
+            if verify_column_type(
+                schema, col["table"], col["column"], db_config=db_config
+            ):
+                logger.warning(
+                    f"FK column {schema}.{col['table']}.{col['column']} already CITEXT — skipping"
                 )
-                columns_converted += 1
-                if col["table"] not in tables_processed:
-                    tables_processed.append(col["table"])
+                manifest.record_column_converted(
+                    col["table"], col["column"], "citext", None
+                )
+            else:
+                columns_to_alter.append(col)
+        if columns_to_alter:
+            sql = alter_fk_group(
+                schema, columns_to_alter, db_config=db_config, run_id=run_id
+            )
+            if sql:
+                for col in columns_to_alter:
+                    manifest.record_column_converted(
+                        col["table"], col["column"], "character varying", None
+                    )
+                    columns_converted += 1
+                    if col["table"] not in tables_processed:
+                        tables_processed.append(col["table"])
+            else:
+                errors_count += len(columns_to_alter)
 
     manifest.complete_phase("02-alter-columns")
 
     return {
         "columns_converted": columns_converted,
         "tables_processed": tables_processed,
+        "errors_count": errors_count,
     }
 
 

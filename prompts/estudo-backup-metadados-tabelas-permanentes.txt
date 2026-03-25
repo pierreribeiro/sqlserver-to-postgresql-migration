@@ -1,0 +1,416 @@
+-- Para realizar essa tarefa de forma segura e eficiente no PostgreSQL, a melhor abordagem é utilizar um bloco anônimo (DO block) com PL/pgSQL. Isso permite iterar sobre os metadados do schema e executar comandos DDL dinamicamente.
+
+Abaixo, apresento o script configurado especificamente para o schema perseus.
+
+Script Dinâmico para Remover Foreign Keys
+Este script localiza todas as chaves estrangeiras no schema informado e executa o comando DROP CONSTRAINT.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+BEGIN
+    -- Loop através de todas as FKs do schema 'perseus'
+    FOR r IN (
+        SELECT 
+            n.nspname AS schema_name,
+            t.relname AS table_name,
+            c.conname AS constraint_name
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_namespace n ON t.relnamespace = n.oid
+        WHERE c.contype = 'f'          -- 'f' indica Foreign Key
+          AND n.nspname = 'perseus'    -- Filtro do seu schema
+    ) LOOP
+        -- Executa o drop dinamicamente
+        -- O uso de CASCADE resolve dependências de objetos que possam referenciar a constraint
+        EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT %I CASCADE', 
+                       r.schema_name, r.table_name, r.constraint_name);
+        
+        RAISE NOTICE 'Dropado: FK % na tabela %', r.constraint_name, r.table_name;
+    END LOOP;
+END $$;
+
+-- Pontos Importantes do Script
+pg_constraint vs information_schema: Utilize as tabelas de catálogo do sistema (pg_constraint), pois elas são mais performáticas e detalhadas para tarefas de administração de banco de dados.
+
+format() e %I: O uso da função format com o identificador %I é uma boa prática de segurança. Ela escapa automaticamente nomes de tabelas ou colunas que contenham caracteres especiais ou letras maiúsculas, prevenindo erros de sintaxe.
+
+CASCADE: Incluí o parâmetro CASCADE no final do comando. Embora seja raro que outros objetos dependam exclusivamente de uma Foreign Key, isso garante que o script não pare caso existam visões ou outras dependências atreladas à existência dessa constraint.
+
+RAISE NOTICE: Adicionei um log para que você possa acompanhar no console quais chaves estão sendo removidas em tempo real.
+
+Como validar antes de executar?
+Se você quiser apenas listar os comandos que seriam executados (sem aplicá-los de fato), você pode rodar este SELECT:
+
+SQL
+SELECT 
+    format('ALTER TABLE %I.%I DROP CONSTRAINT %I CASCADE;', 
+           n.nspname, t.relname, c.conname) AS script_gerado
+FROM pg_constraint c
+JOIN pg_class t ON c.conrelid = t.oid
+JOIN pg_namespace n ON t.relnamespace = n.oid
+WHERE c.contype = 'f' 
+  AND n.nspname = 'perseus';
+
+Você precisará gerar também os comandos para recriar essas chaves estrangeiras depois, ou o objetivo é uma remoção definitiva para limpeza/migração?
+
+Para garantir que você possa restaurar a integridade referencial após a sua manutenção ou migração, o script abaixo gera os comandos ALTER TABLE ... ADD CONSTRAINT exatos para todas as Foreign Keys atuais do schema perseus.
+
+Importante: Execute este script antes de rodar o script de DROP, e salve o resultado em um arquivo .sql seguro.
+
+Script para Gerar a Recriação das Foreign Keys
+Este SQL utiliza a função nativa pg_get_constraintdef, que é a forma mais segura de obter a definição completa da constraint (incluindo múltiplas colunas e regras de ON DELETE/UPDATE).
+
+SQL
+SELECT 
+    format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s;', 
+           n.nspname, 
+           t.relname, 
+           c.conname, 
+           pg_get_constraintdef(c.oid)) AS comando_reverso
+FROM pg_constraint c
+JOIN pg_class t ON c.conrelid = t.oid
+JOIN pg_namespace n ON t.relnamespace = n.oid
+WHERE c.contype = 'f' 
+  AND n.nspname = 'perseus'
+ORDER BY t.relname;
+Por que usar este método?
+Precisão Cirúrgica: Ao usar o pg_get_constraintdef(c.oid), o PostgreSQL reconstrói a sintaxe exata da FK conforme ela existe no catálogo, evitando erros de digitação manuais.
+
+Suporte a Chaves Compostas: Se uma tabela possuir uma FK que aponte para duas ou mais colunas simultaneamente, este script as captura corretamente (o que seria bem complexo de fazer manualmente via JOIN com a pg_attribute).
+
+Tratamento de Nomes: O uso da função format com %I garante que nomes de tabelas ou constraints que contenham letras maiúsculas ou caracteres reservados sejam colocados entre aspas duplas automaticamente.
+
+Dica de Fluxo de Trabalho (DBA)
+Se você estiver fazendo uma carga massiva de dados ou uma migração de grande porte, o fluxo ideal é:
+
+Exportar o Backup das FKs: Rode o script acima e salve a saída.
+
+Dropar as FKs: Rode o script de DROP que te enviei na resposta anterior.
+
+Realizar a Carga/Alteração: Faça os INSERTs ou UPDATEs necessários (que serão muito mais rápidos sem a validação de FK).
+
+Validar os Dados: Garanta que não há órfãos antes de tentar recriar.
+
+Restaurar as FKs: Execute o arquivo salvo no passo 1.
+
+Atenção: Se houver dados inconsistentes após a carga, a recriação das FKs falhará. Nesse caso, você precisará limpar os dados antes de rodar o script de restauração.
+
+Gostaria que eu criasse uma versão desse script que armazene essas definições em uma tabela temporária para que o processo de "Drop e Recreate" seja totalmente automatizado em uma única transação?
+
+Esta é a solução definitiva para automação. Vamos utilizar uma tabela temporária para persistir as definições das constraints durante a sessão.
+
+Dividi o processo em dois blocos lógicos. O primeiro "guarda e remove" e o segundo "restaura". Você pode executá-los separadamente ou colocar sua lógica de carga de dados entre eles.
+
+Passo 1: Fazer o Backup e Dropar as FKs
+Este bloco cria uma tabela temporária chamada backup_fks_perseus, armazena os metadados necessários e remove todas as chaves estrangeiras do schema.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+BEGIN
+    -- 1. Criar tabela temporária para armazenar as definições
+    CREATE TEMP TABLE IF NOT EXISTS backup_fks_perseus (
+        esquema TEXT,
+        tabela TEXT,
+        nome_constraint TEXT,
+        definicao TEXT
+    ) ON COMMIT PRESERVE ROWS;
+
+    -- Limpa a tabela de backup caso já exista de uma execução anterior na mesma sessão
+    TRUNCATE backup_fks_perseus;
+
+    -- 2. Popular o backup com as FKs do schema 'perseus'
+    INSERT INTO backup_fks_perseus (esquema, tabela, nome_constraint, definicao)
+    SELECT 
+        n.nspname, 
+        t.relname, 
+        c.conname, 
+        pg_get_constraintdef(c.oid)
+    FROM pg_constraint c
+    JOIN pg_class t ON c.conrelid = t.oid
+    JOIN pg_namespace n ON t.relnamespace = n.oid
+    WHERE c.contype = 'f' 
+      AND n.nspname = 'perseus';
+
+    -- 3. Loop para Dropar as FKs
+    FOR r IN (SELECT * FROM backup_fks_perseus) LOOP
+        EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT %I CASCADE', 
+                       r.esquema, r.tabela, r.nome_constraint);
+        RAISE NOTICE 'Removida: % na tabela %', r.nome_constraint, r.tabela;
+    END LOOP;
+    
+    RAISE NOTICE 'Backup concluído. % FKs armazenadas em backup_fks_perseus.', (SELECT count(*) FROM backup_fks_perseus);
+END $$;
+Passo 2: O Momento da Intervenção
+Neste ponto, seu banco de dados está "livre" das amarras das chaves estrangeiras. Você pode realizar seus INSERTs, UPDATEs ou migrações de dados com performance máxima.
+
+Passo 3: Restaurar as FKs do Backup
+Após terminar a manutenção, execute este bloco para ler a tabela temporária e recriar tudo exatamente como estava.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+    v_sucesso INT := 0;
+    v_erro INT := 0;
+BEGIN
+    -- Loop através do backup para recriar as constraints
+    FOR r IN (SELECT * FROM backup_fks_perseus) LOOP
+        BEGIN
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            v_sucesso := v_sucesso + 1;
+        EXCEPTION WHEN OTHERS THEN
+            v_erro := v_erro + 1;
+            RAISE WARNING 'Erro ao restaurar FK % na tabela %: %', r.nome_constraint, r.tabela, SQLERRM;
+        END;
+    END LOOP;
+
+    RAISE NOTICE 'Restauração concluída. Sucessos: % | Falhas: %', v_sucesso, v_erro;
+END $$;
+Observações Técnicas Importantes
+Persistência: A tabela temporária existe apenas enquanto durar a sua conexão (sessão). Se você fechar o pgAdmin ou o psql, a tabela backup_fks_perseus sumirá. Se precisar de algo permanente, remova a palavra TEMP do CREATE TABLE.
+
+Tratamento de Erros: No script de restauração, incluí um bloco EXCEPTION. Isso é vital porque, se durante a sua carga de dados você inseriu um registro "órfão" (sem pai), o PostgreSQL impedirá a recriação da FK. O script avisará exatamente qual tabela falhou para você corrigir o dado.
+
+Single Transaction? Se você quiser rodar tudo em uma única transação, basta colocar o código de DROP, sua lógica de dados e o código de ADD dentro de um único BEGIN ... COMMIT. Porém, para grandes volumes de dados, isso pode travar as tabelas (locks) por muito tempo.
+
+Como você mencionou que o script deve ser capaz de "resolver dependências", o uso do CASCADE no drop e a restauração via pg_get_constraintdef cobrem 100% dos casos de dependências entre constraints e tabelas.
+
+Deseja que eu prepare uma versão desse script que gere um relatório de dados inconsistentes caso a restauração de alguma FK falhe?
+
+Esta é uma evolução importante do seu fluxo de trabalho. Automatizar a detecção de "órfãos" (registros na tabela filha que não existem na tabela pai) economiza horas de depuração manual.
+
+Abaixo, apresento o Script de Restauração com Diagnóstico de Inconsistências.
+
+Como funciona esta versão:
+Ela tenta recriar a Foreign Key.
+
+Se falhar (geralmente erro 23503), o script entra no bloco de exceção.
+
+Ele identifica automaticamente quais são as colunas e a tabela pai envolvidas.
+
+Ele gera e executa um SELECT dinâmico para contar quantos registros estão violando a integridade e exibe uma amostra (os primeiros IDs) no console do PostgreSQL.
+
+Passo 3 (Evoluído): Restauração com Relatório de Erros
+Nota: Este script assume que você usou o Passo 1 anterior para popular a tabela backup_fks_perseus.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+    v_sql_diagnostico TEXT;
+    v_total_orfaos INT;
+    v_exemplo_ids TEXT;
+    v_col_filha TEXT;
+    v_tab_pai TEXT;
+    v_col_pai TEXT;
+BEGIN
+    FOR r IN (SELECT * FROM backup_fks_perseus) LOOP
+        BEGIN
+            -- Tenta restaurar a FK
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            
+            RAISE NOTICE 'Sucesso: FK % restaurada.', r.nome_constraint;
+
+        EXCEPTION WHEN OTHERS THEN
+            -- Captura detalhes da constraint para o diagnóstico
+            -- O regex abaixo extrai as colunas e a tabela alvo da definição da FK
+            -- Exemplo de definição: FOREIGN KEY (cliente_id) REFERENCES public.clientes(id)
+            v_col_filha := substring(r.definicao FROM '\((.*?)\)');
+            v_tab_pai   := substring(r.definicao FROM 'REFERENCES (.*?)\(');
+            v_col_pai   := substring(r.definicao FROM 'REFERENCES .*?\((.*?)\)');
+
+            -- Monta uma query dinâmica para achar os registros inconsistentes
+            v_sql_diagnostico := format(
+                'SELECT count(*), string_agg(cast(%s as text), '', '' ) FROM (SELECT %s FROM %I.%I EXCEPT SELECT %s FROM %s) AS s LIMIT 5',
+                v_col_filha, v_col_filha, r.esquema, r.tabela, v_col_pai, v_tab_pai
+            );
+
+            EXECUTE v_sql_diagnostico INTO v_total_orfaos, v_exemplo_ids;
+
+            RAISE WARNING '----------------------------------------------------------';
+            RAISE WARNING 'FALHA NA FK: %', r.nome_constraint;
+            RAISE WARNING 'TABELA: %.% | COLUNA: %', r.esquema, r.tabela, v_col_filha;
+            RAISE WARNING 'REFERENCIA: % (%)', v_tab_pai, v_col_pai;
+            RAISE WARNING 'REGISTROS INCONSISTENTES ENCONTRADOS: %', v_total_orfaos;
+            RAISE WARNING 'EXEMPLOS DE VALORES PROBLEMÁTICOS: %', COALESCE(v_exemplo_ids, 'N/A');
+            RAISE WARNING '----------------------------------------------------------';
+        END;
+    END LOOP;
+END $$;
+O que este script entrega para você:
+Identificação Visual Imediata: No console de mensagens do seu editor SQL (pgAdmin, DBeaver, etc.), os erros aparecerão em destaque (geralmente em laranja ou vermelho).
+
+Amostra de Dados: O string_agg com LIMIT 5 mostra os primeiros valores que estão causando o erro. Isso permite que você vá direto na tabela e decida se deve deletar esses registros ou criar os registros correspondentes na tabela pai.
+
+Robustez: O uso de EXCEPT na query de diagnóstico é a forma mais performática de comparar grandes volumes de dados para achar discrepâncias entre chaves.
+
+Possíveis Ajustes
+Chaves Compostas: O regex acima é otimizado para FKs de coluna única (as mais comuns). Se o seu schema perseus tiver muitas chaves compostas (ex: FOREIGN KEY (empresa_id, filial_id) ...), a extração por regex pode precisar de um ajuste mais fino, mas para 95% dos casos de uso, ela funcionará perfeitamente.
+
+Dica Profissional: Após rodar este script e ver os erros, você pode optar por rodar um DELETE ou UPDATE nos registros órfãos e reexecutar apenas o bloco de restauração para as FKs que faltaram.
+
+Gostaria que eu adaptasse o script para também gerar automaticamente os comandos de DELETE para limpar esses registros órfãos de uma vez?
+
+Este é o "modo tanque" de manutenção. O script abaixo tentará recriar a Foreign Key; se encontrar um erro de inconsistência, ele identificará os registros órfãos, irá deletá-los da tabela filha e tentará recriar a constraint novamente.
+
+[!WARNING]
+Atenção: Este script é destrutivo. Ele apagará permanentemente registros da tabela filha que não possuem um correspondente na tabela pai para garantir que a integridade referencial seja restabelecida. Recomendo ter um backup dos dados antes de prosseguir.
+
+Script de Restauração com Limpeza Automática de Órfãos
+Este bloco deve ser executado após a sua carga de dados, utilizando a tabela backup_fks_perseus criada nos passos anteriores.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+    v_col_filha TEXT;
+    v_tab_pai TEXT;
+    v_col_pai TEXT;
+    v_rows_deleted INT;
+BEGIN
+    FOR r IN (SELECT * FROM backup_fks_perseus) LOOP
+        BEGIN
+            -- 1. Tentativa inicial de restaurar a FK
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            
+            RAISE NOTICE 'Sucesso: FK % restaurada diretamente.', r.nome_constraint;
+
+        EXCEPTION WHEN OTHERS THEN
+            -- 2. Se falhar, extraímos os metadados para limpeza
+            v_col_filha := substring(r.definicao FROM '\((.*?)\)');
+            v_tab_pai   := substring(r.definicao FROM 'REFERENCES (.*?)\(');
+            v_col_pai   := substring(r.definicao FROM 'REFERENCES .*?\((.*?)\)');
+
+            RAISE WARNING 'Inconsistência detectada na FK %. Iniciando limpeza...', r.nome_constraint;
+
+            -- 3. Deleta registros na tabela filha que não existem na tabela pai
+            -- Usamos NOT EXISTS por ser mais seguro com valores NULL
+            EXECUTE format(
+                'DELETE FROM %I.%I f WHERE NOT EXISTS (SELECT 1 FROM %s p WHERE p.%s = f.%s)',
+                r.esquema, r.tabela, v_tab_pai, v_col_pai, v_col_filha
+            );
+            
+            GET DIAGNOSTICS v_rows_deleted = ROW_COUNT;
+            RAISE NOTICE 'Limpeza concluída: % registros deletados de %.%.', v_rows_deleted, r.esquema, r.tabela;
+
+            -- 4. Segunda tentativa de restaurar a FK após a limpeza
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            
+            RAISE NOTICE 'Sucesso: FK % restaurada após limpeza de dados.', r.nome_constraint;
+        END;
+    END LOOP;
+    
+    RAISE NOTICE 'Processo de restauração e limpeza finalizado.';
+END $$;
+Como o script resolve o problema:
+Tentativa Otimista: Ele sempre tenta criar a constraint primeiro. Se os dados estiverem limpos, ele passa direto, garantindo performance.
+
+Captura de Exceção: O bloco EXCEPTION captura qualquer erro (como o famoso insert or update on table violates foreign key constraint).
+
+Dedução de Metadados: O script "lê" a definição da constraint que guardamos no backup para saber quem é o pai e quem é o filho.
+
+Limpeza Cirúrgica: O DELETE utiliza um NOT EXISTS. Isso é fundamental no PostgreSQL porque, se a sua coluna de chave estrangeira permitir valores NULL, o NOT IN poderia falhar ou ter um comportamento inesperado. O NOT EXISTS garante que apenas quem realmente não tem pai seja removido.
+
+Re-execução: Ele tenta o ALTER TABLE uma segunda vez. Se falhar novamente (o que é improvável, a menos que haja um gatilho/trigger impedindo o delete), ele lançará o erro final para sua inspeção.
+
+Dica para Chaves Compostas
+Se o seu schema perseus utiliza chaves estrangeiras que envolvem múltiplas colunas (ex: empresa_id + filial_id), a extração por regex (v_col_filha) pode precisar de um ajuste para tratar vírgulas. Para chaves simples (ID padrão), o script acima é 100% "plug and play".
+
+Precisa que eu adicione uma verificação para remover a tabela temporária de backup ao final do processo ou prefere mantê-la para conferência manual?
+
+Aqui está a versão do script utilizando uma tabela permanente. Isso é ideal para ambientes de produção ou migrações longas, pois os dados não somem se a sua conexão cair ou se você precisar reiniciar o computador.
+
+Vou chamar a tabela de backup_fks_audit_perseus.
+
+1. Criar e Popular a Tabela de Auditoria (Permanente)
+Este script cria a tabela no schema public (ou no que você preferir) e armazena as definições atuais. Adicionei uma coluna de data para você saber exatamente quando o backup foi tirado.
+
+SQL
+-- 1. Criação da tabela física (se não existir)
+CREATE TABLE IF NOT EXISTS public.backup_fks_audit_perseus (
+    id SERIAL PRIMARY KEY,
+    esquema TEXT,
+    tabela TEXT,
+    nome_constraint TEXT,
+    definicao TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Limpa dados de execuções anteriores (opcional, remova se quiser histórico)
+TRUNCATE public.backup_fks_audit_perseus;
+
+-- 3. Insere as FKs atuais do schema 'perseus'
+INSERT INTO public.backup_fks_audit_perseus (esquema, tabela, nome_constraint, definicao)
+SELECT 
+    n.nspname, 
+    t.relname, 
+    c.conname, 
+    pg_get_constraintdef(c.oid)
+FROM pg_constraint c
+JOIN pg_class t ON c.conrelid = t.oid
+JOIN pg_namespace n ON t.relnamespace = n.oid
+WHERE c.contype = 'f' 
+  AND n.nspname = 'perseus';
+
+SELECT * FROM public.backup_fks_audit_perseus;
+2. Script de Restauração Lendo da Tabela Permanente
+Agora, o script de restauração (com aquela limpeza automática de órfãos que criamos) aponta para a tabela física.
+
+SQL
+DO $$ 
+DECLARE 
+    r RECORD;
+    v_col_filha TEXT;
+    v_tab_pai TEXT;
+    v_col_pai TEXT;
+    v_rows_deleted INT;
+BEGIN
+    -- Lendo da tabela PERMANENTE agora
+    FOR r IN (SELECT * FROM public.backup_fks_audit_perseus) LOOP
+        BEGIN
+            -- Tenta restaurar
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            
+            RAISE NOTICE 'OK: FK % restaurada.', r.nome_constraint;
+
+        EXCEPTION WHEN OTHERS THEN
+            -- Extração de metadados para limpeza
+            v_col_filha := substring(r.definicao FROM '\((.*?)\)');
+            v_tab_pai   := substring(r.definicao FROM 'REFERENCES (.*?)\(');
+            v_col_pai   := substring(r.definicao FROM 'REFERENCES .*?\((.*?)\)');
+
+            RAISE WARNING 'Limpando órfãos para FK %...', r.nome_constraint;
+
+            EXECUTE format(
+                'DELETE FROM %I.%I f WHERE NOT EXISTS (SELECT 1 FROM %s p WHERE p.%s = f.%s)',
+                r.esquema, r.tabela, v_tab_pai, v_col_pai, v_col_filha
+            );
+            
+            GET DIAGNOSTICS v_rows_deleted = ROW_COUNT;
+            
+            -- Tenta restaurar novamente
+            EXECUTE format('ALTER TABLE %I.%I ADD CONSTRAINT %I %s', 
+                           r.esquema, r.tabela, r.nome_constraint, r.definicao);
+            
+            RAISE NOTICE 'Sucesso: FK % restaurada. (% linhas deletadas)', r.nome_constraint, v_rows_deleted;
+        END;
+    END LOOP;
+END $$;
+Vantagens da Tabela Permanente para Conferência:
+Auditoria: Você pode rodar um SELECT * FROM backup_fks_audit_perseus a qualquer momento para ver quais eram as regras de integridade originais.
+
+Segurança em Longo Prazo: Se a sua migração de dados demorar 2 dias, os metadados estarão lá, seguros no disco, e não apenas na memória da sessão.
+
+Comparação: Se algo der errado meses depois, você ainda tem o registro de como as tabelas eram relacionadas.
+
+Dica Final: Quando você terminar toda a sua conferência e tiver certeza de que não precisa mais desses dados, você pode apagar a tabela com:
+DROP TABLE public.backup_fks_audit_perseus;

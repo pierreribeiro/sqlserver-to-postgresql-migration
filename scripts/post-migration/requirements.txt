@@ -1,6 +1,7 @@
 # US7: CITEXT Column Conversion — Python Dependencies
 python-dotenv>=1.0.0    # .env file loading
 pyyaml>=6.0             # YAML config parsing
+ruamel.yaml>=0.18.0     # Comment-preserving YAML round-trip
 rich>=13.0              # Console output formatting
 
 # Testing

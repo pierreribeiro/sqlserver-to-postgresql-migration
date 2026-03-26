@@ -1,0 +1,1834 @@
+{
+  "version": 1,
+  "started_at": "2026-03-25T23:28:43.375153+00:00",
+  "last_updated": "2026-03-25T23:29:25.143002+00:00",
+  "current_phase": "04-validate",
+  "phases": {
+    "01-drop-dependents": {
+      "status": "complete",
+      "dropped": [
+        {
+          "type": "view",
+          "name": "perseus.hermes_run",
+          "ddl": "CREATE OR REPLACE VIEW perseus.hermes_run AS\nSELECT r.experiment_id,\n    r.local_id AS run_id,\n    r.description,\n    r.created_on,\n    r.strain,\n    r.max_yield AS yield,\n    r.max_titer AS titer,\n    rg.id AS result_goo_id,\n    ig.id AS feedstock_goo_id,\n    c.id AS container_id,\n    r.start_time AS run_on,\n    r.stop_time AS duration\n   FROM hermes.run r\n     LEFT JOIN goo rg ON ('m'::text || rg.id::text) = r.resultant_material::text\n     LEFT JOIN goo ig ON ('m'::text || ig.id::text) = r.feedstock_material::text\n     LEFT JOIN container c ON c.uid::text = r.tank::text\n  WHERE (COALESCE(r.feedstock_material, ''::character varying)::text <> ''::text OR COALESCE(r.resultant_material, ''::character varying)::text <> ''::text) AND COALESCE(r.feedstock_material, ''::character varying)::text <> COALESCE(r.resultant_material, ''::character varying)::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.combined_sp_field_map_display_type",
+          "ddl": "CREATE OR REPLACE VIEW perseus.combined_sp_field_map_display_type AS\nSELECT sp.id + 10000 + dl.id AS id,\n    sp.id + 20000 AS field_map_id,\n    dl.id AS display_type_id,\n    ('getPollValueBySmurfPropertyId('::text || sp.id::text) || ')'::text AS display,\n    5 AS display_layout_id,\n    0 AS manditory\n   FROM smurf_property sp\n     JOIN smurf s ON s.id = sp.smurf_id\n     JOIN property p ON p.id = sp.property_id\n     CROSS JOIN display_layout dl\n  WHERE sp.disabled = 0 AND dl.id = 1\nUNION\n SELECT sp.id + 20000 + dl.id AS id,\n    sp.id + 20000 AS field_map_id,\n    dl.id AS display_type_id,\n    ('getPollValueBySmurfPropertyId('::text || sp.id::text) || ')'::text AS display,\n    7 AS display_layout_id,\n    0 AS manditory\n   FROM smurf_property sp\n     JOIN smurf s ON s.id = sp.smurf_id\n     JOIN property p ON p.id = sp.property_id\n     CROSS JOIN display_layout dl\n  WHERE sp.disabled = 0 AND dl.id = 7\nUNION\n SELECT sp.id + 30000 + dl.id AS id,\n    sp.id + 30000 AS field_map_id,\n    dl.id AS display_type_id,\n    ('getPollValueStringBySmurfPropertyId('::text || sp.id::text) || ')'::text AS display,\n    7 AS display_layout_id,\n    0 AS manditory\n   FROM smurf_property sp\n     JOIN smurf s ON s.id = sp.smurf_id\n     JOIN property p ON p.id = sp.property_id\n     CROSS JOIN display_layout dl\n  WHERE sp.disabled = 0 AND dl.id = 3\nUNION\n SELECT sp.id + 40000 + dl.id AS id,\n    sp.id + 30000 AS field_map_id,\n    dl.id AS display_type_id,\n    ('getPollValueStringBySmurfPropertyId('::text || sp.id::text) || ')'::text AS display,\n    7 AS display_layout_id,\n    0 AS manditory\n   FROM smurf_property sp\n     JOIN smurf s ON s.id = sp.smurf_id\n     JOIN property p ON p.id = sp.property_id\n     CROSS JOIN display_layout dl\n  WHERE sp.disabled = 0 AND dl.id = 6\nUNION\n SELECT sp.id + 50000 + dl.id AS id,\n    sp.id + 40000 AS field_map_id,\n    dl.id AS display_type_id,\n    ('getPollValueBySmurfPropertyId('::text || sp.id::text) || ')'::text AS display,\n    5 AS display_layout_id,\n    0 AS manditory\n   FROM smurf_property sp\n     JOIN smurf s ON s.id = sp.smurf_id\n     JOIN property p ON p.id = sp.property_id\n     CROSS JOIN display_layout dl\n  WHERE sp.disabled = 0 AND dl.id = 1;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.combined_field_map_display_type",
+          "ddl": "CREATE OR REPLACE VIEW perseus.combined_field_map_display_type AS\nSELECT field_map_display_type.id,\n    field_map_display_type.field_map_id,\n    field_map_display_type.display_type_id,\n    field_map_display_type.display,\n    field_map_display_type.display_layout_id,\n    field_map_display_type.manditory\n   FROM field_map_display_type\nUNION\n SELECT combined_sp_field_map_display_type.id,\n    combined_sp_field_map_display_type.field_map_id,\n    combined_sp_field_map_display_type.display_type_id,\n    combined_sp_field_map_display_type.display,\n    combined_sp_field_map_display_type.display_layout_id,\n    combined_sp_field_map_display_type.manditory\n   FROM combined_sp_field_map_display_type;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_lot",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_lot AS\nSELECT m.id,\n    m.uid,\n    m.name,\n    m.description,\n    m.goo_type_id AS material_type_id,\n    p.id AS process_id,\n    p.uid AS process_uid,\n    p.name AS process_name,\n    p.description AS process_description,\n    p.smurf_id AS process_type_id,\n    p.run_on,\n    p.duration,\n        CASE\n            WHEN p.container_id IS NOT NULL THEN p.container_id\n            ELSE m.container_id\n        END AS container_id,\n    m.original_volume,\n    m.original_mass,\n    m.triton_task_id,\n    m.recipe_id,\n    m.recipe_part_id,\n        CASE\n            WHEN m.manufacturer_id IS NULL THEN p.organization_id\n            ELSE m.manufacturer_id\n        END AS manufacturer_id,\n    p.themis_sample_id,\n    m.catalog_label,\n    m.added_on AS created_on,\n    m.added_by AS created_by_id\n   FROM goo m\n     LEFT JOIN transition_material tm ON tm.material_id::text = m.uid::text\n     LEFT JOIN fatsmurf p ON tm.transition_id::text = p.uid::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_process_upstream",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_process_upstream AS\nSELECT tm.transition_id AS source_process,\n    mt.transition_id AS destination_process,\n    fs.smurf_id AS source_process_type,\n    fs2.smurf_id AS destination_process_type,\n    mt.material_id AS connecting_material\n   FROM material_transition mt\n     JOIN transition_material tm ON tm.material_id::text = mt.material_id::text\n     JOIN fatsmurf fs ON mt.transition_id::text = fs.uid::text\n     JOIN fatsmurf fs2 ON tm.transition_id::text = fs2.uid::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_fermentation_upstream",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_fermentation_upstream AS\nWITH RECURSIVE fermentation_chain AS (\n         SELECT pt.destination_process AS start_point,\n            pt.destination_process AS parent,\n            pt.destination_process_type AS process_type,\n            pt.source_process AS child,\n            '/'::text || pt.destination_process::text AS path,\n            1 AS level\n           FROM vw_process_upstream pt\n          WHERE pt.source_process_type = 22\n        UNION ALL\n         SELECT r.start_point,\n            pt.destination_process,\n            pt.destination_process_type AS process_type,\n            pt.source_process,\n                CASE\n                    WHEN pt.destination_process_type = 22 THEN (r.path || '/'::text) || pt.source_process::text\n                    ELSE r.path\n                END AS path,\n                CASE\n                    WHEN pt.destination_process_type = 22 THEN r.level + 1\n                    ELSE r.level\n                END AS level\n           FROM vw_process_upstream pt\n             JOIN fermentation_chain r ON pt.destination_process::text = r.child::text\n          WHERE pt.destination_process::text <> pt.source_process::text\n        ) CYCLE child SET is_cycle USING path_array\n SELECT start_point,\n    child AS end_point,\n    path,\n    level\n   FROM fermentation_chain\n  WHERE process_type = 22 AND NOT is_cycle;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_lot_edge",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_lot_edge AS\nSELECT sl.id AS src_lot_id,\n    dl.id AS dst_lot_id,\n    mt.added_on AS created_on\n   FROM material_transition mt\n     JOIN vw_lot sl ON sl.uid::text = mt.material_id::text\n     JOIN vw_lot dl ON dl.process_uid::text = mt.transition_id::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_lot_path",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_lot_path AS\nSELECT sl.id AS src_lot_id,\n    dl.id AS dst_lot_id,\n    mu.path,\n    mu.level AS length\n   FROM m_upstream mu\n     JOIN vw_lot sl ON sl.uid::text = mu.end_point::text\n     JOIN vw_lot dl ON dl.uid::text = mu.start_point::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_recipe_prep",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_recipe_prep AS\nSELECT id,\n    name,\n    material_type_id,\n    container_id,\n    recipe_id,\n    triton_task_id,\n    original_volume AS volume_l,\n    original_mass AS mass_kg,\n    created_on,\n    created_by_id\n   FROM vw_lot prep\n  WHERE recipe_id IS NOT NULL AND process_type_id = 207;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_recipe_prep_part",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_recipe_prep_part AS\nSELECT split.id,\n    r.id AS recipe_id,\n    rp.id AS recipe_part_id,\n    prep.id AS prep_id,\n    rp.goo_type_id AS expected_material_type_id,\n    split.material_type_id AS actual_material_type_id,\n    src.id AS source_lot_id,\n    split.original_volume AS volume_l,\n    split.original_mass AS mass_kg,\n    split.created_on,\n    split.created_by_id\n   FROM vw_lot split\n     JOIN vw_lot_edge split_to_prep ON split_to_prep.src_lot_id = split.id\n     JOIN vw_lot prep ON prep.id = split_to_prep.dst_lot_id\n     JOIN vw_lot_edge src_to_split ON src_to_split.dst_lot_id = split.id\n     JOIN vw_lot src ON src.id = src_to_split.src_lot_id\n     JOIN recipe r ON r.id = prep.recipe_id\n     JOIN recipe_part rp ON rp.id = split.recipe_part_id AND r.id = rp.recipe_id\n  WHERE split.recipe_part_id IS NOT NULL AND prep.recipe_id IS NOT NULL AND split.process_type_id = 110 AND prep.process_type_id = 207;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.combined_field_map",
+          "ddl": "CREATE OR REPLACE VIEW perseus.combined_field_map AS\nSELECT field_map.id,\n    field_map.field_map_block_id,\n    field_map.name,\n    field_map.description,\n    field_map.display_order,\n    field_map.setter,\n    field_map.lookup,\n    field_map.lookup_service,\n    field_map.nullable,\n    field_map.field_map_type_id,\n    field_map.database_id,\n    field_map.save_sequence,\n    field_map.onchange,\n    field_map.field_map_set_id\n   FROM field_map\nUNION\n SELECT combined_sp_field_map.id,\n    combined_sp_field_map.field_map_block_id,\n    combined_sp_field_map.name,\n    combined_sp_field_map.description,\n    combined_sp_field_map.display_order,\n    combined_sp_field_map.setter,\n    combined_sp_field_map.lookup,\n    combined_sp_field_map.lookup_service,\n    combined_sp_field_map.nullable,\n    combined_sp_field_map.field_map_type_id,\n    combined_sp_field_map.database_id,\n    combined_sp_field_map.save_sequence,\n    combined_sp_field_map.onchange,\n    combined_sp_field_map.field_map_set_id\n   FROM combined_sp_field_map;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.combined_field_map_block",
+          "ddl": "CREATE OR REPLACE VIEW perseus.combined_field_map_block AS\nSELECT field_map_block.id,\n    field_map_block.filter,\n    field_map_block.scope\n   FROM field_map_block\nUNION\n SELECT smurf.id + 1000 AS id,\n    ('isSmurf('::text || smurf.id::text) || ')'::text AS filter,\n    'FatSmurfReading'::character varying AS scope\n   FROM smurf\nUNION\n SELECT smurf.id + 2000 AS id,\n    ('isSmurf('::text || smurf.id::text) || ')'::text AS filter,\n    'FatSmurf'::character varying AS scope\n   FROM smurf\nUNION\n SELECT smurf.id + 3000 AS id,\n    ('isSmurfWithOneReading('::text || smurf.id::text) || ')'::text AS filter,\n    'FatSmurf'::character varying AS scope\n   FROM smurf;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_tom_perseus_sample_prep_materials",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_tom_perseus_sample_prep_materials AS\nSELECT ds.end_point AS material_id\n   FROM goo g\n     JOIN m_downstream ds ON ds.start_point::text = g.uid::text\n  WHERE g.goo_type_id = ANY (ARRAY[40, 62])\nUNION\n SELECT g.uid AS material_id\n   FROM goo g\n  WHERE g.goo_type_id = ANY (ARRAY[40, 62]);"
+        },
+        {
+          "type": "materialized_view",
+          "name": "perseus.translated",
+          "ddl": "CREATE MATERIALIZED VIEW perseus.translated AS\nSELECT mt.material_id AS source_material,\n    tm.material_id AS destination_material,\n    mt.transition_id\n   FROM material_transition mt\n     JOIN transition_material tm ON tm.transition_id::text = mt.transition_id::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_material_transition_material_up",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_material_transition_material_up AS\nSELECT mt.material_id AS source_uid,\n    tm.material_id AS destination_uid,\n    tm.transition_id AS transition_uid\n   FROM transition_material tm\n     LEFT JOIN material_transition mt ON tm.transition_id::text = mt.transition_id::text;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.downstream",
+          "ddl": "CREATE OR REPLACE VIEW perseus.downstream AS\nWITH RECURSIVE downstream AS (\n         SELECT pt.source_material AS start_point,\n            pt.source_material AS parent,\n            pt.destination_material AS child,\n            '/'::character varying(4000) AS path,\n            1 AS level\n           FROM translated pt\n        UNION ALL\n         SELECT r.start_point,\n            pt.source_material,\n            pt.destination_material,\n            (((r.path::text || r.child::text) || '/'::text))::character varying(4000) AS \"varchar\",\n            r.level + 1\n           FROM translated pt\n             JOIN downstream r ON pt.source_material::text = r.child::text\n          WHERE pt.source_material::text <> pt.destination_material::text\n        ) CYCLE start_point, child SET is_cycle USING cycle_path\n SELECT start_point,\n    child AS end_point,\n    path,\n    level\n   FROM downstream\n  WHERE NOT is_cycle;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.material_transition_material",
+          "ddl": "CREATE OR REPLACE VIEW perseus.material_transition_material AS\nSELECT source_material AS start_point,\n    transition_id,\n    destination_material AS end_point\n   FROM translated;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.upstream",
+          "ddl": "CREATE OR REPLACE VIEW perseus.upstream AS\nWITH RECURSIVE upstream AS (\n         SELECT pt.destination_material AS start_point,\n            pt.destination_material AS parent,\n            pt.source_material AS child,\n            '/'::text AS path,\n            1 AS level\n           FROM translated pt\n        UNION ALL\n         SELECT r.start_point,\n            pt.destination_material AS parent,\n            pt.source_material AS child,\n            (r.path || r.child::text) || '/'::text AS path,\n            r.level + 1 AS level\n           FROM translated pt\n             JOIN upstream r ON pt.destination_material::text = r.child::text\n          WHERE pt.destination_material::text <> pt.source_material::text\n        ) CYCLE child SET is_cycle USING path_array\n SELECT start_point,\n    child AS end_point,\n    path,\n    level\n   FROM upstream\n  WHERE NOT is_cycle;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.combined_sp_field_map",
+          "ddl": "CREATE OR REPLACE VIEW perseus.combined_sp_field_map AS\nSELECT sp.id + 20000 AS id,\n    sp.smurf_id + 1000 AS field_map_block_id,\n    p.name::text ||\n        CASE\n            WHEN u.name IS NOT NULL THEN (' ('::text || u.name::text) || ')'::text\n            ELSE ''::text\n        END AS name,\n    NULL::text AS description,\n    sp.sort_order AS display_order,\n    ('setPollValueBySpid('::text || sp.id::text) || ', ?)'::text AS setter,\n        CASE\n            WHEN po.property_id IS NULL THEN NULL::text\n            ELSE ('PropertyPeer::getLookupByPropertyId('::text || po.property_id::text) || ')'::text\n        END AS lookup,\n    NULL::text AS lookup_service,\n    1 AS nullable,\n        CASE\n            WHEN po.property_id IS NOT NULL THEN 12\n            ELSE 10\n        END AS field_map_type_id,\n    NULL::text AS database_id,\n    1 AS save_sequence,\n    NULL::text AS onchange,\n        CASE\n            WHEN s.class_id = 2 THEN 9\n            ELSE 12\n        END AS field_map_set_id\n   FROM smurf_property sp\n     JOIN smurf s ON sp.smurf_id = s.id\n     JOIN property p ON sp.property_id = p.id\n     LEFT JOIN unit u ON u.id = p.unit_id\n     LEFT JOIN property_option po ON po.property_id = p.id\nUNION\n SELECT sp.id + 30000 AS id,\n    sp.smurf_id + 2000 AS field_map_block_id,\n    p.name::text ||\n        CASE\n            WHEN u.name IS NOT NULL THEN (' ('::text || u.name::text) || ')'::text\n            ELSE ''::text\n        END AS name,\n    NULL::text AS description,\n    sp.sort_order AS display_order,\n    NULL::text AS setter,\n    NULL::text AS lookup,\n    NULL::text AS lookup_service,\n    1 AS nullable,\n        CASE\n            WHEN po.property_id IS NOT NULL THEN 12\n            ELSE 10\n        END AS field_map_type_id,\n    NULL::text AS database_id,\n    2 AS save_sequence,\n    NULL::text AS onchange,\n        CASE\n            WHEN s.class_id = 2 THEN 9\n            ELSE 12\n        END AS field_map_set_id\n   FROM smurf_property sp\n     JOIN smurf s ON sp.smurf_id = s.id\n     JOIN property p ON sp.property_id = p.id\n     LEFT JOIN unit u ON u.id = p.unit_id\n     LEFT JOIN property_option po ON po.property_id = p.id\nUNION\n SELECT sp.id + 40000 AS id,\n    sp.smurf_id + 3000 AS field_map_block_id,\n    p.name::text ||\n        CASE\n            WHEN u.name IS NOT NULL THEN (' ('::text || u.name::text) || ')'::text\n            ELSE ''::text\n        END AS name,\n    NULL::text AS description,\n    sp.sort_order AS display_order,\n    ('setPollValueBySpid('::text || sp.id::text) || ', ?)'::text AS setter,\n        CASE\n            WHEN po.property_id IS NULL THEN NULL::text\n            ELSE ('PropertyPeer::getLookupByPropertyId('::text || po.property_id::text) || ')'::text\n        END AS lookup,\n    NULL::text AS lookup_service,\n    1 AS nullable,\n        CASE\n            WHEN po.property_id IS NOT NULL THEN 12\n            ELSE 10\n        END AS field_map_type_id,\n    NULL::text AS database_id,\n    2 AS save_sequence,\n    NULL::text AS onchange,\n        CASE\n            WHEN s.class_id = 2 THEN 9\n            ELSE 12\n        END AS field_map_set_id\n   FROM smurf_property sp\n     JOIN smurf s ON sp.smurf_id = s.id\n     JOIN property p ON sp.property_id = p.id\n     LEFT JOIN unit u ON u.id = p.unit_id\n     LEFT JOIN property_option po ON po.property_id = p.id;"
+        },
+        {
+          "type": "view",
+          "name": "perseus.vw_processable_logs",
+          "ddl": "CREATE OR REPLACE VIEW perseus.vw_processable_logs AS\nSELECT rl.id,\n    rl.class_id,\n    rl.source,\n    rl.created_on,\n    rl.log_text,\n    rl.file_name,\n    rl.robot_log_checksum,\n    rl.started_on,\n    rl.completed_on,\n    rl.loaded_on,\n    rl.loaded,\n    rl.loadable,\n    rl.robot_run_id,\n    rl.robot_log_type_id\n   FROM robot_log rl\n     JOIN robot_log_type rlt ON rlt.id = rl.robot_log_type_id\n  WHERE COALESCE(rl.loaded, 0) = 0 AND NOT (EXISTS ( SELECT 1\n           FROM robot_log_error rle\n             JOIN robot_log rl_c ON rle.robot_log_id = rl_c.id\n          WHERE rl_c.robot_run_id = rl.robot_run_id)) AND (rl.id IN ( SELECT min(rl_d.id) AS min\n           FROM robot_log rl_d\n          GROUP BY rl_d.robot_log_checksum)) AND ((EXISTS ( SELECT 1\n           FROM robot_log_read rlr\n          WHERE rlr.robot_log_id = rl.id)) OR (EXISTS ( SELECT 1\n           FROM robot_log_transfer rltr\n          WHERE rltr.robot_log_id = rl.id))) AND COALESCE(rl.loadable, 0) = 1 AND rl.created_on > (CURRENT_TIMESTAMP - '1 mon'::interval);"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_goo_added_on_covering",
+          "ddl": "CREATE INDEX idx_goo_added_on_covering ON perseus.goo USING btree (added_on) INCLUDE (uid, container_id) WITH (fillfactor='90')"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_goo_uid_type_covering",
+          "ddl": "CREATE INDEX idx_goo_uid_type_covering ON perseus.goo USING btree (uid, goo_type_id) INCLUDE (name, description, added_on)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_goo_uid_prefix",
+          "ddl": "CREATE INDEX idx_goo_uid_prefix ON perseus.goo USING btree (uid varchar_pattern_ops)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_fatsmurf_uid_smurf_covering",
+          "ddl": "CREATE INDEX idx_fatsmurf_uid_smurf_covering ON perseus.fatsmurf USING btree (uid, smurf_id) INCLUDE (name, added_on)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_material_transition_material_id",
+          "ddl": "CREATE INDEX idx_material_transition_material_id ON perseus.material_transition USING btree (material_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_material_transition_transition_id",
+          "ddl": "CREATE INDEX idx_material_transition_transition_id ON perseus.material_transition USING btree (transition_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_transition_material_material_id",
+          "ddl": "CREATE INDEX idx_transition_material_material_id ON perseus.transition_material USING btree (material_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_transition_material_transition_id",
+          "ddl": "CREATE INDEX idx_transition_material_transition_id ON perseus.transition_material USING btree (transition_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_container_scope_left_right_depth",
+          "ddl": "CREATE INDEX idx_container_scope_left_right_depth ON perseus.container USING btree (scope_id, left_id, right_id, depth)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_container_scope_id",
+          "ddl": "CREATE INDEX idx_container_scope_id ON perseus.container USING btree (scope_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_container_nested_set_left",
+          "ddl": "CREATE INDEX idx_container_nested_set_left ON perseus.container USING btree (left_id, right_id, scope_id)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.uq_container_uid",
+          "ddl": "CREATE UNIQUE INDEX uq_container_uid ON perseus.container USING btree (uid) WITH (fillfactor='90')"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_person_km_session_id",
+          "ddl": "CREATE INDEX idx_person_km_session_id ON perseus.person USING btree (km_session_id) WITH (fillfactor='90')"
+        },
+        {
+          "type": "index",
+          "name": "perseus.idx_recipe_type_workflow",
+          "ddl": "CREATE INDEX idx_recipe_type_workflow ON perseus.recipe USING btree (goo_type_id, workflow_id) INCLUDE (name)"
+        },
+        {
+          "type": "index",
+          "name": "perseus.uq_robot_run_name",
+          "ddl": "CREATE UNIQUE INDEX uq_robot_run_name ON perseus.robot_run USING btree (name) WITH (fillfactor='70')"
+        },
+        {
+          "type": "index",
+          "name": "perseus.uq_unit_name",
+          "ddl": "CREATE UNIQUE INDEX uq_unit_name ON perseus.unit USING btree (name)"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_material_inventory_material",
+          "ddl": "ALTER TABLE perseus.material_inventory ADD CONSTRAINT fk_material_inventory_material FOREIGN KEY (material_id) REFERENCES goo(id);"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_material_qc_goo",
+          "ddl": "ALTER TABLE perseus.material_qc ADD CONSTRAINT fk_material_qc_goo FOREIGN KEY (material_id) REFERENCES goo(id);"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_material_transition_goo",
+          "ddl": "ALTER TABLE perseus.material_transition ADD CONSTRAINT fk_material_transition_goo FOREIGN KEY (material_id) REFERENCES goo(uid) ON UPDATE CASCADE ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_robot_log_transfer_dest_goo",
+          "ddl": "ALTER TABLE perseus.robot_log_transfer ADD CONSTRAINT fk_robot_log_transfer_dest_goo FOREIGN KEY (destination_material_id) REFERENCES goo(id);"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_robot_log_transfer_source_goo",
+          "ddl": "ALTER TABLE perseus.robot_log_transfer ADD CONSTRAINT fk_robot_log_transfer_source_goo FOREIGN KEY (source_material_id) REFERENCES goo(id);"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.fk_transition_material_goo",
+          "ddl": "ALTER TABLE perseus.transition_material ADD CONSTRAINT fk_transition_material_goo FOREIGN KEY (material_id) REFERENCES goo(uid) ON UPDATE CASCADE ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.goo_attachment_fk_2",
+          "ddl": "ALTER TABLE perseus.goo_attachment ADD CONSTRAINT goo_attachment_fk_2 FOREIGN KEY (goo_id) REFERENCES goo(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.goo_comment_fk_2",
+          "ddl": "ALTER TABLE perseus.goo_comment ADD CONSTRAINT goo_comment_fk_2 FOREIGN KEY (goo_id) REFERENCES goo(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.goo.goo_history_fk_2",
+          "ddl": "ALTER TABLE perseus.goo_history ADD CONSTRAINT goo_history_fk_2 FOREIGN KEY (goo_id) REFERENCES goo(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fatsmurf_attachment_fk_2",
+          "ddl": "ALTER TABLE perseus.fatsmurf_attachment ADD CONSTRAINT fatsmurf_attachment_fk_2 FOREIGN KEY (fatsmurf_id) REFERENCES fatsmurf(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fatsmurf_comment_fk_2",
+          "ddl": "ALTER TABLE perseus.fatsmurf_comment ADD CONSTRAINT fatsmurf_comment_fk_2 FOREIGN KEY (fatsmurf_id) REFERENCES fatsmurf(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fatsmurf_history_fk_2",
+          "ddl": "ALTER TABLE perseus.fatsmurf_history ADD CONSTRAINT fatsmurf_history_fk_2 FOREIGN KEY (fatsmurf_id) REFERENCES fatsmurf(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fatsmurf_reading_fk_1",
+          "ddl": "ALTER TABLE perseus.fatsmurf_reading ADD CONSTRAINT fatsmurf_reading_fk_1 FOREIGN KEY (fatsmurf_id) REFERENCES fatsmurf(id) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fk_material_transition_fatsmurf",
+          "ddl": "ALTER TABLE perseus.material_transition ADD CONSTRAINT fk_material_transition_fatsmurf FOREIGN KEY (transition_id) REFERENCES fatsmurf(uid) ON DELETE CASCADE;"
+        },
+        {
+          "type": "constraint",
+          "name": "perseus.fatsmurf.fk_transition_material_fatsmurf",
+          "ddl": "ALTER TABLE perseus.transition_material ADD CONSTRAINT fk_transition_material_fatsmurf FOREIGN KEY (transition_id) REFERENCES fatsmurf(uid) ON DELETE CASCADE;"
+        }
+      ],
+      "completed_at": "2026-03-25T23:29:06.775302+00:00"
+    },
+    "02-alter-columns": {
+      "status": "complete",
+      "completed": [
+        "cm_application.description",
+        "cm_application.jira_id",
+        "cm_application.label",
+        "cm_application.url",
+        "cm_application_group.label",
+        "cm_group.domain_id",
+        "cm_group.name",
+        "cm_project.label",
+        "cm_unit.description",
+        "cm_unit.longname",
+        "cm_unit.name",
+        "cm_unit_dimensions.name",
+        "cm_user.domain_id",
+        "cm_user.email",
+        "cm_user.login",
+        "cm_user.name",
+        "coa.name",
+        "coa_spec.equal_bound",
+        "color.name",
+        "container.name",
+        "container.position_name",
+        "container.position_x_coordinate",
+        "container.position_y_coordinate",
+        "container.scope_id",
+        "container.uid",
+        "container_type.name",
+        "container_type_position.position_name",
+        "container_type_position.position_x_coordinate",
+        "container_type_position.position_y_coordinate",
+        "display_layout.name",
+        "display_type.name",
+        "external_goo_type.external_label",
+        "fatsmurf.description",
+        "fatsmurf.name",
+        "fatsmurf_attachment.attachment_mime_type",
+        "fatsmurf_attachment.attachment_name",
+        "fatsmurf_attachment.description",
+        "fatsmurf_comment.comment",
+        "fatsmurf_reading.name",
+        "feed_type.correction_method",
+        "feed_type.description",
+        "feed_type.name",
+        "field_map.database_id",
+        "field_map.description",
+        "field_map.lookup",
+        "field_map.lookup_service",
+        "field_map.name",
+        "field_map.onchange",
+        "field_map.setter",
+        "field_map_block.filter",
+        "field_map_block.scope",
+        "field_map_display_type.display",
+        "field_map_set.color",
+        "field_map_set.name",
+        "field_map_type.name",
+        "goo.catalog_label",
+        "goo.description",
+        "goo.name",
+        "goo_attachment.attachment_mime_type",
+        "goo_attachment.attachment_name",
+        "goo_attachment.description",
+        "goo_attachment_type.name",
+        "goo_comment.category",
+        "goo_comment.comment",
+        "goo_process_queue_type.name",
+        "goo_type.abbreviation",
+        "goo_type.casrn",
+        "goo_type.color",
+        "goo_type.iupac",
+        "goo_type.name",
+        "goo_type.scope_id",
+        "history_type.format",
+        "history_type.name",
+        "history_value.value",
+        "manufacturer.goo_prefix",
+        "manufacturer.location",
+        "manufacturer.name",
+        "material_inventory.comment",
+        "material_qc.entity_type_name",
+        "material_qc.qc_process_uid",
+        "migration.description",
+        "permissions.email_address",
+        "permissions.permission",
+        "perseus_user.domain_id",
+        "perseus_user.login",
+        "perseus_user.mail",
+        "perseus_user.name",
+        "person.domain_id",
+        "person.email",
+        "person.km_session_id",
+        "person.login",
+        "person.name",
+        "poll.value",
+        "prefix_incrementor.prefix",
+        "property.description",
+        "property.name",
+        "property_option.label",
+        "recipe.description",
+        "recipe.name",
+        "recipe.sop",
+        "recipe.sterilization_method",
+        "recipe_part.description",
+        "robot_log.file_name",
+        "robot_log.log_text",
+        "robot_log.robot_log_checksum",
+        "robot_log.source",
+        "robot_log_error.error_text",
+        "robot_log_read.source_barcode",
+        "robot_log_read.source_position",
+        "robot_log_read.value",
+        "robot_log_transfer.destination_barcode",
+        "robot_log_transfer.destination_position",
+        "robot_log_transfer.source_barcode",
+        "robot_log_transfer.source_position",
+        "robot_log_transfer.transfer_volume",
+        "robot_log_type.name",
+        "robot_run.name",
+        "saved_search.name",
+        "saved_search.parameter_string",
+        "scraper.active",
+        "scraper.document_id",
+        "scraper.filename",
+        "scraper.filename_saved_as",
+        "scraper.file_type",
+        "scraper.message",
+        "scraper.received_from",
+        "scraper.result",
+        "scraper.scraper_id",
+        "scraper.scraper_message",
+        "scraper.scraper_send_to",
+        "scraper.scraping_status",
+        "sequence_type.name",
+        "smurf.description",
+        "smurf.name",
+        "smurf_group.name",
+        "smurf_property.calculated",
+        "submission.label",
+        "submission_entry.priority",
+        "submission_entry.sample_type",
+        "submission_entry.status",
+        "tmp_messy_links.destination_name",
+        "tmp_messy_links.destination_transition",
+        "tmp_messy_links.material_id",
+        "tmp_messy_links.source_name",
+        "tmp_messy_links.source_transition",
+        "unit.description",
+        "unit.name",
+        "workflow.category",
+        "workflow.description",
+        "workflow.name",
+        "workflow_attachment.attachment_mime_type",
+        "workflow_attachment.attachment_name",
+        "workflow_section.name",
+        "workflow_step.description",
+        "workflow_step.label",
+        "workflow_step.name",
+        "workflow_step_type.name",
+        "goo.uid",
+        "fatsmurf.uid",
+        "material_transition.material_id",
+        "material_transition.transition_id",
+        "transition_material.material_id",
+        "transition_material.transition_id"
+      ],
+      "completed_at": "2026-03-25T23:29:14.412351+00:00"
+    },
+    "02b-alter-cache-tables": {
+      "status": "complete",
+      "completed": [
+        "m_upstream_dirty_leaves.material_uid",
+        "m_downstream.start_point",
+        "m_downstream.end_point",
+        "m_downstream.path",
+        "m_upstream.start_point",
+        "m_upstream.end_point",
+        "m_upstream.path"
+      ],
+      "completed_at": "2026-03-25T23:29:14.872376+00:00"
+    },
+    "03-recreate-dependents": {
+      "status": "complete",
+      "completed_at": "2026-03-25T23:29:18.495255+00:00"
+    },
+    "04-validate": {
+      "status": "complete",
+      "completed_at": "2026-03-25T23:29:25.142957+00:00"
+    }
+  },
+  "original_types": {
+    "perseus.goo.uid": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.fatsmurf.uid": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.material_transition.material_id": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.material_transition.transition_id": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.transition_material.material_id": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.transition_material.transition_id": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.m_upstream_dirty_leaves.material_uid": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.m_downstream.start_point": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.m_downstream.end_point": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.m_downstream.path": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.m_upstream.start_point": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.m_upstream.end_point": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.m_upstream.path": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.cm_application.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_application.jira_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_application.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_application.url": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_application_group.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_group.domain_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_group.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_project.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_unit.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_unit.longname": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_unit.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_unit_dimensions.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_user.domain_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_user.email": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_user.login": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.cm_user.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.coa.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.coa_spec.equal_bound": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.color.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.position_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.position_x_coordinate": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.position_y_coordinate": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.scope_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container.uid": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.container_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container_type_position.position_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container_type_position.position_x_coordinate": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.container_type_position.position_y_coordinate": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.display_layout.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.display_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.external_goo_type.external_label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.fatsmurf.description": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.fatsmurf.name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.fatsmurf_attachment.attachment_mime_type": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.fatsmurf_attachment.attachment_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.fatsmurf_attachment.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.fatsmurf_comment.comment": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.fatsmurf_reading.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.feed_type.correction_method": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.feed_type.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.feed_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.field_map.database_id": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.description": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.lookup": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.lookup_service": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.onchange": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map.setter": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map_block.filter": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map_block.scope": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map_display_type.display": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.field_map_set.color": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.field_map_set.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.field_map_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo.catalog_label": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.goo.description": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.goo.name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.goo_attachment.attachment_mime_type": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_attachment.attachment_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_attachment.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_attachment_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_comment.category": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_comment.comment": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_process_queue_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.abbreviation": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.casrn": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.color": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.iupac": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.goo_type.scope_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.history_type.format": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.history_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.history_value.value": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.manufacturer.goo_prefix": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.manufacturer.location": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.manufacturer.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.material_inventory.comment": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.material_qc.entity_type_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.material_qc.qc_process_uid": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.migration.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.permissions.email_address": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.permissions.permission": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.perseus_user.domain_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.perseus_user.login": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.perseus_user.mail": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.perseus_user.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.person.domain_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.person.email": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.person.km_session_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.person.login": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.person.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.poll.value": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.prefix_incrementor.prefix": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.property.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.property.name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.property_option.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.recipe.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.recipe.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.recipe.sop": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.recipe.sterilization_method": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.recipe_part.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log.file_name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.robot_log.log_text": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.robot_log.robot_log_checksum": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.robot_log.source": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.robot_log_error.error_text": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_read.source_barcode": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_read.source_position": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_read.value": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_transfer.destination_barcode": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_transfer.destination_position": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_transfer.source_barcode": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_transfer.source_position": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_transfer.transfer_volume": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_log_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.robot_run.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.saved_search.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.saved_search.parameter_string": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.active": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.document_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.filename": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.filename_saved_as": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.file_type": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.message": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.received_from": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.result": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.scraper_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.scraper_message": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.scraper_send_to": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.scraper.scraping_status": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.sequence_type.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.smurf.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.smurf.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.smurf_group.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.smurf_property.calculated": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.submission.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.submission_entry.priority": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.submission_entry.sample_type": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.submission_entry.status": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.tmp_messy_links.destination_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.tmp_messy_links.destination_transition": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.tmp_messy_links.material_id": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.tmp_messy_links.source_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.tmp_messy_links.source_transition": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.unit.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.unit.name": {
+      "type": "character varying",
+      "length": null
+    },
+    "perseus.workflow.category": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_attachment.attachment_mime_type": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_attachment.attachment_name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_section.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_step.description": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_step.label": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_step.name": {
+      "type": "citext",
+      "length": null
+    },
+    "perseus.workflow_step_type.name": {
+      "type": "citext",
+      "length": null
+    }
+  },
+  "target_columns": [
+    {
+      "table": "goo",
+      "column": "uid"
+    },
+    {
+      "table": "fatsmurf",
+      "column": "uid"
+    },
+    {
+      "table": "material_transition",
+      "column": "material_id"
+    },
+    {
+      "table": "material_transition",
+      "column": "transition_id"
+    },
+    {
+      "table": "transition_material",
+      "column": "material_id"
+    },
+    {
+      "table": "transition_material",
+      "column": "transition_id"
+    },
+    {
+      "table": "m_upstream_dirty_leaves",
+      "column": "material_uid"
+    },
+    {
+      "table": "m_downstream",
+      "column": "start_point"
+    },
+    {
+      "table": "m_downstream",
+      "column": "end_point"
+    },
+    {
+      "table": "m_downstream",
+      "column": "path"
+    },
+    {
+      "table": "m_upstream",
+      "column": "start_point"
+    },
+    {
+      "table": "m_upstream",
+      "column": "end_point"
+    },
+    {
+      "table": "m_upstream",
+      "column": "path"
+    },
+    {
+      "table": "cm_application",
+      "column": "description"
+    },
+    {
+      "table": "cm_application",
+      "column": "jira_id"
+    },
+    {
+      "table": "cm_application",
+      "column": "label"
+    },
+    {
+      "table": "cm_application",
+      "column": "url"
+    },
+    {
+      "table": "cm_application_group",
+      "column": "label"
+    },
+    {
+      "table": "cm_group",
+      "column": "domain_id"
+    },
+    {
+      "table": "cm_group",
+      "column": "name"
+    },
+    {
+      "table": "cm_project",
+      "column": "label"
+    },
+    {
+      "table": "cm_unit",
+      "column": "description"
+    },
+    {
+      "table": "cm_unit",
+      "column": "longname"
+    },
+    {
+      "table": "cm_unit",
+      "column": "name"
+    },
+    {
+      "table": "cm_unit_dimensions",
+      "column": "name"
+    },
+    {
+      "table": "cm_user",
+      "column": "domain_id"
+    },
+    {
+      "table": "cm_user",
+      "column": "email"
+    },
+    {
+      "table": "cm_user",
+      "column": "login"
+    },
+    {
+      "table": "cm_user",
+      "column": "name"
+    },
+    {
+      "table": "coa",
+      "column": "name"
+    },
+    {
+      "table": "coa_spec",
+      "column": "equal_bound"
+    },
+    {
+      "table": "color",
+      "column": "name"
+    },
+    {
+      "table": "container",
+      "column": "name"
+    },
+    {
+      "table": "container",
+      "column": "position_name"
+    },
+    {
+      "table": "container",
+      "column": "position_x_coordinate"
+    },
+    {
+      "table": "container",
+      "column": "position_y_coordinate"
+    },
+    {
+      "table": "container",
+      "column": "scope_id"
+    },
+    {
+      "table": "container",
+      "column": "uid"
+    },
+    {
+      "table": "container_type",
+      "column": "name"
+    },
+    {
+      "table": "container_type_position",
+      "column": "position_name"
+    },
+    {
+      "table": "container_type_position",
+      "column": "position_x_coordinate"
+    },
+    {
+      "table": "container_type_position",
+      "column": "position_y_coordinate"
+    },
+    {
+      "table": "display_layout",
+      "column": "name"
+    },
+    {
+      "table": "display_type",
+      "column": "name"
+    },
+    {
+      "table": "external_goo_type",
+      "column": "external_label"
+    },
+    {
+      "table": "fatsmurf",
+      "column": "description"
+    },
+    {
+      "table": "fatsmurf",
+      "column": "name"
+    },
+    {
+      "table": "fatsmurf_attachment",
+      "column": "attachment_mime_type"
+    },
+    {
+      "table": "fatsmurf_attachment",
+      "column": "attachment_name"
+    },
+    {
+      "table": "fatsmurf_attachment",
+      "column": "description"
+    },
+    {
+      "table": "fatsmurf_comment",
+      "column": "comment"
+    },
+    {
+      "table": "fatsmurf_reading",
+      "column": "name"
+    },
+    {
+      "table": "feed_type",
+      "column": "correction_method"
+    },
+    {
+      "table": "feed_type",
+      "column": "description"
+    },
+    {
+      "table": "feed_type",
+      "column": "name"
+    },
+    {
+      "table": "field_map",
+      "column": "database_id"
+    },
+    {
+      "table": "field_map",
+      "column": "description"
+    },
+    {
+      "table": "field_map",
+      "column": "lookup"
+    },
+    {
+      "table": "field_map",
+      "column": "lookup_service"
+    },
+    {
+      "table": "field_map",
+      "column": "name"
+    },
+    {
+      "table": "field_map",
+      "column": "onchange"
+    },
+    {
+      "table": "field_map",
+      "column": "setter"
+    },
+    {
+      "table": "field_map_block",
+      "column": "filter"
+    },
+    {
+      "table": "field_map_block",
+      "column": "scope"
+    },
+    {
+      "table": "field_map_display_type",
+      "column": "display"
+    },
+    {
+      "table": "field_map_set",
+      "column": "color"
+    },
+    {
+      "table": "field_map_set",
+      "column": "name"
+    },
+    {
+      "table": "field_map_type",
+      "column": "name"
+    },
+    {
+      "table": "goo",
+      "column": "catalog_label"
+    },
+    {
+      "table": "goo",
+      "column": "description"
+    },
+    {
+      "table": "goo",
+      "column": "name"
+    },
+    {
+      "table": "goo_attachment",
+      "column": "attachment_mime_type"
+    },
+    {
+      "table": "goo_attachment",
+      "column": "attachment_name"
+    },
+    {
+      "table": "goo_attachment",
+      "column": "description"
+    },
+    {
+      "table": "goo_attachment_type",
+      "column": "name"
+    },
+    {
+      "table": "goo_comment",
+      "column": "category"
+    },
+    {
+      "table": "goo_comment",
+      "column": "comment"
+    },
+    {
+      "table": "goo_process_queue_type",
+      "column": "name"
+    },
+    {
+      "table": "goo_type",
+      "column": "abbreviation"
+    },
+    {
+      "table": "goo_type",
+      "column": "casrn"
+    },
+    {
+      "table": "goo_type",
+      "column": "color"
+    },
+    {
+      "table": "goo_type",
+      "column": "iupac"
+    },
+    {
+      "table": "goo_type",
+      "column": "name"
+    },
+    {
+      "table": "goo_type",
+      "column": "scope_id"
+    },
+    {
+      "table": "history_type",
+      "column": "format"
+    },
+    {
+      "table": "history_type",
+      "column": "name"
+    },
+    {
+      "table": "history_value",
+      "column": "value"
+    },
+    {
+      "table": "manufacturer",
+      "column": "goo_prefix"
+    },
+    {
+      "table": "manufacturer",
+      "column": "location"
+    },
+    {
+      "table": "manufacturer",
+      "column": "name"
+    },
+    {
+      "table": "material_inventory",
+      "column": "comment"
+    },
+    {
+      "table": "material_qc",
+      "column": "entity_type_name"
+    },
+    {
+      "table": "material_qc",
+      "column": "qc_process_uid"
+    },
+    {
+      "table": "migration",
+      "column": "description"
+    },
+    {
+      "table": "permissions",
+      "column": "email_address"
+    },
+    {
+      "table": "permissions",
+      "column": "permission"
+    },
+    {
+      "table": "perseus_user",
+      "column": "domain_id"
+    },
+    {
+      "table": "perseus_user",
+      "column": "login"
+    },
+    {
+      "table": "perseus_user",
+      "column": "mail"
+    },
+    {
+      "table": "perseus_user",
+      "column": "name"
+    },
+    {
+      "table": "person",
+      "column": "domain_id"
+    },
+    {
+      "table": "person",
+      "column": "email"
+    },
+    {
+      "table": "person",
+      "column": "km_session_id"
+    },
+    {
+      "table": "person",
+      "column": "login"
+    },
+    {
+      "table": "person",
+      "column": "name"
+    },
+    {
+      "table": "poll",
+      "column": "value"
+    },
+    {
+      "table": "prefix_incrementor",
+      "column": "prefix"
+    },
+    {
+      "table": "property",
+      "column": "description"
+    },
+    {
+      "table": "property",
+      "column": "name"
+    },
+    {
+      "table": "property_option",
+      "column": "label"
+    },
+    {
+      "table": "recipe",
+      "column": "description"
+    },
+    {
+      "table": "recipe",
+      "column": "name"
+    },
+    {
+      "table": "recipe",
+      "column": "sop"
+    },
+    {
+      "table": "recipe",
+      "column": "sterilization_method"
+    },
+    {
+      "table": "recipe_part",
+      "column": "description"
+    },
+    {
+      "table": "robot_log",
+      "column": "file_name"
+    },
+    {
+      "table": "robot_log",
+      "column": "log_text"
+    },
+    {
+      "table": "robot_log",
+      "column": "robot_log_checksum"
+    },
+    {
+      "table": "robot_log",
+      "column": "source"
+    },
+    {
+      "table": "robot_log_error",
+      "column": "error_text"
+    },
+    {
+      "table": "robot_log_read",
+      "column": "source_barcode"
+    },
+    {
+      "table": "robot_log_read",
+      "column": "source_position"
+    },
+    {
+      "table": "robot_log_read",
+      "column": "value"
+    },
+    {
+      "table": "robot_log_transfer",
+      "column": "destination_barcode"
+    },
+    {
+      "table": "robot_log_transfer",
+      "column": "destination_position"
+    },
+    {
+      "table": "robot_log_transfer",
+      "column": "source_barcode"
+    },
+    {
+      "table": "robot_log_transfer",
+      "column": "source_position"
+    },
+    {
+      "table": "robot_log_transfer",
+      "column": "transfer_volume"
+    },
+    {
+      "table": "robot_log_type",
+      "column": "name"
+    },
+    {
+      "table": "robot_run",
+      "column": "name"
+    },
+    {
+      "table": "saved_search",
+      "column": "name"
+    },
+    {
+      "table": "saved_search",
+      "column": "parameter_string"
+    },
+    {
+      "table": "scraper",
+      "column": "active"
+    },
+    {
+      "table": "scraper",
+      "column": "document_id"
+    },
+    {
+      "table": "scraper",
+      "column": "filename"
+    },
+    {
+      "table": "scraper",
+      "column": "filename_saved_as"
+    },
+    {
+      "table": "scraper",
+      "column": "file_type"
+    },
+    {
+      "table": "scraper",
+      "column": "message"
+    },
+    {
+      "table": "scraper",
+      "column": "received_from"
+    },
+    {
+      "table": "scraper",
+      "column": "result"
+    },
+    {
+      "table": "scraper",
+      "column": "scraper_id"
+    },
+    {
+      "table": "scraper",
+      "column": "scraper_message"
+    },
+    {
+      "table": "scraper",
+      "column": "scraper_send_to"
+    },
+    {
+      "table": "scraper",
+      "column": "scraping_status"
+    },
+    {
+      "table": "sequence_type",
+      "column": "name"
+    },
+    {
+      "table": "smurf",
+      "column": "description"
+    },
+    {
+      "table": "smurf",
+      "column": "name"
+    },
+    {
+      "table": "smurf_group",
+      "column": "name"
+    },
+    {
+      "table": "smurf_property",
+      "column": "calculated"
+    },
+    {
+      "table": "submission",
+      "column": "label"
+    },
+    {
+      "table": "submission_entry",
+      "column": "priority"
+    },
+    {
+      "table": "submission_entry",
+      "column": "sample_type"
+    },
+    {
+      "table": "submission_entry",
+      "column": "status"
+    },
+    {
+      "table": "tmp_messy_links",
+      "column": "destination_name"
+    },
+    {
+      "table": "tmp_messy_links",
+      "column": "destination_transition"
+    },
+    {
+      "table": "tmp_messy_links",
+      "column": "material_id"
+    },
+    {
+      "table": "tmp_messy_links",
+      "column": "source_name"
+    },
+    {
+      "table": "tmp_messy_links",
+      "column": "source_transition"
+    },
+    {
+      "table": "unit",
+      "column": "description"
+    },
+    {
+      "table": "unit",
+      "column": "name"
+    },
+    {
+      "table": "workflow",
+      "column": "category"
+    },
+    {
+      "table": "workflow",
+      "column": "description"
+    },
+    {
+      "table": "workflow",
+      "column": "name"
+    },
+    {
+      "table": "workflow_attachment",
+      "column": "attachment_mime_type"
+    },
+    {
+      "table": "workflow_attachment",
+      "column": "attachment_name"
+    },
+    {
+      "table": "workflow_section",
+      "column": "name"
+    },
+    {
+      "table": "workflow_step",
+      "column": "description"
+    },
+    {
+      "table": "workflow_step",
+      "column": "label"
+    },
+    {
+      "table": "workflow_step",
+      "column": "name"
+    },
+    {
+      "table": "workflow_step_type",
+      "column": "name"
+    }
+  ],
+  "snapshots": {
+    "01-drop-dependents": {
+      "run_id": "a7b1e69ee615",
+      "counts": {
+        "views": 19,
+        "mvs": 1,
+        "indexes": 16,
+        "constraints": 15
+      }
+    }
+  }
+}

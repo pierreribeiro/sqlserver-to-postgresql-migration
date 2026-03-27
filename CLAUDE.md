@@ -260,7 +260,7 @@ Exit: All 22 views pass validation + performance benchmarks within ±20%
 | `uv` | Python package/env management — install deps, run scripts (`uv run`, `uv pip`) |
 | `rg` (ripgrep) | Fast content search across files — use instead of `grep` for codebase searches |
 | `jq` | JSON processing — parse/filter CLI tool output and API responses |
-| `psql` | PostgreSQL client — syntax validation, deployment, query testing against `perseus_dev` |
+| `psql` | PostgreSQL client — syntax validation, deployment, query testing against `perseus_dev` - .pgpass file is configured, so there's no need to enter a password to connect  |
 | `npx` | Run Node.js tools without installing globally (e.g. `npx prettier`, `npx tsc`) |
 | `npm` | Node.js package management — install/run project Node dependencies |
 | `fnm` | Fast Node Version Manager — switch Node.js versions per project |
